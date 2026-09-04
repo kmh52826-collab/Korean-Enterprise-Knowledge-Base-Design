@@ -1,15 +1,18 @@
 # Scalable Data Pipeline & Hybrid Knowledge Base Design for Regulated Environments
 
 **Status:** Active / In Progress  
-**Current Focus:** Phase 1 - Relational Data Modeling & AI Document Draft Pipeline  
+**Project Start Date:** Aug 2026  
+**Current Progress:** Phase 1 - Relational Data Modeling (Completed) / Phase 2 - AI Pipeline & Vector/Graph DB Architecture (In Progress)  
 **Role:** Data Architect & Knowledge Engineer (Relational Data Modeling & AI Knowledge Architecture)
+
+> 💡 **Notice:** This repository documents an active work-in-progress (WIP) enterprise project. As the system is currently under active development, documentation and module implementations are continuously being populated, and certain sections may be under construction.
 
 ---
 
 ## 1. Project Overview
 본 프로젝트는 제약·바이오 산업의 핵심 규제인 GMP 및 CSV(Computerized System Validation) 규정을 준수하는 AI 기반 Validation Management Platform 구축 프로젝트입니다. URS(요구사항), RA(위험평가), RTM(추적성 매트릭스), IQ/OQ/PQ(적격성평가) 등 수작업과 문서로 파편화되어 관리되던 전 Validation 과정을 하나의 플랫폼에서 통합 관리합니다.
 
-본 포트폴리오는 해당 플랫폼의 핵심 기반이 되는 **(1) 규제 준수용 관계형 데이터 모델링(RDBMS ERD)**과 **(2) 산출물 초안 자동 생성을 위한 AI 데이터 파이프라인**, 그리고 향후 확장 예정인 **(3) AI 감사 대응용 하이브리드 지식 DB(Vector/Graph DB) 아키텍처 설계**에 초점을 맞추고 있습니다.
+본 포트폴리오는 해당 플랫폼의 핵심 기반이 되는 **(1) 규제 준수용 관계형 데이터 모델링(RDBMS ERD, 완료)**과 **(2) 산출물 초안 자동 생성 및 AI 감사 대응을 위한 하이브리드 지식 DB(Vector DB & Graph DB) 데이터 파이프라인 구축(진행 중)**에 초점을 맞추고 있습니다.
 
 ---
 
@@ -19,8 +22,8 @@
 * **Access & Security:** Route 53, WAF, CloudFront, ALB (보안 및 트래픽 분산)
 * **Application Layer:** ECS Fargate 기반 컨테이너 환경 (Web Portal, Backend API, Validation Workflow Engine)
 * **Data & Knowledge Layer:** 
-  * **Relational Data & Cache:** Amazon RDS (PostgreSQL) + ElastiCache (Redis)
-  * **File Storage & Knowledge Pipeline:** Amazon S3 (문서/첨부파일) + Vector Storage & Knowledge Graph (RAG/AI 연계)
+  * **Relational Data & Cache (Completed):** Amazon RDS (PostgreSQL) + ElastiCache (Redis)
+  * **File Storage & Knowledge Pipeline (In Progress):** Amazon S3 (문서/첨부파일) + Vector Storage & Knowledge Graph (RAG/AI 연계)
 * **AI Engine Integration:** AI Orchestrator, RAG / Document Generation Service, LLM API (Azure OpenAI / Bedrock)
 * **DevOps & Monitoring:** AWS CodePipeline (CI/CD), CloudWatch, Secrets Manager
 
@@ -46,26 +49,26 @@ Validation 각 단계별(URS, RA, RTM 등) 서식과 표준 데이터를 바탕�
 
 ---
 
-### Contribution 3. Hybrid Database Architecture for Advanced Audit Search (Proposed Architecture)
-단순한 문서 생성을 넘어, 향후 규제 검토자(Auditor)의 질의에 신속히 대응할 수 있도록 Vector DB와 Graph DB를 연계한 지식 데이터베이스(Knowledge Database) 구조를 설계 및 구상하고 있습니다.
+### Contribution 3. Hybrid Database Architecture for Advanced Audit Search (In Progress)
+단순한 문서 생성을 넘어, 향후 규제 검토자(Auditor)의 질의에 신속히 대응할 수 있도록 Vector DB와 Graph DB를 연계한 지식 데이터베이스(Knowledge Database) 구조를 설계 및 구현하고 있습니다.
 
 * **Graph DB Modeling (Knowledge Graph & Ontology):**  
   문서 간의 단순 유사도를 넘어, **"특정 요구사항(URS)이 어떤 위험평가(RA)를 거쳐 최종 승인되었는가"**에 대한 객체 간의 관계와 승인 이력 그래프 모델(Ontology)을 구상했습니다. 이를 통해 감사관 질의 시 승인 관계망을 추적(Lineage Tracking)할 수 있는 DB 스키마를 정의 중입니다.
 * **Vector DB & Hybrid Retrieval:**  
-  Amazon S3에 저장될 Validation 규제 가이드라인과 SOP를 임베딩하여 Vector DB에 연동하고, Graph DB의 '승인 이력 추적'과 결합해 환각(Hallucination) 없는 고품질 감사 대응 검색 파이프라인을 구상하고 있습니다.
+  Amazon S3에 저장될 Validation 규제 가이드라인과 SOP를 임베딩하여 Vector DB에 연동하고, Graph DB의 '승인 이력 추적'과 결합해 환각(Hallucination) 없는 고품질 감사 대응 검색 파이프라인을 구축하고 있습니다.
 
 ---
 
 ## 4. Database & Infrastructure Tech Stack
-* **Relational Database & Cache:** Amazon RDS (PostgreSQL), Amazon ElastiCache (Redis)
-* **AI & Knowledge Databases (Architecture Design):** Vector DB (e.g., Pinecone / Qdrant / Pgvector), Graph DB (e.g., Neo4j / Amazon Neptune)
+* **Relational Database & Cache (Implemented):** Amazon RDS (PostgreSQL), Amazon ElastiCache (Redis)
+* **AI & Knowledge Databases (In Progress):** Vector DB (e.g., Pinecone / Qdrant / Pgvector), Graph DB (e.g., Neo4j / Amazon Neptune)
 * **Object Storage & AI Pipeline:** Amazon S3, Azure OpenAI / Bedrock API
 * **Cloud Infrastructure Context:** AWS (VPC, ECS Fargate, CodePipeline, CloudWatch)
 
 ---
 
 ## 5. Open Research Challenges
-현재 RDBMS 설계와 산출물 생성 파이프라인을 구축하며, 향후 Ph.D. 과정에서 깊이 있게 탐구하고자 하는 연구 주제입니다.
+현재 RDBMS 설계를 마치고 지식 데이터베이스 및 AI 파이프라인을 구축하며, 향후 Ph.D. 과정에서 깊이 있게 탐구하고자 하는 연구 주제입니다.
 
 * **Dual-Database Synchronization:** Amazon RDS PostgreSQL 트랜잭션 DB의 승인/변경 상태를 실시간으로 Graph DB 및 Vector DB에 레이턴시 없이 무결하게 동기화하는 데이터 파이프라인 최적화
 * **Auditability in Hybrid DB:** AI 검색 결과가 규제 감사를 통과할 수 있도록, Vector Search와 Graph Traversal을 혼합한 검색 결과의 추론 과정(Reasoning Path)을 역추적할 수 있는 DB 구조 연구
