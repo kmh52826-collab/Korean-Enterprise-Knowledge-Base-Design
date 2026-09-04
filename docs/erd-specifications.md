@@ -1,8 +1,20 @@
-# 데이터 테이블 정의서
+# DVT 데이터 테이블 정의서
+
+[![Document](https://img.shields.io/badge/document-data%20dictionary-2563EB)](#) [![Tables](https://img.shields.io/badge/tables-51-0F766E)](#) [![Columns](https://img.shields.io/badge/columns-783-7C3AED)](#) [![GxP](https://img.shields.io/badge/GxP-audit%20ready-B45309)](#)
 
 > Validation Management Platform 데이터 모델 문서  
+> **범위**: `DVT_데이터_테이블_정의서_v0.2.xlsx`의 `01_테이블목록`, `02_컬럼정의` 시트  
+> **보안 처리**: 예시값은 문서 공개를 고려하여 비식별 샘플 값으로 치환
 
-## 문서 개요
+## 목차
+
+- [1. 문서 개요](#1-문서-개요)
+- [2. 표기 기준](#2-표기-기준)
+- [3. 테이블 목록](#3-테이블-목록)
+- [4. 도메인별 바로가기](#4-도메인별-바로가기)
+- [5. 상세 테이블 및 컬럼 정의](#5-상세-테이블-및-컬럼-정의)
+
+## 1. 문서 개요
 
 - 전체 테이블: **51개**
 - 전체 컬럼: **783개**
@@ -11,7 +23,7 @@
 - 날짜/시간 기준: DB에는 UTC 저장, 화면에서는 사용자 또는 사업장 Timezone 적용
 - GxP 원칙: 승인 기록은 직접 수정하지 않고 Revision 및 상태 이력으로 관리하며 주요 변경은 Audit Trail에 기록
 
-## 표기 기준
+## 2. 표기 기준
 
 | 표기 | 의미 |
 |---|---|
@@ -23,63 +35,63 @@
 | Not Null | NULL 허용 여부의 반대 조건 |
 | Audit | Audit Trail 기록 대상 여부 |
 
-## 테이블 목록
+## 3. 테이블 목록
 
-| No | Domain | 논리 테이블명 | 물리 테이블명 | PK | 주요 참조(FK) | GxP | Audit | 상태 |
-|---:|---|---|---|---|---|---|:---:|---|
-| 1 | Organization | 조직/고객사 | [`organization`](#table-organization) | `organization_id` | - | High | Y | Draft |
-| 2 | Security | 사용자 | [`app_user`](#table-app_user) | `user_id` | `organization_id` | High | Y | Draft |
-| 3 | Security | 역할 | [`role`](#table-role) | `role_id` | - | High | Y | Draft |
-| 4 | Security | 사용자 역할 | [`user_role`](#table-user_role) | `user_role_id` | `user_id, role_id` | High | Y | Draft |
-| 5 | Compliance | 전자서명 | [`electronic_signature`](#table-electronic_signature) | `signature_id` | `signer_id` | Critical | Y | Draft |
-| 6 | Compliance | Audit Trail | [`audit_trail`](#table-audit_trail) | `audit_id` | `actor_id` | Critical | Y | Draft |
-| 7 | File | 파일 자산 | [`file_asset`](#table-file_asset) | `file_id` | `uploader_id` | High | Y | Draft |
-| 8 | System | 시스템/장비 식별 정보 | [`system_asset`](#table-system_asset) | `system_id` | `organization_id` | High | Y | Draft |
-| 9 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | - | High | Y | Draft |
-| 10 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by` | High | Y | Draft |
-| 11 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id` | High | Y | Draft |
-| 12 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id` | High | Y | Draft |
-| 13 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id` | High | Y | Draft |
-| 14 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by` | High | Y | Draft |
-| 15 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 16 | FDS | FDS 상세 항목 | [`fds_item`](#table-fds_item) | `fds_item_id` | `fds_id, created_by, updated_by` | High | Y | Draft |
-| 17 | FDS | FDS 인터페이스 정의 | [`fds_interface`](#table-fds_interface) | `fds_interface_id` | `fds_id, created_by, updated_by` | High | Y | Draft |
-| 18 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 19 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, reviewed_by, created_by, updated_by` | High | Y | Draft |
-| 20 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 21 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by` | High | Y | Draft |
-| 22 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 23 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, executed_by, created_by, updated_by` | High | Y | Draft |
-| 24 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 25 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, executed_by, created_by, updated_by` | High | Y | Draft |
-| 26 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 27 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, executed_by, created_by, updated_by` | High | Y | Draft |
-| 28 | RTM | 요구사항 추적 매트릭스 | [`rtm_assessment`](#table-rtm_assessment) | `rtm_id` | `project_id, created_by, updated_by` | Critical | Y | Draft |
-| 29 | RTM | RTM 상세 추적 항목 | [`rtm_item`](#table-rtm_item) | `rtm_item_id` | `rtm_id, requirement_id, created_by, updated_by` | Critical | Y | Draft |
-| 30 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by` | Critical | Y | Draft |
-| 31 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by` | Critical | Y | Draft |
-| 32 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by` | Critical | Y | Draft |
-| 33 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, assignee_id, created_by, updated_by` | Critical | Y | Draft |
-| 34 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, actor_id, signature_id` | Critical | Y | Draft |
-| 35 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y | Draft |
-| 36 | File | 증적 파일 연결 | [`evidence_link`](#table-evidence_link) | `evidence_link_id` | `project_id, file_id, created_by, updated_by` | High | Y | Draft |
-| 37 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y | Draft |
-| 38 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y | Draft |
-| 39 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y | Draft |
-| 40 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y | Draft |
-| 41 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 42 | DDS | DDS 상세 항목 | [`dds_item`](#table-dds_item) | `dds_item_id` | `dds_id, created_by, updated_by` | High | Y | Draft |
-| 43 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, resolved_by, approved_by, created_by, updated_by` | Critical | Y | Draft |
-| 44 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, report_schedule_id, created_by, updated_by` | High | Y | Draft |
-| 45 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y | Draft |
-| 46 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, created_by, updated_by` | High | Y | Draft |
-| 47 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y | Draft |
-| 48 | Notification | 알림 발송 | [`notification_delivery`](#table-notification_delivery) | `notification_delivery_id` | `project_id, workflow_instance_id, workflow_step_id, recipient_id, created_by, updated_by` | High | Y | Draft |
-| 49 | System | 백업 실행 이력 | [`backup_execution`](#table-backup_execution) | `backup_execution_id` | `requested_by, created_by, updated_by` | Critical | Y | Draft |
-| 50 | Report | 리포트 실행 일정 | [`report_schedule`](#table-report_schedule) | `report_schedule_id` | `project_id, created_by, updated_by` | High | Y | Draft |
-| 51 | File | 파일 정리 실행 이력 | [`file_cleanup_execution`](#table-file_cleanup_execution) | `file_cleanup_execution_id` | `requested_by, created_by, updated_by` | High | Y | Draft |
+| No | Domain | 논리 테이블명 | 물리 테이블명 | PK | 주요 참조(FK) | GxP | Audit |
+|---:|---|---|---|---|---|:---:|:---:|
+| 1 | Organization | 조직/고객사 | [`organization`](#table-organization) | `organization_id` | - | High | Y |
+| 2 | Security | 사용자 | [`app_user`](#table-app_user) | `user_id` | `organization_id` | High | Y |
+| 3 | Security | 역할 | [`role`](#table-role) | `role_id` | - | High | Y |
+| 4 | Security | 사용자 역할 | [`user_role`](#table-user_role) | `user_role_id` | `user_id, role_id` | High | Y |
+| 5 | Compliance | 전자서명 | [`electronic_signature`](#table-electronic_signature) | `signature_id` | `signer_id` | Critical | Y |
+| 6 | Compliance | Audit Trail | [`audit_trail`](#table-audit_trail) | `audit_id` | `actor_id` | Critical | Y |
+| 7 | File | 파일 자산 | [`file_asset`](#table-file_asset) | `file_id` | `uploader_id` | High | Y |
+| 8 | System | 시스템/장비 식별 정보 | [`system_asset`](#table-system_asset) | `system_id` | `organization_id` | High | Y |
+| 9 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | - | High | Y |
+| 10 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by` | High | Y |
+| 11 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id` | High | Y |
+| 12 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id` | High | Y |
+| 13 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id` | High | Y |
+| 14 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by` | High | Y |
+| 15 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by` | High | Y |
+| 16 | FDS | FDS 상세 항목 | [`fds_item`](#table-fds_item) | `fds_item_id` | `fds_id, created_by, updated_by` | High | Y |
+| 17 | FDS | FDS 인터페이스 정의 | [`fds_interface`](#table-fds_interface) | `fds_interface_id` | `fds_id, created_by, updated_by` | High | Y |
+| 18 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y |
+| 19 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, reviewed_by, created_by, updated_by` | High | Y |
+| 20 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y |
+| 21 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by` | High | Y |
+| 22 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y |
+| 23 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, executed_by, created_by, updated_by` | High | Y |
+| 24 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y |
+| 25 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, executed_by, created_by, updated_by` | High | Y |
+| 26 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y |
+| 27 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, executed_by, created_by, updated_by` | High | Y |
+| 28 | RTM | 요구사항 추적 매트릭스 | [`rtm_assessment`](#table-rtm_assessment) | `rtm_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 29 | RTM | RTM 상세 추적 항목 | [`rtm_item`](#table-rtm_item) | `rtm_item_id` | `rtm_id, requirement_id, created_by, updated_by` | Critical | Y |
+| 30 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 31 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by` | Critical | Y |
+| 32 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by` | Critical | Y |
+| 33 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, assignee_id, created_by, updated_by` | Critical | Y |
+| 34 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, actor_id, signature_id` | Critical | Y |
+| 35 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 36 | File | 증적 파일 연결 | [`evidence_link`](#table-evidence_link) | `evidence_link_id` | `project_id, file_id, created_by, updated_by` | High | Y |
+| 37 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y |
+| 38 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y |
+| 39 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y |
+| 40 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y |
+| 41 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by` | High | Y |
+| 42 | DDS | DDS 상세 항목 | [`dds_item`](#table-dds_item) | `dds_item_id` | `dds_id, created_by, updated_by` | High | Y |
+| 43 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, resolved_by, approved_by, created_by, updated_by` | Critical | Y |
+| 44 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, report_schedule_id, created_by, updated_by` | High | Y |
+| 45 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
+| 46 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, created_by, updated_by` | High | Y |
+| 47 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
+| 48 | Notification | 알림 발송 | [`notification_delivery`](#table-notification_delivery) | `notification_delivery_id` | `project_id, workflow_instance_id, workflow_step_id, recipient_id, created_by, updated_by` | High | Y |
+| 49 | System | 백업 실행 이력 | [`backup_execution`](#table-backup_execution) | `backup_execution_id` | `requested_by, created_by, updated_by` | Critical | Y |
+| 50 | Report | 리포트 실행 일정 | [`report_schedule`](#table-report_schedule) | `report_schedule_id` | `project_id, created_by, updated_by` | High | Y |
+| 51 | File | 파일 정리 실행 이력 | [`file_cleanup_execution`](#table-file_cleanup_execution) | `file_cleanup_execution_id` | `requested_by, created_by, updated_by` | High | Y |
 
-## 도메인별 바로가기
+## 4. 도메인별 바로가기
 
 - **Organization**: [`organization`](#table-organization)
 - **Security**: [`app_user`](#table-app_user), [`role`](#table-role), [`user_role`](#table-user_role)
@@ -109,7 +121,7 @@
 
 ---
 
-# 상세 테이블 및 컬럼 정의
+# 5. 상세 테이블 및 컬럼 정의
 
 ## Organization
 
@@ -124,22 +136,23 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 14 | 조직 ID | `organization_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 조직 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 15 | 조직 코드 | `organization_code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 조직/회사 식별 코드 | `ORG-DA-01` |
-| 16 | 조직명 | `organization_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 회사/사업장명 | `DA인포메이션` |
+| 14 | 조직 ID | `organization_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 조직 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 15 | 조직 코드 | `organization_code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 조직/회사 식별 코드 | `ORG-SAMPLE-01` |
+| 16 | 조직명 | `organization_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 회사/사업장명 | `샘플 주식회사` |
 | 17 | 조직 유형 | `organization_type` | `varchar(50)` | N | N | - | Y | `본사'` | N | N | N | Y | 본사 \| 공장 \| 연구소 \| 해외법인 | `본사` |
 | 18 | 상태 | `status` | `varchar(20)` | N | N | - | Y | `ACTIVE'` | N | N | N | Y | ACTIVE \| INACTIVE | `ACTIVE` |
-| 19 | 설명 | `description` | `text` | N | N | - | N | - | N | N | N | Y | 조직 설명 | `그룹 IT 및 데이터 전담 조직` |
+| 19 | 설명 | `description` | `text` | N | N | - | N | - | N | N | N | Y | 조직 설명 | `기업 IT 및 데이터 운영 조직` |
 | 20 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-01T00:00:00` |
 | 21 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T16:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -156,27 +169,28 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1 | 사용자 ID | `user_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자 계정 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 2 | 조직 ID | `organization_id` | `uuid` | N | Y | `organization.organization_id` | Y | - | N | Y | N | Y | organization.organization_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
-| 3 | 로그인 계정명 | `username` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 로그인 ID (중복 불가) | `minho.kim` |
-| 4 | 비밀번호 해시 | `password_hash` | `varchar(255)` | N | N | - | Y | - | N | N | N | N | 비밀번호 해시값 | `$2a$12$e8...` |
-| 5 | 사용자 실명 | `full_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 사용자 이름 | `김민호` |
-| 6 | 이메일 | `email` | `varchar(100)` | N | N | - | Y | - | Y | Y | N | Y | 이메일 주소 | `minho.kim@company.com` |
-| 7 | 부서명 | `department_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 소속 부서명 | `데이터 엑설런스팀` |
-| 8 | 직급/직책 | `position_title` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 직급 정보 | `선임연구원` |
+| 1 | 사용자 ID | `user_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자 계정 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 2 | 조직 ID | `organization_id` | `uuid` | N | Y | `organization.organization_id` | Y | - | N | Y | N | Y | organization.organization_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 3 | 로그인 계정명 | `username` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 로그인 ID (중복 불가) | `user.sample` |
+| 4 | 비밀번호 해시 | `password_hash` | `varchar(255)` | N | N | - | Y | - | N | N | N | N | 비밀번호 해시값 | `[REDACTED_PASSWORD_HASH]` |
+| 5 | 사용자 실명 | `full_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 사용자 이름 | `홍길동` |
+| 6 | 이메일 | `email` | `varchar(100)` | N | N | - | Y | - | Y | Y | N | Y | 이메일 주소 | `user.sample@example.com` |
+| 7 | 부서명 | `department_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 소속 부서명 | `정보전략팀` |
+| 8 | 직급/직책 | `position_title` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 직급 정보 | `선임` |
 | 9 | 계정 상태 | `status` | `varchar(20)` | N | N | - | Y | `ACTIVE'` | N | N | N | Y | ACTIVE \| INACTIVE \| LOCKED | `ACTIVE` |
 | 10 | 최종 로그인 시각 | `last_login_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 최종 시스템 접속 타임스탬프 | `2026-08-26T16:00:00` |
 | 11 | 비밀번호 변경일 | `password_changed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 비밀번호 마지막 변경 시각 | `2026-08-01T09:00:00` |
 | 12 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-01T00:00:00` |
 | 13 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T16:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -191,19 +205,20 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 22 | 역할 ID | `role_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 역할/권한 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 22 | 역할 ID | `role_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 역할/권한 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 23 | 역할 코드 | `role_code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 역할 식별 코드 | `SYSTEM_ADMIN` |
 | 24 | 역할명 | `role_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 역할 명칭 (시스템관리자, 작성자, 승인자 등) | `전체관리자` |
 | 25 | 설명 | `description` | `text` | N | N | - | N | - | N | N | N | Y | 역할 상세 권한 범위 설명 | `시스템 전체 관리 권한` |
 | 26 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-01T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -218,18 +233,19 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 27 | 매핑 ID | `user_role_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자-역할 매핑 고유 식별자. 활성 데이터는 (user_id, role_id) 조합의 중복 등록을 허용하지 않음 | `550e8400-e29b-41d4-a716-446655440000` |
-| 28 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
-| 29 | 역할 ID | `role_id` | `uuid` | N | Y | `role.role_id` | Y | - | N | Y | N | Y | role.role_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 27 | 매핑 ID | `user_role_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자-역할 매핑 고유 식별자. 활성 데이터는 (user_id, role_id) 조합의 중복 등록을 허용하지 않음 | `00000000-0000-0000-0000-000000000001` |
+| 28 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 29 | 역할 ID | `role_id` | `uuid` | N | Y | `role.role_id` | Y | - | N | Y | N | Y | role.role_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 30 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-01T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -246,25 +262,26 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 31 | 전자서명 ID | `signature_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 전자서명 기록 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 32 | 서명자 ID | `signer_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 31 | 전자서명 ID | `signature_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 전자서명 기록 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 32 | 서명자 ID | `signer_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 33 | 대상 테이블명 | `target_table_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 서명이 적용된 테이블명 (예: requirement) | `requirement` |
-| 34 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 서명이 적용된 레코드 PK값 | `550e8400-e29b-41d4-a716-446655440000` |
+| 34 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 서명이 적용된 레코드 PK값 | `00000000-0000-0000-0000-000000000001` |
 | 35 | 서명 단계 | `signature_action` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | REVIEW \| APPROVE \| REJECT | `APPROVE` |
 | 36 | 서명 목적 | `signature_meaning` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 21 CFR Part 11 서명 사유 | `URS 요구사항 최종 승인` |
 | 37 | 서명 타임스탬프 | `signed_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 전자서명 수행 타임스탬프 | `2026-08-26T16:30:00` |
 | 38 | 대상 문서 버전 | `target_version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 전자서명이 적용된 대상 문서 Revision의 표시 버전 | `v1.0` |
-| 39 | 서명 대상 내용 해시 | `content_hash` | `varchar(128)` | N | N | - | Y | - | N | N | N | Y | 서명 당시 대상 문서 및 상세 내용의 무결성 검증을 위한 SHA-256 해시값 | `SHA-256 해시값` |
+| 39 | 서명 대상 내용 해시 | `content_hash` | `varchar(128)` | N | N | - | Y | - | N | N | N | Y | 서명 당시 대상 문서 및 상세 내용의 무결성 검증을 위한 SHA-256 해시값 | `[SAMPLE_SHA256_HASH]` |
 | 40 | 재인증 방식 | `authentication_method` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 전자서명 수행 시 서명자 본인 확인에 사용한 재인증 방식 | `PASSWORD` |
 | 41 | 재인증 결과 | `authentication_result` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 전자서명 수행 시 재인증 처리 결과 | `SUCCESS` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -279,31 +296,32 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 42 | 감사추적 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 감사추적 레코드 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 43 | 수행자 ID | `actor_id` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 (시스템 자동 시 NULL 가능) | `550e8400-e29b-41d4-a716-446655440000` |
+| 42 | 감사추적 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 감사추적 레코드 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 43 | 수행자 ID | `actor_id` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 (시스템 자동 시 NULL 가능) | `00000000-0000-0000-0000-000000000001` |
 | 44 | 작업 유형 | `action_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | CREATE, UPDATE, DELETE, EXPORT, LOGIN, REPORT_GENERATE, REPORT_DOWNLOAD, REPORT_CANCEL | `REPORT_GENERATE` |
 | 45 | 대상 테이블명 | `target_table_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 변경이 발생한 물리 테이블명 | `requirement` |
-| 46 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 변경 대상 레코드 PK값 | `550e8400-e29b-41d4-a716-446655440000` |
+| 46 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 변경 대상 레코드 PK값 | `00000000-0000-0000-0000-000000000001` |
 | 47 | 변경 전 데이터 | `old_values` | `jsonb` | N | N | - | N | - | N | N | N | Y | 수정 전 JSON 데이터 | `{"status": "작성중"}` |
 | 48 | 변경 후 데이터 | `new_values` | `jsonb` | N | N | - | N | - | N | N | N | Y | 수정 후 JSON 데이터 | `{"status": "승인완료"}` |
 | 49 | 변경 사유 | `reason_for_change` | `text` | N | N | - | N | - | N | N | N | Y | 21 CFR Part 11 데이터 변경 사유 | `요구사항 오탈자 수정 및 규정 항목 보완` |
-| 50 | 접속 IP 주소 | `client_ip` | `varchar(45)` | N | N | - | N | - | N | N | N | Y | 사용자 클라이언트 IP | `192.168.1.100` |
+| 50 | 접속 IP 주소 | `client_ip` | `varchar(45)` | N | N | - | N | - | N | N | N | Y | 사용자 클라이언트 IP | `192.0.2.10` |
 | 51 | 발생 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 감사추적 로그 생성 시각 (UTC) | `2026-08-26T16:30:00` |
 | 52 | 수행 주체 유형 | `actor_type` | `varchar(20)` | N | N | - | Y | `USER` | N | Y | N | Y | 변경 수행 주체 유형. USER, SYSTEM, BATCH로 구분하며 USER인 경우 actor_id를 필수로 저장 | `USER` |
-| 53 | 요청 ID | `request_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 하나의 화면·API 요청에서 발생한 여러 감사추적 기록을 동일 요청으로 묶기 위한 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 54 | 세션 ID | `session_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 변경 작업이 발생한 사용자 로그인 세션 식별자. 시스템·배치 처리 또는 세션이 없는 요청은 NULL 허용 | `550e8400-e29b-41d4-a716-446655440000` |
+| 53 | 요청 ID | `request_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 하나의 화면·API 요청에서 발생한 여러 감사추적 기록을 동일 요청으로 묶기 위한 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 54 | 세션 ID | `session_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 변경 작업이 발생한 사용자 로그인 세션 식별자. 시스템·배치 처리 또는 세션이 없는 요청은 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
 | 55 | 대상 문서 버전 | `target_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | Revision 관리 문서인 경우 변경 발생 당시의 표시 버전을 저장하며 일반 테이블은 NULL 허용 | `v1.0` |
 | 56 | 대상 개정 순번 | `target_revision_number` | `integer` | N | N | - | N | - | N | N | N | Y | Revision 관리 문서인 경우 변경 발생 당시의 숫자형 개정 순번을 저장하며 일반 테이블은 NULL 허용 | `1` |
 | 57 | 요청 경로 | `request_uri` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 변경을 발생시킨 화면 또는 API 요청 경로. 시스템·배치 처리 등 경로가 없는 경우 NULL 허용 | `/api/fds/approve` |
-| 58 | 접속 클라이언트 정보 | `user_agent` | `text` | N | N | - | N | - | N | N | Y | Y | 변경 요청에 사용된 브라우저, 운영체제 또는 클라이언트 애플리케이션 정보 | `Mozilla/5.0` |
+| 58 | 접속 클라이언트 정보 | `user_agent` | `text` | N | N | - | N | - | N | N | Y | Y | 변경 요청에 사용된 브라우저, 운영체제 또는 클라이언트 애플리케이션 정보 | `Sample-Client/1.0` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -320,16 +338,17 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 파일 유형 및 연결 대상의 보존정책에 따라 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 59 | 파일 ID | `file_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 첨부파일 메타데이터 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 59 | 파일 ID | `file_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 첨부파일 메타데이터 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 60 | 업로드자 ID | `uploader_id` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 사용자 업로드 파일은 업로드자 ID 필수. 시스템·정기 배치 생성 파일은 NULL 허용 | `UUID` |
-| 61 | 원본 파일명 | `original_file_name` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 업로드 당시 파일명 | `URS_Approval_Doc.pdf` |
-| 62 | 저장 파일경로 | `stored_file_path` | `text` | N | N | - | Y | - | N | N | N | Y | 스토리지 저장 경로/S3 Key | `/uploads/2026/08/urs_001.pdf` |
+| 61 | 원본 파일명 | `original_file_name` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 업로드 당시 파일명 | `sample_document.pdf` |
+| 62 | 저장 파일경로 | `stored_file_path` | `text` | N | N | - | Y | - | N | N | N | Y | 스토리지 저장 경로/S3 Key | `documents/2026/08/sample_001.pdf` |
 | 63 | 파일 구분 | `file_category` | `varchar(30)` | N | N | - | Y | `ATTACHMENT` | N | Y | N | Y | 파일 업무 구분. ATTACHMENT, EVIDENCE, REPORT, EXPORT | `REPORT` |
 | 64 | 파일 용량 | `file_size_bytes` | `bigint` | N | N | - | Y | `0` | N | N | N | Y | 파일 크기 (Byte) | `1048576` |
 | 65 | MIME 타입 | `mime_type` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 파일 형식 | `application/pdf` |
@@ -341,7 +360,7 @@
 | 71 | 정리 완료 시각 | `cleaned_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 실제 스토리지 파일 및 메타데이터 정리가 완료된 시각 | `2026-09-09 19:00:00+00` |
 | 72 | 정리 실패 사유 | `cleanup_error_message` | `text` | N | N | - | N | - | N | N | N | Y | 개별 파일 정리 실패 상세 내용. 접근키 등 민감정보 저장 금지 | `파일에 대한 접근 권한 없음` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -356,9 +375,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -375,7 +395,7 @@
 | 533 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 증적 연결을 최종 수정한 사용자 ID | `UUID` |
 | 534 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 증적 연결 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -390,9 +410,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 파일 정리 결과와 실행이력을 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -419,7 +440,7 @@
 | 782 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 파일 정리 실행이력 최종 수정 시각(UTC) | `2026-09-02 01:05:00+00` |
 | 783 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 사용자 수정 시 사용자 ID를 저장하며 시스템·배치 처리 시 NULL 허용 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -436,20 +457,21 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 73 | 시스템 ID | `system_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 시스템 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 74 | 조직 ID | `organization_id` | `uuid` | N | Y | `organization.organization_id` | Y | - | N | Y | N | Y | 시스템/장비가 소속된 고객사 또는 운영 조직 | `550e8400-e29b-41d4-a716-446655440000` |
+| 73 | 시스템 ID | `system_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 시스템 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 74 | 조직 ID | `organization_id` | `uuid` | N | Y | `organization.organization_id` | Y | - | N | Y | N | Y | 시스템/장비가 소속된 고객사 또는 운영 조직 | `00000000-0000-0000-0000-000000000001` |
 | 75 | 관리번호 | `management_number` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 자산/설비 관리번호 | `EQ-MES-2024-001` |
-| 76 | 시스템명 | `system_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 시스템/장비명 | `MES` |
+| 76 | 시스템명 | `system_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 시스템/장비명 | `Sample System` |
 | 77 | 시스템 유형 | `system_type` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | IT시스템 \| 생산 장비 \| 품질 장비 \| 유틸리티 | `IT시스템` |
 | 78 | 담당부서 | `department_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | N | 관리/운용 담당부서 | `생산기술팀` |
 | 79 | 설치위치 | `location` | `varchar(200)` | N | N | - | N | - | N | N | N | N | 물리적/논리적 설치 장소 | `서버실 A동 3F` |
-| 80 | 공급업체 | `vendor` | `varchar(100)` | N | N | - | N | - | N | N | N | N | 장비/시스템 공급업체명 | `Agilent` |
+| 80 | 공급업체 | `vendor` | `varchar(100)` | N | N | - | N | - | N | N | N | N | 장비/시스템 공급업체명 | `Sample Vendor` |
 | 81 | 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | N | N | N | 장비/시스템 모델명 | `FillMaster 500` |
 | 82 | 시스템 설명 | `description` | `text` | N | N | - | N | - | N | N | N | N | 시스템 목적 및 운영 범위 설명 | `생산 공정 데이터 수집 및 제어` |
 | 83 | 시스템 식별 상태 | `identification_status` | `varchar(20)` | N | N | - | Y | `PENDING` | N | Y | N | Y | 대상 시스템 등록·식별 상태. PENDING, COMPLETED | `COMPLETED` |
@@ -461,7 +483,7 @@
 | 89 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00` |
 | 90 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-25T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -476,9 +498,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 백업 정책 및 규정에 따라 백업 실행이력을 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -488,7 +511,7 @@
 | 726 | 백업 대상 | `backup_target` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 백업 대상 구분. DATABASE, FILE_STORAGE, ALL | `ALL` |
 | 727 | 백업 기준시각 | `backup_base_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 백업 대상 데이터의 기준시각 | `2026-09-02 18:00:00+00` |
 | 728 | 실행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `PENDING` | N | Y | N | Y | 실행 상태. PENDING, PROCESSING, COMPLETED, RETRY_WAIT, FAILED, CANCELLED | `COMPLETED` |
-| 729 | 백업 저장 위치 | `backup_location` | `text` | N | N | - | N | - | N | N | N | Y | 백업 파일 저장 위치 또는 스토리지 경로. 접근 토큰 등 인증정보 저장 금지 | `backups/2026/09/02/full` |
+| 729 | 백업 저장 위치 | `backup_location` | `text` | N | N | - | N | - | N | N | N | Y | 백업 파일 저장 위치 또는 스토리지 경로. 접근 토큰 등 인증정보 저장 금지 | `backups/YYYY/MM/DD/full` |
 | 730 | 백업 파일 크기 | `backup_size_bytes` | `bigint` | N | N | - | N | - | N | N | N | Y | 생성된 전체 백업 파일 크기(Byte) | `1073741824` |
 | 731 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 수동 실행 요청 사용자. 정기 배치 실행은 NULL 허용 | `UUID` |
 | 732 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 수동 요청이 접수되거나 정기 백업이 등록된 시각 | `2026-09-02 18:00:00+00` |
@@ -504,7 +527,7 @@
 | 742 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 백업 실행이력 최종 수정 시각(UTC) | `2026-09-02 18:20:00+00` |
 | 743 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 사용자 수정 시 사용자 ID를 저장하며 시스템·배치 처리 시 NULL 허용 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -521,13 +544,14 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 91 | 라이브러리 ID | `library_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 라이브러리 항목 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 91 | 라이브러리 ID | `library_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 라이브러리 항목 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 92 | 모듈 구분 | `module_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | URS \| IQ \| OQ 구분 | `URS` |
 | 93 | 코드 | `code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | 항목 코드 (예: URS-AT-L01) | `URS-AT-L01` |
 | 94 | 카테고리 | `category` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사추적, 교정/검증, 보안 등 | `감사추적` |
@@ -540,7 +564,7 @@
 | 101 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00` |
 | 102 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-25T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -557,16 +581,17 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 103 | 프로젝트 ID | `project_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 103 | 프로젝트 ID | `project_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 104 | 프로젝트 코드 | `project_code` | `varchar(100)` | N | N | - | Y | - | Y | Y | N | Y | 프로젝트 식별 코드 | `VP-SYS-008-20260422` |
 | 105 | 프로젝트명 | `project_name` | `varchar(200)` | N | N | - | Y | - | N | Y | N | Y | 프로젝트명 | `테스트 장비3 CSV 프로젝트` |
-| 106 | 시스템 ID | `system_id` | `uuid` | N | Y | `system_asset.system_id` | Y | - | N | Y | N | Y | system_asset.system_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 106 | 시스템 ID | `system_id` | `uuid` | N | Y | `system_asset.system_id` | Y | - | N | Y | N | Y | system_asset.system_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 107 | 진행률 | `progress_rate` | `integer` | N | N | - | Y | `0` | N | N | N | Y | 프로젝트 진행률 (%) | `0` |
 | 108 | 상태 | `status` | `varchar(20)` | N | N | - | Y | `진행 중'` | N | N | N | Y | 진행 중 \| 완료 \| 보류 | `진행 중` |
 | 109 | 시작일 | `start_date` | `date` | N | N | - | Y | `CURRENT_DATE` | N | N | N | Y | 프로젝트 시작 일자 | `2026-04-15T00:00:00` |
@@ -576,12 +601,12 @@
 | 113 | 비고 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 추가 메모 사항 | - |
 | 114 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00` |
 | 115 | GAMP 카테고리 | `gamp_category` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | GAMP 5 분류 (Category 3, 4, 5) | `Category 3` |
-| 116 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 프로젝트 생성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 116 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 프로젝트 생성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 117 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 118 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 프로젝트 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 118 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 프로젝트 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 119 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -596,9 +621,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -615,7 +641,7 @@
 | 545 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 참여 정보를 최종 수정한 사용자 ID | `UUID` |
 | 546 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 참여 정보 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -630,9 +656,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -647,7 +674,7 @@
 | 555 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 활동 마스터를 최종 수정한 사용자 | `UUID` |
 | 556 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 마스터 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -662,9 +689,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -684,7 +712,7 @@
 | 570 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 활동 최종 수정 사용자 | `UUID` |
 | 571 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 활동 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -699,9 +727,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -721,7 +750,7 @@
 | 585 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조건 최종 수정 사용자 | `UUID` |
 | 586 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 조건 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -738,14 +767,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 120 | QIA ID | `qia_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 평가 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 121 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 120 | QIA ID | `qia_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 평가 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 121 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 122 | Part11 Q1 전자기록 생성여부 | `p11_q1` | `varchar(10)` | N | N | - | Y | `Yes'` | N | N | N | Y | Q1 전자기록 생성/수정/유지 여부 (Yes/No) | `Yes` |
 | 123 | Part11 Q2 전자저장 여부 | `p11_q2` | `varchar(10)` | N | N | - | Y | `Yes'` | N | N | N | Y | Q2 전자형태 저장 여부 (Yes/No) | `Yes` |
 | 124 | Part11 Q3 규제기관 제출여부 | `p11_q3` | `varchar(10)` | N | N | - | Y | `No'` | N | N | N | Y | Q3 규제기관 전자기록 제출 여부 (Yes/No) | `No` |
@@ -761,7 +791,7 @@
 | 134 | 작성·검토·승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | N | N | Y | 문서 진행 상태 (DRAFT, REVIEW, APPROVED 등) | `DRAFT` |
 | 135 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -776,9 +806,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -803,7 +834,7 @@
 | 154 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-26T10:00:00` |
 | 155 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-26T10:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -820,20 +851,21 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 156 | 감사 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 공급업체 감사 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 157 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 156 | 감사 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 공급업체 감사 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 157 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 158 | 문서 번호 | `document_number` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 보고서 문서 번호 | `VA-2026-001` |
-| 159 | 공급업체명 | `vendor_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 공급업체명 | `ABC Corp` |
-| 160 | 대상 시스템 | `system_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 시스템명/버전 | `MES v3.2.1` |
+| 159 | 공급업체명 | `vendor_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 공급업체명 | `Sample Vendor` |
+| 160 | 대상 시스템 | `system_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 시스템명/버전 | `Sample System v1.0` |
 | 161 | 감사 방식 | `audit_type` | `varchar(50)` | N | N | - | Y | `현장 감사'` | N | N | N | Y | 현장 감사 \| 서류 감사 \| 원격 감사 | `현장 감사` |
 | 162 | 감사 일자 | `audit_date` | `date` | N | N | - | Y | `CURRENT_DATE` | N | N | N | Y | 감사 수행 일자 (또는 예정일) | `2026-08-26T00:00:00` |
-| 163 | 감사자 | `auditor_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 감사 담당자/수행자 이름 | `김민호` |
+| 163 | 감사자 | `auditor_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 감사 담당자/수행자 이름 | `홍길동` |
 | 164 | 감사 결과 | `audit_result` | `varchar(20)` | N | N | - | Y | `적합'` | N | N | N | Y | 적합 \| 조건부 적합 \| 부적합 | `적합` |
 | 165 | Critical 결함 수 | `critical_defects` | `integer` | N | N | - | Y | `0` | N | N | N | Y | 치명적 결함(Critical) 발견 건수 | `0` |
 | 166 | Major 결함 수 | `major_defects` | `integer` | N | N | - | Y | `0` | N | N | N | Y | 중대 결함(Major) 발견 건수 | `0` |
@@ -846,7 +878,7 @@
 | 173 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
 | 174 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -863,14 +895,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 175 | 요구사항 ID | `requirement_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 요구사항 고유 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 176 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `550e8400-e29b-41d4-a716-446655440000` |
+| 175 | 요구사항 ID | `requirement_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 요구사항 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 176 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 177 | 항목 번호 | `item_number` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 요구사항 관리 번호 (예: URS-001) | `URS-001` |
 | 178 | 카테고리 | `category` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 시스템 관리, 감사추적, 전자서명 등 | `전자서명` |
 | 179 | 항목 / 기능 | `title` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 요구사항 항목명 및 주요 기능 | `전자서명 서명자·일시·의미 기록` |
@@ -882,11 +915,11 @@
 | 185 | 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 버전 여부 (TRUE/FALSE) | `True` |
 | 186 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 버전 신규 생성/개정 시 사유 | `최초 작성` |
 | 187 | RTM 연결 여부 | `is_rtm_linked` | `boolean` | N | N | - | Y | `False` | N | N | N | Y | Traceability Matrix 연결 여부 | `False` |
-| 188 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 요구사항 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 188 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 요구사항 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 189 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
 | 190 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -903,14 +936,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 191 | FDS ID | `fds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FDS 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 192 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 191 | FDS ID | `fds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FDS 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 192 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 193 | FDS 번호 | `fds_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | FDS 문서 번호 | `VP-SYS-008-20260422` |
 | 194 | FDS 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 기능 설계 명세서 제목 | `테스트 장비3 CSV 프로젝트` |
 | 195 | 문서 버전 | `version` | `varchar(20)` | N | N | - | Y | `v1.0` | N | N | N | Y | FDS 문서 표준 버전 | `v1.0` |
@@ -919,12 +953,12 @@
 | 198 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 버전 여부 (TRUE/FALSE) | `True` |
 | 199 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성 중` | N | N | N | Y | 문서 상태 (작성 중, 검토 중, 승인 완료) | `작성 중` |
 | 200 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 201 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FDS 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 201 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FDS 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 202 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 203 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FDS 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 203 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FDS 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 204 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -939,14 +973,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 205 | FDS 항목 ID | `fds_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FDS 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 206 | FDS ID | `fds_id` | `uuid` | N | Y | `fds_spec.fds_id` | Y | - | N | N | N | Y | 상위 FDS 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 205 | FDS 항목 ID | `fds_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FDS 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 206 | FDS ID | `fds_id` | `uuid` | N | Y | `fds_spec.fds_id` | Y | - | N | N | N | Y | 상위 FDS 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 207 | 항목 구분 | `item_type` | `varchar(20)` | N | N | - | Y | `FUNCTION` | N | N | N | Y | 서브 탭 구분 (FUNCTION, SCREEN, INTERFACE) | `FUNCTION` |
 | 208 | FDS 항목 번호 | `fds_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | FDS 항목 관리 번호 | `FDS-001` |
 | 209 | 카테고리 | `category` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 기능 카테고리 | `시스템 관리` |
@@ -956,12 +991,12 @@
 | 213 | 개별 개정 차수 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 개정 순번 (1, 2, 3...) | `1` |
 | 214 | 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성 중` | N | N | N | Y | 진행 상태 (작성 중, 검토 중, 승인 완료) | `작성 중` |
 | 215 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 216 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 216 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 217 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 218 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 218 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 219 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -976,17 +1011,18 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
 | 220 | FDS 인터페이스 ID | `fds_interface_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FDS 인터페이스 레코드 고유 식별자 | `UUID` |
 | 221 | FDS ID | `fds_id` | `uuid` | N | Y | `fds_spec.fds_id` | Y | - | N | Y | N | Y | 상위 FDS 문서 식별자 | `UUID` |
 | 222 | 인터페이스 관리 번호 | `interface_id` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | FDS 문서 내 인터페이스 관리 번호 | `IF-001` |
-| 223 | 소스 시스템 | `source_system` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 송신 시스템명 | `MES` |
-| 224 | 대상 시스템 | `target_system` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 수신 시스템명 | `SAP S/4HANA` |
+| 223 | 소스 시스템 | `source_system` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 송신 시스템명 | `Sample System` |
+| 224 | 대상 시스템 | `target_system` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 수신 시스템명 | `Target System` |
 | 225 | 연동 데이터 | `interface_data` | `text` | N | N | - | Y | - | N | N | N | Y | 전송 데이터 항목 | `자재 소비량, 배치 결과` |
 | 226 | 연동 주기 | `transfer_cycle` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 실시간, 주기적, 이벤트 기반 등 | `실시간` |
 | 227 | 연동 방식 | `transfer_method` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | REST API, Message Queue 등 | `REST API` |
@@ -997,7 +1033,7 @@
 | 232 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 인터페이스 최종 수정자 식별자 | `UUID` |
 | 233 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1014,14 +1050,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 234 | DQ ID | `dq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | DQ 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 235 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 234 | DQ ID | `dq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | DQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 235 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 236 | DQ 번호 | `dq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | DQ 문서 번호 (예: DQ-VP-SYS-008-20260422) | `DQ-VP-SYS-008-20260422` |
 | 237 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 적격성 평가 문서 제목 | `설계 적격성 평가 (URS → FDS/DDS 매핑)` |
 | 238 | 문서 버전 | `version` | `varchar(20)` | N | N | - | Y | `v1.0` | N | N | N | Y | DQ 문서 표준 버전 | `v1.0` |
@@ -1030,12 +1067,12 @@
 | 241 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 DQ 평가 문서 버전 여부 (TRUE/FALSE) | `True` |
 | 242 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성 중` | N | N | N | Y | 문서 상태 (작성 중, 검토 중, 승인 완료) | `작성 중` |
 | 243 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 244 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | DQ 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 244 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | DQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 245 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 246 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | DQ 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 246 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | DQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 247 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1050,15 +1087,16 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 248 | DQ 항목 ID | `dq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | DQ 세부 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 249 | DQ ID | `dq_id` | `uuid` | N | Y | `dq_assessment.dq_id` | Y | - | N | N | N | Y | 상위 DQ 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 250 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | N | N | Y | 매핑 대상 URS 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 248 | DQ 항목 ID | `dq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | DQ 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 249 | DQ ID | `dq_id` | `uuid` | N | Y | `dq_assessment.dq_id` | Y | - | N | N | N | Y | 상위 DQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 250 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | N | N | Y | 매핑 대상 URS 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 251 | URS 번호 | `urs_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 화면 표시용 URS 번호 (예: URS-001) | `URS-001` |
 | 252 | URS 요구사항 | `urs_description` | `text` | N | N | - | Y | - | N | N | N | Y | URS 세부 요구사항 내용 | `사용자 로그인 및 전자서명 기능` |
 | 253 | FDS 연계 | `fds_mapping` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 연계된 FDS 번호 (예: FDS-001) | `FDS-001` |
@@ -1066,15 +1104,15 @@
 | 255 | DDS 연계 | `dds_mapping` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 연계된 DDS 설계 번호 | `DDS-001` |
 | 256 | DDS 설계 | `dds_description` | `text` | N | N | - | N | - | N | N | N | Y | 연계된 DDS 데이터베이스/컴포넌트 설계 | `User Auth Table Schema` |
 | 257 | 판정 | `result_status` | `varchar(20)` | N | N | - | Y | `검토 대기` | N | N | N | Y | 평가 판정 (PASS, FAIL, PENDING) | `PASS` |
-| 258 | 검토자 ID | `reviewed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 항목 검토 수행자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 258 | 검토자 ID | `reviewed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 항목 검토 수행자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 259 | 비고 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 검토 관련 특이사항 및 비고 | `FDS 및 DDS 설계 반영 완료 확인` |
 | 260 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 261 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 261 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 262 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 263 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 263 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 264 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1091,14 +1129,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 265 | FRA ID | `fra_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FRA 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 266 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 265 | FRA ID | `fra_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FRA 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 266 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 267 | FRA 번호 | `fra_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | FRA 문서 번호 (예: FRA-VP-SYS-008-20260422) | `FRA-VP-SYS-008-20260422` |
 | 268 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | FMEA 기반 기능 위험평가 문서 제목 | `FMEA 기반 기능 위험평가` |
 | 269 | 문서 버전 | `version` | `varchar(20)` | N | N | - | Y | `v1.0` | N | N | N | Y | FRA 문서 표준 버전 | `v1.0` |
@@ -1107,12 +1146,12 @@
 | 272 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 FRA 평가 문서 버전 여부 (TRUE/FALSE) | `True` |
 | 273 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성 중` | N | N | N | Y | 문서 상태 (작성 중, 검토 중, 승인 완료) | `작성 중` |
 | 274 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 275 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FRA 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 275 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FRA 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 276 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 277 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FRA 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 277 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | FRA 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 278 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1127,15 +1166,16 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 279 | 위험 항목 ID | `fra_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FRA 위험 세부 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 280 | FRA ID | `fra_id` | `uuid` | N | Y | `fra_assessment.fra_id` | Y | - | N | N | N | Y | 상위 FRA 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 281 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | N | - | N | N | N | Y | 매핑 URS 요구사항 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 279 | 위험 항목 ID | `fra_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | FRA 위험 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 280 | FRA ID | `fra_id` | `uuid` | N | Y | `fra_assessment.fra_id` | Y | - | N | N | N | Y | 상위 FRA 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 281 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | N | - | N | N | N | Y | 매핑 URS 요구사항 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 282 | URS 참조번호 | `urs_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 화면 표시용 URS 참조번호 (예: URS-001) | `URS-001` |
 | 283 | 기능명 | `feature_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 위험 평가 대상 기능명 | `전자서명` |
 | 284 | 위험 시나리오 | `risk_scenario` | `text` | N | N | - | Y | - | N | N | N | Y | FMEA 위험 발생 시나리오 설명 | `전자서명 시 비밀번호 검증 미수행` |
@@ -1148,12 +1188,12 @@
 | 291 | 연결 테스트 | `test_reference` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 연계 검증 테스트 코드 (예: OQ-AT-01) | `OQ-AT-01` |
 | 292 | 진행 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성 중` | N | N | N | Y | 위험 항목 상태 (작성 중, 검토 완료) | `작성 중` |
 | 293 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 294 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 294 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 295 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 296 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 296 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 297 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1170,14 +1210,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 298 | IQ ID | `iq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | IQ 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 299 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 298 | IQ ID | `iq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | IQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 299 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 300 | IQ 번호 | `iq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | IQ 문서 번호 (예: IQ-VP-SYS-010-20260529) | `IQ-VP-SYS-010-20260529` |
 | 301 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설치 적격성 평가 문서 제목 | `Installation Qualification` |
 | 302 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | IQ 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
@@ -1187,12 +1228,12 @@
 | 306 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | IQ 프로토콜 상태. DRAFT, REVIEW, APPROVED | `APPROVED` |
 | 307 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | IQ 수행 레코드 상태. 프로토콜 APPROVED 이후 DRAFT, REVIEW, APPROVED 순으로 진행 | `DRAFT` |
 | 308 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 309 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | IQ 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 309 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | IQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 310 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 311 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | IQ 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 311 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | IQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 312 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1207,14 +1248,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 313 | IQ 항목 ID | `iq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | IQ 세부 테스트 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 314 | IQ ID | `iq_id` | `uuid` | N | Y | `iq_assessment.iq_id` | Y | - | N | N | N | Y | 상위 IQ 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 313 | IQ 항목 ID | `iq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | IQ 세부 테스트 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 314 | IQ ID | `iq_id` | `uuid` | N | Y | `iq_assessment.iq_id` | Y | - | N | N | N | Y | 상위 IQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 315 | 절차 번호 | `step_no` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 테스트 수행 절차 번호 (예: 01, 02) | `1` |
 | 316 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 테스트 항목 ID (예: IQ-NEW-01) | `IQ-NEW-01` |
 | 317 | 테스트 케이스 | `test_case` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 하드웨어 설치, 소프트웨어 설치 등 | `하드웨어 설치` |
@@ -1224,16 +1266,16 @@
 | 321 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `승인완료` | N | N | N | Y | 항목별 프로토콜 승인 상태 | `승인완료` |
 | 322 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 테스트 수행 후 실제 결과 기록 | `IQ 테스트1 결과` |
 | 323 | 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 테스트 판정 (Pass, Fail, 미실행) | `Pass` |
-| 324 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 324 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 325 | 수행일 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 테스트 수행 완료 일시 | `2026-06-22T00:00:00` |
 | 326 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `작성중` | N | N | N | Y | 항목별 레코드 승인 상태 | `승인완료` |
 | 327 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 328 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 328 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 329 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 330 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 330 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 331 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1250,14 +1292,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 332 | OQ ID | `oq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | OQ 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 333 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 332 | OQ ID | `oq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | OQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 333 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 334 | OQ 번호 | `oq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | OQ 문서 번호 (예: OQ-VP-SYS-010-20260529) | `OQ-VP-SYS-010-20260529` |
 | 335 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 운전 적격성 평가 문서 제목 | `Operational Qualification` |
 | 336 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | OQ 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
@@ -1267,12 +1310,12 @@
 | 340 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | OQ 프로토콜 상태. DRAFT, REVIEW, APPROVED | `APPROVED` |
 | 341 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | OQ 수행 레코드 상태. 프로토콜 APPROVED 이후 DRAFT, REVIEW, APPROVED 순으로 진행 | `DRAFT` |
 | 342 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 343 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | OQ 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 343 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | OQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 344 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 345 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | OQ 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 345 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | OQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 346 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1287,14 +1330,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 347 | OQ 항목 ID | `oq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | OQ 세부 테스트 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 348 | OQ ID | `oq_id` | `uuid` | N | Y | `oq_assessment.oq_id` | Y | - | N | N | N | Y | 상위 OQ 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 347 | OQ 항목 ID | `oq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | OQ 세부 테스트 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 348 | OQ ID | `oq_id` | `uuid` | N | Y | `oq_assessment.oq_id` | Y | - | N | N | N | Y | 상위 OQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 349 | 절차 번호 | `step_no` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 테스트 수행 절차 번호 (예: 01, 02, 03) | `1` |
 | 350 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 테스트 항목 ID (예: OQ-AT-L01) | `OQ-AT-L01` |
 | 351 | 테스트 케이스 | `test_case` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | Audit Trail, 사용자 관리, 백업 및 복구 등 | `Audit Trail` |
@@ -1304,16 +1348,16 @@
 | 355 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `승인완료` | N | N | N | Y | 항목별 프로토콜 승인 상태 | `승인완료` |
 | 356 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 테스트 수행 후 실제 결과 기록 | `실제 결과 Test` |
 | 357 | 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 테스트 판정 (Pass, Fail, 미실행) | `Pass` |
-| 358 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 358 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 359 | 수행일 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 테스트 수행 완료 일시 | `2026-06-22T00:00:00` |
 | 360 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `작성중` | N | N | N | Y | 항목별 레코드 승인 상태 | `승인완료` |
 | 361 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 362 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 362 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 363 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 364 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 364 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 365 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1330,14 +1374,15 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 366 | PQ ID | `pq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | PQ 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 367 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 366 | PQ ID | `pq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | PQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 367 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 368 | PQ 번호 | `pq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | PQ 문서 번호 (예: PQ-VP-SYS-008-20260422) | `PQ-VP-SYS-008-20260422` |
 | 369 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 성능 적격성 평가 문서 제목 | `Performance Qualification` |
 | 370 | PQ 시작 예정일 | `start_scheduled_date` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | PQ 시작 예정 기준 (예: OQ 완료 + 5영업일) | `OQ 완료 + 5영업일` |
@@ -1352,12 +1397,12 @@
 | 379 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | PQ 프로토콜 상태. DRAFT, REVIEW, APPROVED | `APPROVED` |
 | 380 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `DRAFT` | N | Y | N | Y | PQ 수행 레코드 상태. 프로토콜 APPROVED 이후 DRAFT, REVIEW, APPROVED 순으로 진행 | `DRAFT` |
 | 381 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 382 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | PQ 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 382 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | PQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 383 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 384 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | PQ 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 384 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | PQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 385 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1372,30 +1417,31 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 386 | PQ 항목 ID | `pq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | PQ 세부 테스트 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 387 | PQ ID | `pq_id` | `uuid` | N | Y | `pq_assessment.pq_id` | Y | - | N | N | N | Y | 상위 PQ 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 386 | PQ 항목 ID | `pq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | PQ 세부 테스트 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 387 | PQ ID | `pq_id` | `uuid` | N | Y | `pq_assessment.pq_id` | Y | - | N | N | N | Y | 상위 PQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 388 | 절차 번호 | `step_no` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 테스트 수행 절차 번호 (예: 01, 02) | `1` |
 | 389 | 카테고리 | `category` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | PQ 평가 카테고리 (예: 연속 배치 검증, 데이터 완전성 등) | `연속 배치 검증` |
 | 390 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | PQ 테스트 검증 수행 상세 절차 | `연속 3배치 이상 생산 공정 정상 완료 검증` |
 | 391 | 기대 결과 | `expected_result` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 성공 기준 및 기대 결과 | `모든 배치가 사양에 맞게 정상 생산 완료되어야 함` |
 | 392 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 테스트 수행 후 실제 결과 기록 | `연속 3배치 정상 완료 확인` |
 | 393 | 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 테스트 판정 (Pass, Fail, 미실행) | `Pass` |
-| 394 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 394 | 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 테스트 수행자 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 395 | 수행일 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 테스트 수행 완료 일시 | `2026-08-26T00:00:00` |
 | 396 | 진행 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성중` | N | N | N | Y | 항목별 진행 상태 (작성중, 승인완료) | `작성중` |
 | 397 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 398 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 398 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 399 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 400 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 400 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 401 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1412,14 +1458,15 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 402 | RTM ID | `rtm_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | RTM 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 403 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 402 | RTM ID | `rtm_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | RTM 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 403 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 404 | RTM 번호 | `rtm_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | RTM 문서 번호 (예: RTM-VP-SYS-008-20260422) | `RTM-VP-SYS-008-20260422` |
 | 405 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 요구사항 추적 매트릭스 문서 제목 | `요구사항 추적 매트릭스 (자동 생성)` |
 | 406 | URS 전체 건수 | `total_urs_count` | `integer` | N | N | - | Y | `0` | N | N | N | Y | 프로젝트 전체 URS 요구사항 건수 | `8` |
@@ -1433,12 +1480,12 @@
 | 414 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 RTM 평가 문서 버전 여부 (TRUE/FALSE) | `True` |
 | 415 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `작성중` | N | N | N | Y | RTM 진행 상태 (작성중, 승인완료) | `작성중` |
 | 416 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 417 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | RTM 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 417 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | RTM 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 418 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 419 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | RTM 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 419 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | RTM 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 420 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1453,15 +1500,16 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 421 | RTM 항목 ID | `rtm_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | RTM 매트릭스 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 422 | RTM ID | `rtm_id` | `uuid` | N | Y | `rtm_assessment.rtm_id` | Y | - | N | N | N | Y | 상위 RTM 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
-| 423 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | N | N | Y | 매핑 URS 요구사항 식별자 (FK) | `550e8400-e29b-41d4-a716-446655440000` |
+| 421 | RTM 항목 ID | `rtm_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | RTM 매트릭스 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 422 | RTM ID | `rtm_id` | `uuid` | N | Y | `rtm_assessment.rtm_id` | Y | - | N | N | N | Y | 상위 RTM 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 423 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | N | N | Y | 매핑 URS 요구사항 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
 | 424 | URS 번호 | `urs_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 화면 표시용 URS 번호 (예: URS-001) | `URS-001` |
 | 425 | 항목/기능 | `feature_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | URS 요구사항 기능명 | `전자서명 서명자·일시·의미 기록` |
 | 426 | 요구사항 내용 | `requirement_desc` | `text` | N | N | - | Y | - | N | N | N | Y | URS 세부 요구사항 내용 | `전자서명 시 서명자 ID, 서명 일시가 기록되어야 한다.` |
@@ -1474,12 +1522,12 @@
 | 433 | PQ 결과 | `pq_result` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 연계 PQ 테스트 항목 번호 (예: PQ-01, N/A) | `N/A` |
 | 434 | 항목 커버리지 | `item_coverage_rate` | `numeric(5,2)` | N | N | - | Y | `0` | N | N | N | Y | 해당 URS 항목의 산출물 커버리지 비율 (%) | `50` |
 | 435 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 436 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 436 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 437 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 438 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 438 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 439 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1496,14 +1544,15 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 440 | VSR ID | `vsr_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | VSR 평가 문서 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 441 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `550e8400-e29b-41d4-a716-446655440000` |
+| 440 | VSR ID | `vsr_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | VSR 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 441 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | N | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 442 | VSR 번호 | `vsr_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | VSR 문서 번호 (예: VSR-VP-SYS-008-20260422) | `VSR-VP-SYS-008-20260422` |
 | 443 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 밸리데이션 종합 보고서 제목 | `Validation Summary Report` |
 | 444 | 밸리데이션 결론 | `overall_conclusion` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 최종 적합성 결론 (적합, 조건부 적합, 부적합) | `조건부 적합 (Conditionally Acceptable)` |
@@ -1514,12 +1563,12 @@
 | 449 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 현재 활성화된 최신 VSR 평가 문서 버전 여부 (TRUE/FALSE) | `True` |
 | 450 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `검토중` | N | N | N | Y | VSR 진행 상태 (작성중, 검토중, 승인완료) | `검토중` |
 | 451 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 452 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | VSR 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 452 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | VSR 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 453 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 454 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | VSR 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 454 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | VSR 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 455 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1534,14 +1583,15 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
 
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 456 | VSR 항목 ID | `vsr_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | VSR 활동 요약 항목 식별자 (PK) | `550e8400-e29b-41d4-a716-446655440000` |
-| 457 | VSR ID | `vsr_id` | `uuid` | N | Y | `vsr_assessment.vsr_id` | Y | - | N | N | N | Y | 상위 VSR 문서 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 456 | VSR 항목 ID | `vsr_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | N | N | Y | VSR 활동 요약 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 457 | VSR ID | `vsr_id` | `uuid` | N | Y | `vsr_assessment.vsr_id` | Y | - | N | N | N | Y | 상위 VSR 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 458 | 활동 구분 | `activity_code` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 밸리데이션 활동 구분 (VP, QIA, VA, URS, FDS, DQ, FRA, IQ, OQ, PQ, RTM) | `URS` |
 | 459 | 문서 번호 | `doc_no` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 해당 단계 문서 번호 | `VP-SYS-008-20260422 · URS` |
 | 460 | 개정 차수 | `revision_no` | `varchar(20)` | N | N | - | Y | `1` | N | N | N | Y | 문서 개정 차수 (REV) | `2.1` |
@@ -1550,15 +1600,15 @@
 | 463 | 실패 건수 | `fail_count` | `integer` | N | N | - | N | - | N | N | N | Y | FAIL 건수 | `0` |
 | 464 | 일탈 건수 | `deviation_info` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 일탈 발생 및 해결 수량 (예: 3건(해결2), 1(미결)) | - |
 | 465 | 결론/상태 | `item_status` | `varchar(20)` | N | N | - | Y | `대기` | N | N | N | Y | 해당 문서/활동 결론 (승인완료, 검토중, 대기) | `승인완료` |
-| 466 | 승인자명 | `approver_name` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최종 승인자 성명 | `박승인` |
+| 466 | 승인자명 | `approver_name` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최종 승인자 성명 | `홍길동` |
 | 467 | 승인일 | `approval_date` | `date` | N | N | - | N | - | N | N | N | Y | 최종 승인 일자 | `2024-02-20T00:00:00` |
 | 468 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00` |
-| 469 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 469 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 470 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00` |
-| 471 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `550e8400-e29b-41d4-a716-446655440000` |
+| 471 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 472 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1575,9 +1625,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1596,7 +1647,7 @@
 | 485 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | Workflow 레코드 최종 수정자 | `UUID` |
 | 486 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1611,9 +1662,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1632,7 +1684,7 @@
 | 499 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | Workflow 단계 최종 수정자 | `UUID` |
 | 500 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1647,9 +1699,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1663,7 +1716,7 @@
 | 508 | 처리 시각 | `acted_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 상신·검토·승인·반려가 실제 처리된 시각 | `2026-09-01T10:00:00` |
 | 509 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-09-01T10:00:00` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1680,9 +1733,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1700,7 +1754,7 @@
 | 521 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 추적 관계를 최종 수정한 사용자 ID | `UUID` |
 | 522 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 추적 관계 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1717,9 +1771,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1738,7 +1793,7 @@
 | 599 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 최종 수정 사용자 | `UUID` |
 | 600 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | DDS 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1753,9 +1808,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1772,7 +1828,7 @@
 | 611 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 항목 최종 수정 사용자 | `UUID` |
 | 612 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | DDS 항목 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1789,9 +1845,10 @@
 | GxP 중요도 | Critical |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1815,7 +1872,7 @@
 | 630 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 일탈 최종 수정 사용자 | `UUID` |
 | 631 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 일탈 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1832,9 +1889,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 리포트 생성 결과 및 실행이력을 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1864,7 +1922,7 @@
 | 655 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 사용자 수정 시 사용자 ID를 저장하며 시스템·배치 처리 시 NULL 허용 | `UUID` |
 | 656 | 리포트 일정 ID | `report_schedule_id` | `uuid` | N | Y | `report_schedule.report_schedule_id` | N | - | N | Y | N | Y | 정기 실행으로 생성된 경우 원본 리포트 일정 ID 저장. 사용자 요청 실행은 NULL 허용 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1879,9 +1937,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 실행 일정과 변경이력을 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1904,7 +1963,7 @@
 | 760 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 리포트 일정을 최종 수정한 사용자 | `UUID` |
 | 761 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 리포트 일정 소프트 삭제 시각 | - |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1921,9 +1980,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1949,7 +2009,7 @@
 | 676 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00` |
 | 677 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 수정 사용자 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1964,9 +2024,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -1982,7 +2043,7 @@
 | 687 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00` |
 | 688 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 수정 사용자 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -1997,9 +2058,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -2017,7 +2079,7 @@
 | 700 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00` |
 | 701 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 수정 사용자 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
 
@@ -2034,9 +2096,10 @@
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 알림 발송 내용과 실행이력을 감사 가능 기간 보존 |
-| 상태 | Draft |
 
 #### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
@@ -2062,6 +2125,6 @@
 | 721 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 알림 발송 작업 최종 수정 시각(UTC) | `2026-09-02 18:00:05+00` |
 | 722 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 사용자 수정 시 사용자 ID를 저장하며 시스템·배치 처리 시 NULL 허용 | `UUID` |
 
-[맨 위로](#dvt-데이터-테이블-정의서)
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
 
 ---
