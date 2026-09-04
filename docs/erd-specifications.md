@@ -223,7 +223,7 @@ URS부터 FDS·DDS·DQ·FRA·IQ·OQ·PQ까지 산출물 간 추적 관계를 관
 
 # 9.AI 문서·항목 생성 관리
 <img width="1092" height="861" alt="image" src="https://github.com/user-attachments/assets/44097c42-9dbb-42f3-9942-58771051fc65" />
-> 가독성 이슈로 별도 링크를 제공합니다 : [https://drawsql.app/teams/minho-kim/diagrams/09-ai-generation](https://dbdiagram.io/d/09_AI_GENERATION-6a9a18d3aed2f4f6beaa89ca)
+> 가독성 이슈로 별도 링크를 제공합니다 : https://dbdiagram.io/d/09_AI_GENERATION-6a9a18d3aed2f4f6beaa89ca
 
 ## 구조 개요
 
