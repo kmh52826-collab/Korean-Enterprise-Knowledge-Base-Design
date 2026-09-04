@@ -1,7 +1,5 @@
 # DVT 데이터 테이블 정의서
 
-[![Document](https://img.shields.io/badge/document-data%20dictionary-2563EB)](#) [![Tables](https://img.shields.io/badge/tables-51-0F766E)](#) [![Columns](https://img.shields.io/badge/columns-783-7C3AED)](#) [![GxP](https://img.shields.io/badge/GxP-audit%20ready-B45309)](#)
-
 > Validation Management Platform 데이터 모델 문서  
 > **범위**: `DVT_데이터_테이블_정의서_v0.2.xlsx`의 `01_테이블목록`, `02_컬럼정의` 시트  
 > **보안 처리**: 예시값은 문서 공개를 고려하여 비식별 샘플 값으로 치환
