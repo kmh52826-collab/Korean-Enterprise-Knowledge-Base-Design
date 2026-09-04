@@ -7,50 +7,60 @@
 ---
 
 ## 1. Project Overview
-본 프로젝트는 제약·바이오 산업의 핵심 규제인 GMP 및 CSV(Computerized System Validation) 규정을 준수하는 AI 기반 Validation Management Platform 구축 프로젝트입니다. 기존에 수작업 및 파편화되어 관리되던 URS(요구사항)부터 RA(위험평가), RTM(추적성 매트릭스), IQ/OQ/PQ(적격성평가) 등의 전 Validation 과정을 하나의 플랫폼에서 통합 관리합니다. 궁극적으로 데이터 추적성(Traceability)과 무결성을 보장하는 정형 데이터베이스 구조 위에, 향후 LLM 기반 문서 생성 및 Audit 대응용 지식 구조화(Knowledge Layer)를 결합하는 것을 목표로 합니다.
+본 프로젝트는 제약·바이오 산업의 핵심 규제인 GMP 및 CSV(Computerized System Validation) 규정을 준수하는 AI 기반 Validation Management Platform 구축 프로젝트입니다. URS(요구사항), RA(위험평가), RTM(추적성 매트릭스), IQ/OQ/PQ(적격성평가) 등 수작업과 문서로 파편화되어 관리되던 전 Validation 과정을 하나의 플랫폼에서 통합 관리합니다.
+
+본 포트폴리오는 해당 플랫폼의 핵심 기반이 되는 **(1) 규제 준수용 관계형 데이터 모델링(RDBMS ERD)**과 **(2) AI 감사 대응 및 문서 생성을 위한 하이브리드 지식 DB(Vector DB & Graph DB) 아키텍처 설계**에 초점을 맞추고 있습니다.
 
 ---
 
-## 2. System Architecture
-전체 시스템은 규제 준수(Quality & Compliance)와 AI 지원(AI Engine) 기능이 유기적으로 연결되도록 설계되었습니다.
+## 2. System Overview & Context
+*(본인이 설계한 데이터 레이어가 AWS 클라우드 아키텍처 상에서 동작하는 전체 시스템 구성입니다.)*
 
-* **Backend & DB:** Spring Boot / FastAPI 기반 API 구성 및 PostgreSQL을 활용한 정형 데이터(트랜잭션, 감사추적) 영구 저장
-* **AI Engine & Knowledge Layer:** Azure OpenAI(LLM)와 Embedding / Vector DB 및 Graph DB를 연계하여 Audit 대응용 RAG 및 하이브리드 지식 베이스(Ontology, LLM Wiki) 구축
-* **Storage & Infrastructure:** AWS Cloud 환경에서 S3(Object Storage) 기반 문서 관리 및 CI/CD 파이프라인 구성
+* **Access & Security:** Route 53, WAF, CloudFront, ALB (보안 및 트래픽 분산)
+* **Application Layer:** ECS Fargate 기반 컨테이너 환경 (Web Portal, Backend API, Validation Workflow Engine)
+* **Data & Knowledge Layer (Main Role):** 
+  * **Relational Data & Cache:** Amazon RDS (PostgreSQL) + ElastiCache (Redis)
+  * **File & Knowledge Storage:** Amazon S3 (문서/첨부파일) + Vector Storage & Knowledge Graph (RAG/AI 연계)
+* **AI Engine Integration:** AI Orchestrator, RAG / Document Generation Service, LLM API (Azure OpenAI / Bedrock)
+* **DevOps & Monitoring:** AWS CodePipeline (CI/CD), CloudWatch, Secrets Manager
 
 ---
 
-## 3. Key Technical Contributions
+## 3. My Technical Contributions (Core Focus)
 
-### Phase 1: Complex Relational Data Modeling (Current Focus)
-규제가 엄격한 도메인(Highly Regulated Domain)의 특성을 반영하여 데이터 무결성 보장과 완전한 추적성(Traceability) 확보에 집중한 관계형 데이터베이스(PostgreSQL) ERD를 설계했습니다.
+### Contribution 1. Relational Data Modeling & ERD Design (Amazon RDS PostgreSQL)
+규제가 엄격한 도메인(Highly Regulated Domain)의 특성을 반영하여, 데이터 무결성 보장과 완전한 추적성(Traceability) 확보에 집중한 PostgreSQL 스키마를 설계했습니다.
 
-* **Regulatory Compliance Data Model:** 21 CFR Part 11(전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 시스템 레벨에서 강제할 수 있도록 Audit Trail 및 Versioning 테이블 구조를 고도화했습니다.
-* **End-to-End Traceability (N:M Mapping):** Validation 프로세스 상의 핵심 엔티티(프로젝트 ➔ URS ➔ RA ➔ RTM ➔ Test Protocol) 간의 복잡한 다대다 의존성을 분해하고, 변경 및 승인 이력을 신속히 추적할 수 있는 관계형 스키마를 구현했습니다.
+* **Regulatory Compliance Schema:** 21 CFR Part 11(전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 레벨에서 강제할 수 있도록 Audit Trail 및 Versioning 전용 테이블 구조를 구축했습니다.
+* **Complex Traceability Mapping (N:M):** Validation 프로세스 상의 핵심 엔티티(프로젝트 ➔ URS ➔ RA ➔ RTM ➔ Test Protocol) 간의 복잡한 다대다 의존성을 정교하게 분해하고, 변경 발생 시 영향도(Impact) 분석이 가능하도록 스키마를 최적화했습니다.
 
 > **[Detail Link] 🔗 [ERD Data Dictionary & Schema Design Document](ERD_LINK_HERE)**  
 > *(본 프로젝트의 ERD 상세 설계 문서 및 핵심 테이블 명세는 위 링크에서 확인하실 수 있습니다.)*
 
-### Phase 2: Hybrid Knowledge Base & AI Agent Architecture (Proposed)
-단순한 관계형 데이터베이스 관리를 넘어, AI 엔진이 Audit 대응 및 단계별 산출물 작성을 지능적으로 지원할 수 있도록 이종 데이터 통합 및 지식 계층(Knowledge Layer)을 설계하고 있습니다.
+---
 
-* **Audit-Ready Semantic Search & Traceability (핵심 기능):**  
-  외부 감사(Audit) 대응 시, 규제 검토자가 특정 항목의 승인 여부나 이력을 문의할 때 AI가 수초 내에 관련된 증적 문서, 승인 이력, 연관 요구사항을 정밀하게 추출해 제공하는 RAG 기반 지식 검색 파이프라인을 구축합니다. (Vector DB와 Graph DB를 결합하여 문서의 단순 유사도 검색을 넘어 **승인 관계 및 연관성 추적** 구현)
-* **Automated Phase-wise Deliverable Generation:**  
-  Validation 단계별(URS, RA, RTM, IQ/OQ/PQ 등) 표준 템플릿과 과거 승인 데이터를 기반으로 규제 준수 가이드라인을 충족하는 산출물 초안(Draft)을 자동 생성하는 LLM 기반 파이프라인을 설계합니다.
+### Contribution 2. Hybrid Database Architecture for AI (Vector DB & Graph DB)
+단순한 관계형 데이터 관리를 넘어, AI Orchestrator가 Audit(감사) 대응과 단계별 산출물 작성(Drafting)을 정밀하게 수행할 수 있도록 **Vector DB와 Graph DB를 연계한 지식 데이터베이스(Knowledge Database) 구조**를 설계 및 구축하고 있습니다.
+
+* **Graph DB (Knowledge Graph & Ontology):**  
+  문서 간의 단순 유사도를 넘어, **"특정 요구사항(URS)이 어떤 위험평가(RA)를 거쳐 최종 승인되었는가"**에 대한 객체 간의 관계와 승인 이력 그래프를 모델링합니다. 이를 통해 감사관(Auditor) 질의 시 승인 관계망을 완벽하게 추적(Lineage Tracking)할 수 있는 기반을 제공합니다.
+* **Vector DB (Semantic Search & RAG):**  
+  Amazon S3에 저장된 비정형 Validation 문서(PDF, Word), 표준 작업 지침서(SOP), 규제 가이드라인을 청킹(Chunking) 및 임베딩하여 Vector DB에 저장하고, 유사도 기반의 신속한 세맨틱 검색(Semantic Search)을 지원합니다.
+* **Integrated Hybrid Retrieval:**  
+  Vector DB의 '의미 기반 검색'과 Graph DB의 '관계/승인 이력 추적'을 결합한 하이브리드 인덱싱 구조를 설계하여, AI 문서 초안 생성 시 환각(Hallucination)을 극소화하고 정밀한 근거 문서를 제시합니다.
 
 ---
 
-## 4. Tech Stack
-* **Database:** PostgreSQL, Vector DB (Embedding Storage), Graph DB (Ontology / Knowledge Graph)
-* **AI / Data Integration:** Azure OpenAI, LangChain / LlamaIndex, RAG Pipeline
-* **Backend / Cloud:** Spring Boot, FastAPI, AWS (VPC, ECS/EC2, S3)
-* **Compliance Support:** 21 CFR Part 11 (Audit Trail / Electronic Signature)
+## 4. Database & Infrastructure Tech Stack
+* **Relational Database & Cache:** Amazon RDS (PostgreSQL), Amazon ElastiCache (Redis)
+* **AI & Knowledge Databases:** Vector DB (e.g., Pinecone / Qdrant / Pgvector), Graph DB (e.g., Neo4j / Amazon Neptune)
+* **Object Storage:** Amazon S3
+* **Cloud Infrastructure Context:** AWS (VPC, ECS Fargate, CodePipeline, CloudWatch)
 
 ---
 
 ## 5. Open Research Challenges
-현재 프로젝트를 진행하며 향후 Ph.D. 과정에서 깊이 있게 탐구하고자 하는 연구 및 기술적 고민입니다.
+현재 데이터 아키텍처를 설계하며 향후 Ph.D. 과정에서 깊이 있게 탐구하고자 하는 연구 주제입니다.
 
-* **Auditability & Traceability in RAG:** 감사 대응 시 AI가 검색해온 문서와 승인 이력의 정확도를 100% 보장해야 하므로, Vector Search의 환각(Hallucination)을 제어하고 정형 DB의 승인 상태(Approval State)와 비정형 지식을 완벽하게 동기화하는 하이브리드 인덱싱 구조 연구
-* **Schema & Knowledge Synchronization:** 트랜잭션 DB(PostgreSQL)의 승인/변경 데이터 발생 시 이를 Graph DB 및 Vector DB에 실시간으로 반영하여 Audit 대응 시 최신 무결성을 유지하는 파이프라인 최적화
+* **Dual-Database Synchronization:** Amazon RDS PostgreSQL 트랜잭션 DB의 승인/변경 상태를 실시간으로 Graph DB 및 Vector DB에 레이턴시 없이 무결하게 동기화하는 데이터 파이프라인 최적화
+* **Auditability in Hybrid DB:** AI 검색 결과가 규제 감사를 통과할 수 있도록, Vector Search와 Graph Traversal을 혼합한 검색 결과의 추론 과정(Reasoning Path)을 역추적할 수 있는 DB 구조 연구
