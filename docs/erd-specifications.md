@@ -82,7 +82,7 @@
 # 4.FDS·DDS·DQ 설계 관리
 <img width="1077" height="880" alt="image" src="https://github.com/user-attachments/assets/d83a3990-9163-4d6c-86b0-d4016c9f56fd" />
 
-> 가독성 이슈로 별도 링크를 제공합니다 : https://dbdiagram.io/d/DVT_04_FDS_DDS_DQ-6a9675de5450bea1beb83425
+> 가독성 이슈로 별도 링크를 제공합니다 : https://drawsql.app/teams/minho-kim/diagrams/04-fds-dds-dq
 
 ## 구조 개요
 
