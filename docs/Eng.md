@@ -1,7 +1,6 @@
-# DVT Data Table Definition
+# Data Table Definition
 
 > Validation Management Platform data model documentation  
-> **Scope**: `01_Table_List` and `02_Column_Definition` sheets in `DVT_데이터_테이블_정의서_v0.2.xlsx`  
 > **Security note**: Example values have been anonymized for repository publication.
 
 ## Contents
