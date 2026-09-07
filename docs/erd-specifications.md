@@ -62,3 +62,55 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-d
 | `validation_activity` | VP, QIA, VA, URS, FDS, DDS, DQ, FRA, IQ, OQ, PQ, RTM, VSR 등 Validation 활동의 기준정보와 기본 표시 순서 관리 |
 | `project_activity` | 프로젝트별 수행 대상 활동, 필수 여부, 활성화 여부 및 진행 상태 관리 |
 | `activity_dependency` | 선행 활동, 요구 상태, 조건 유형 및 평가 순서를 기준으로 후행 활동의 활성화 조건 관리 |
+
+
+---
+## 4. 라이브러리·QIA·공급업체 감사 관리
+<img width="2600" height="1866" alt="image" src="https://github.com/user-attachments/assets/0fa424a7-ec2f-4589-8b5e-75b20e7eefa0" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-audit-management
+
+### 구조 개요
+
+조직에 소속된 시스템을 기준으로 Validation 프로젝트를 구성하고, 재사용 가능한 표준 라이브러리와 프로젝트별 품질 영향 평가 및 공급업체 감사 결과를 관리하는 구조입니다.
+
+`library_item`은 URS·IQ·OQ 작성에 활용할 표준 항목을 관리합니다. `qia_assessment`와 `qia_module_item`은 프로젝트의 GxP 및 21 CFR Part 11 적용 범위를 평가하며, `vendor_audit`은 대상 시스템 공급업체의 감사 계획과 결과 및 결함 수를 관리합니다.
+
+### 테이블별 역할 요약
+
+| 테이블 | 역할 |
+|---|---|
+| `organization` | 시스템과 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
+| `app_user` | 프로젝트와 평가 문서를 작성·관리하는 사용자 계정 및 기본 프로필 관리 |
+| `system_asset` | Validation 대상 시스템이나 장비의 식별정보, 공급업체, GAMP 범주, GxP 구분 및 상태 관리 |
+| `validation_project` | 대상 시스템별 Validation 프로젝트의 범위, 검증 방식, 진행률 및 상태 관리 |
+| `library_item` | URS·IQ·OQ에서 재사용할 표준 요구사항, 시험 절차, 기대 결과, 수용 기준 및 근거 규정 관리 |
+| `qia_assessment` | 프로젝트별 21 CFR Part 11 적용 여부와 GxP 범위, 문서 버전 및 평가 상태 관리 |
+| `qia_module_item` | QIA 문서의 모듈·프로세스별 GxP 세부 평가 항목과 평가 결과 관리 |
+| `vendor_audit` | 공급업체 감사 방식, 일정, 감사 결과, 결함 수, 문서 버전 및 진행 상태 관리 |
+
+---
+## 5. URS·FDS 관리
+<img width="4440" height="3366" alt="image" src="https://github.com/user-attachments/assets/a424ad13-1d60-4e0d-8f99-97d72d1926c1" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
+
+### 구조 개요
+
+조직에 소속된 시스템을 기준으로 Validation 프로젝트를 구성하고, 프로젝트별 사용자 요구사항과 기능 설계 명세를 작성·관리하는 구조입니다.
+
+`requirement`에서 URS 요구사항과 개정 버전을 관리하고, `fds_spec`에서 FDS 문서의 버전과 상태를 관리합니다. `fds_item`과 `fds_interface`에서는 FDS 문서에 포함되는 기능·화면 항목과 시스템 간 인터페이스 설계를 각각 관리합니다.
+
+### 테이블별 역할 요약
+
+| 테이블 | 역할 |
+|---|---|
+| `organization` | 시스템과 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
+| `app_user` | 프로젝트, URS 및 FDS 문서와 상세 항목을 작성·수정하는 사용자 정보 관리 |
+| `system_asset` | Validation 대상 시스템이나 장비의 식별정보, 관리번호, GAMP 범주, GxP 구분 및 상태 관리 |
+| `validation_project` | URS와 FDS가 소속되는 Validation 프로젝트의 범위, 검증 방식, 진행률 및 상태 관리 |
+| `requirement` | 프로젝트별 URS 요구사항의 항목 번호, 카테고리, 상세 내용, 근거 규정, 개정 버전 및 상태 관리 |
+| `fds_spec` | 프로젝트별 FDS 문서의 문서 번호, 제목, 버전, 개정 순번 및 작성·검토·승인 상태 관리 |
+| `fds_item` | FDS 문서에 포함되는 기능·화면·인터페이스 항목의 구분, 관리 번호, 기능명, 상세 설명 및 관련 화면 관리 |
+| `fds_interface` | FDS 문서의 시스템 간 인터페이스별 송신·수신 시스템, 연동 데이터, 전송 주기, 전송 방식 및 관련 FDS 번호 관리 |
+
+
+
