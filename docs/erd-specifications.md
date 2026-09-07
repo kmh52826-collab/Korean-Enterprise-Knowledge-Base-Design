@@ -1,3 +1,51 @@
+# ERD Specifications
+
+Validation Management Platform의 주요 데이터 영역을 업무 주제별로 구분하여 정리한 ERD 명세서입니다.
+
+각 섹션에서는 업무 영역별 데이터 구조와 주요 테이블의 역할을 확인할 수 있습니다. 개별 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [데이터 딕셔너리](./data-dictionary.md)에서 확인할 수 있습니다.
+
+> [!NOTE]
+> 이 문서는 데이터 모델링 및 엔터프라이즈 시스템 설계 사례를 공유하기 위한 공개용 자료입니다.
+>
+> 문서에 사용된 조직명, 사용자 정보, 시스템명, 프로젝트명, 테이블명, 컬럼명 및 예시값은 특정 회사의 실제 운영 데이터나 내부 시스템 구조를 나타내지 않습니다. 공개 목적에 맞게 일반화하거나 임의로 구성한 명칭과 예시를 사용했습니다.
+>
+> 실제 운영 환경에 적용할 때는 해당 조직의 업무 정책, 보안 기준, 개인정보 보호 요건, 데이터 보존 정책 및 관련 규제 요구사항을 별도로 검토해야 합니다.
+
+## 관련 문서
+
+| 문서 | 설명 |
+|---|---|
+| **ERD Specifications** | 업무 영역별 ERD, 구조 개요 및 테이블별 역할을 정리한 현재 문서 |
+| [Data Dictionary](./data-dictionary.md) | 전체 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 주요 업무 규칙을 정리한 데이터 딕셔너리 |
+
+## 문서 구성
+
+- **ERD 이미지:** 업무 영역에 포함된 주요 테이블과 관계
+- **DrawSQL 링크:** ERD 원본 다이어그램
+- **구조 개요:** 해당 업무 영역의 데이터 구조와 관리 범위
+- **테이블별 역할 요약:** ERD에 포함된 각 테이블의 주요 역할
+
+## 목차
+
+1. [조직·사용자·전역 권한 관리](#1-조직사용자전역-권한-관리)
+2. [시스템·프로젝트·참여자 관리](#2-시스템프로젝트참여자-관리)
+3. [Validation 활동·선후행 조건 관리](#3-validation-활동선후행-조건-관리)
+4. [라이브러리·QIA·공급업체 감사 관리](#4-라이브러리qia공급업체-감사-관리)
+5. [URS·FDS 관리](#5-ursfds-관리)
+6. [DDS·DQ 관리](#6-ddsdq-관리)
+7. [FRA 위험평가 관리](#7-fra-위험평가-관리)
+8. [IQ·OQ·PQ 적격성 시험 관리](#8-iqoqpq-적격성-시험-관리)
+9. [설계·위험 산출물 추적성 관리](#9-설계위험-산출물-추적성-관리)
+10. [적격성 시험 추적성·RTM 관리](#10-적격성-시험-추적성rtm-관리)
+11. [VSR·일탈 관리](#11-vsr일탈-관리)
+12. [Workflow·승인·전자서명 관리](#12-workflow승인전자서명-관리)
+13. [파일·증적·파일 정리 관리](#13-파일증적파일-정리-관리)
+14. [리포트·알림·백업 운영 관리](#14-리포트알림백업-운영-관리)
+15. [AI 생성 작업·결과 관리](#15-ai-생성-작업결과-관리)
+16. [Audit Trail 관리](#16-audit-trail-관리)
+
+---
+
 ## 1. 조직·사용자·전역 권한 관리
 <img width="1650" height="1066" alt="image" src="https://github.com/user-attachments/assets/d1f9d215-dafa-46ae-b7ff-75f4bad5b622" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-global-role-management
@@ -18,6 +66,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-glo
 | `user_role` | 사용자와 전역 역할 간의 다대다 매핑 및 동일 역할 중복 부여 방지 |
 
 ---
+
 ## 2. 시스템·프로젝트·참여자 관리
 <img width="2000" height="1491" alt="image" src="https://github.com/user-attachments/assets/b8625331-f875-41a2-9546-dc2ef32557cd" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-participant-management
@@ -39,8 +88,8 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-partic
 | `app_user` | 프로젝트에 참여하거나 프로젝트를 생성·수정하는 사용자 계정과 기본 프로필 관리 |
 | `role` | 프로젝트 참여자에게 부여할 작성자, 검토자, 승인자 등의 역할 기준정보 관리 |
 
-
 ---
+
 ## 3. Validation 활동·선후행 조건 관리
 <img width="2500" height="1729" alt="image" src="https://github.com/user-attachments/assets/3648a194-0317-43eb-aa29-fd262b715add" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-dependency-management
@@ -63,8 +112,8 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-d
 | `project_activity` | 프로젝트별 수행 대상 활동, 필수 여부, 활성화 여부 및 진행 상태 관리 |
 | `activity_dependency` | 선행 활동, 요구 상태, 조건 유형 및 평가 순서를 기준으로 후행 활동의 활성화 조건 관리 |
 
-
 ---
+
 ## 4. 라이브러리·QIA·공급업체 감사 관리
 <img width="2600" height="1866" alt="image" src="https://github.com/user-attachments/assets/0fa424a7-ec2f-4589-8b5e-75b20e7eefa0" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-audit-management
@@ -89,6 +138,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-au
 | `vendor_audit` | 공급업체 감사 방식, 일정, 감사 결과, 결함 수, 문서 버전 및 진행 상태 관리 |
 
 ---
+
 ## 5. URS·FDS 관리
 <img width="4440" height="3366" alt="image" src="https://github.com/user-attachments/assets/a424ad13-1d60-4e0d-8f99-97d72d1926c1" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
@@ -113,6 +163,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
 | `fds_interface` | FDS 문서의 시스템 간 인터페이스별 송신·수신 시스템, 연동 데이터, 전송 주기, 전송 방식 및 관련 FDS 번호 관리 |
 
 ---
+
 ## 6. DDS·DQ 관리
 <img width="5840" height="4046" alt="image" src="https://github.com/user-attachments/assets/0389d811-f499-4e5f-9db0-530dfa497fce" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
@@ -140,6 +191,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 | `dq_item` | URS 요구사항과 FDS·DDS 설계의 연계 내용, 적격성 평가 결과, 검토자 및 비고 관리 |
 
 ---
+
 ## 7. FRA 위험평가 관리
 <img width="2575" height="2129" alt="image" src="https://github.com/user-attachments/assets/077a700f-9e8b-483f-ac75-e73a29f8a150" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-management
@@ -166,7 +218,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-manag
 
 ## 8. IQ·OQ·PQ 적격성 시험 관리
 <img width="3070" height="2543" alt="image" src="https://github.com/user-attachments/assets/dcbb8a59-325e-4e99-9be1-873c70aabc53" />
-https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testing-management
+Link : https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testing-management
 
 ### 구조 개요
 
@@ -194,7 +246,7 @@ https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testi
 
 ## 9. 설계·위험 산출물 추적성 관리
 <img width="4360" height="5206" alt="image" src="https://github.com/user-attachments/assets/a1587eae-c5f3-47d7-9309-7495b8c0044d" />
-https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverable-traceability-management
+Link : https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverable-traceability-management
 
 ### 구조 개요
 
@@ -306,7 +358,7 @@ Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려�
 
 ## 13. 파일·증적·파일 정리 관리
 <img width="2500" height="1791" alt="image" src="https://github.com/user-attachments/assets/be3ac81c-3cb4-46c1-b19e-80c1cc60e362" />
-https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cleanup-management
+Link : https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cleanup-management
 
 ### 구조 개요
 
@@ -397,5 +449,3 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
 | `organization` | 감사 대상 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
 | `app_user` | 주요 데이터 변경을 수행한 사용자 계정과 소속 조직 정보 관리 |
 | `audit_trail` | 데이터 생성·수정·삭제 및 운영 작업의 수행자, 대상, 변경 전후 값, 변경 사유, 요청·세션 정보와 문서 버전 관리 |
-
-
