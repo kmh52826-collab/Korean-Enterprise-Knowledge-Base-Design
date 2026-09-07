@@ -64,11 +64,3 @@ Validation 각 단계별(URS, RA, RTM 등) 서식과 표준 데이터를 바탕�
 * **AI & Knowledge Databases (In Progress):** Vector DB (e.g., Pinecone / Qdrant / Pgvector), Graph DB (e.g., Neo4j / Amazon Neptune)
 * **Object Storage & AI Pipeline:** Amazon S3, Azure OpenAI / Bedrock API
 * **Cloud Infrastructure Context:** AWS (VPC, ECS Fargate, CodePipeline, CloudWatch)
-
----
-
-## 5. Open Research Challenges
-현재 RDBMS 설계를 마치고 지식 데이터베이스 및 AI 파이프라인을 구축하며, 향후 Ph.D. 과정에서 깊이 있게 탐구하고자 하는 연구 주제입니다.
-
-* **Dual-Database Synchronization:** Amazon RDS PostgreSQL 트랜잭션 DB의 승인/변경 상태를 실시간으로 Graph DB 및 Vector DB에 레이턴시 없이 무결하게 동기화하는 데이터 파이프라인 최적화
-* **Auditability in Hybrid DB:** AI 검색 결과가 규제 감사를 통과할 수 있도록, Vector Search와 Graph Traversal을 혼합한 검색 결과의 추론 과정(Reasoning Path)을 역추적할 수 있는 DB 구조 연구
