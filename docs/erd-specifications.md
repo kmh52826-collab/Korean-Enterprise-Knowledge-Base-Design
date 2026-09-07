@@ -193,6 +193,8 @@ https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testi
 ---
 
 ## 9. 설계·위험 산출물 추적성 관리
+<img width="4360" height="5206" alt="image" src="https://github.com/user-attachments/assets/a1587eae-c5f3-47d7-9309-7495b8c0044d" />
+https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverable-traceability-management
 
 ### 구조 개요
 
@@ -220,6 +222,8 @@ Validation 프로젝트의 URS 요구사항과 FDS·DDS 설계, DQ 평가 및 FR
 ---
 
 ## 10. 적격성 시험 추적성·RTM 관리
+<img width="2840" height="2703" alt="image" src="https://github.com/user-attachments/assets/2173e7a8-503a-42f0-b909-66593b263fa5" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/10-qualification-test-traceability-and-rtm-management
 
 ### 구조 개요
 
@@ -247,6 +251,8 @@ Validation 프로젝트의 URS 요구사항과 IQ·OQ·PQ 시험 항목 간 추�
 ---
 
 ## 11. VSR·일탈 관리
+<img width="4760" height="4306" alt="image" src="https://github.com/user-attachments/assets/d5c6ffd5-1702-4f1a-8de3-8585984fc5b2" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/11-vsr-and-deviation-management
 
 ### 구조 개요
 
@@ -272,6 +278,8 @@ Validation 프로젝트의 활동 수행 결과, RTM 커버리지 및 일탈 현
 ---
 
 ## 12. Workflow·승인·전자서명 관리
+<img width="4640" height="3766" alt="image" src="https://github.com/user-attachments/assets/55c8d805-4684-4d27-9288-ad118a65bc37" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/12-workflow-approval-and-electronic-signature-management
 
 ### 구조 개요
 
@@ -297,6 +305,8 @@ Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려�
 ---
 
 ## 13. 파일·증적·파일 정리 관리
+<img width="2500" height="1791" alt="image" src="https://github.com/user-attachments/assets/be3ac81c-3cb4-46c1-b19e-80c1cc60e362" />
+https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cleanup-management
 
 ### 구조 개요
 
@@ -319,6 +329,8 @@ Validation 프로젝트에서 사용하는 첨부파일과 시험 증적의 메�
 ---
 
 ## 14. 리포트·알림·백업 운영 관리
+<img width="2800" height="2423" alt="image" src="https://github.com/user-attachments/assets/5643c343-a8e0-4bf0-a773-d2411268b98b" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/14-report-notification-and-backup-operations-management
 
 ### 구조 개요
 
@@ -345,6 +357,8 @@ Validation 프로젝트와 Workflow를 기준으로 운영 리포트의 정기·
 ---
 
 ## 15. AI 생성 작업·결과 관리
+<img width="2488" height="2229" alt="image" src="https://github.com/user-attachments/assets/52061c1a-be1e-4375-a75b-1bd04c5ad0d5" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/15-ai-generation-job-and-result-management
 
 ### 구조 개요
 
@@ -367,6 +381,8 @@ Validation 프로젝트의 문서와 항목에 대한 AI 생성 요청을 비동
 ---
 
 ## 16. Audit Trail 관리
+<img width="1563" height="904" alt="image" src="https://github.com/user-attachments/assets/60be2276-6f0d-407e-987f-4a1f4b0a6fdb" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
 
 ### 구조 개요
 
