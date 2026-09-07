@@ -141,6 +141,8 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 
 ---
 ## 7. FRA 위험평가 관리
+<img width="2575" height="2129" alt="image" src="https://github.com/user-attachments/assets/077a700f-9e8b-483f-ac75-e73a29f8a150" />
+Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-management
 
 ### 구조 개요
 
@@ -163,6 +165,8 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 ---
 
 ## 8. IQ·OQ·PQ 적격성 시험 관리
+<img width="3070" height="2543" alt="image" src="https://github.com/user-attachments/assets/dcbb8a59-325e-4e99-9be1-873c70aabc53" />
+https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testing-management
 
 ### 구조 개요
 
