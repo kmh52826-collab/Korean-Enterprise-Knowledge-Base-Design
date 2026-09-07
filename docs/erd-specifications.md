@@ -19,7 +19,7 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-glo
 
 ---
 ## 2. 시스템·프로젝트·참여자 관리
-<img width="2013" height="1579" alt="image" src="https://github.com/user-attachments/assets/ad1f10d8-fd53-4e0d-9363-ead6d592dd9a" />
+<img width="2000" height="1491" alt="image" src="https://github.com/user-attachments/assets/b8625331-f875-41a2-9546-dc2ef32557cd" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-participant-management
 
 ### 구조 개요
