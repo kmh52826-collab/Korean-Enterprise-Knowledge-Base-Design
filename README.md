@@ -5,7 +5,9 @@
 **Current Progress:** Phase 1 - Relational Data Modeling (Completed) / Phase 2 - AI Pipeline & Vector/Graph DB Architecture (In Progress)  
 **Role:** Data Architect & Knowledge Engineer (Relational Data Modeling & AI Knowledge Architecture)
 
-> 💡 **Notice:** This repository documents an active work-in-progress (WIP) enterprise project. As the system is currently under active development, documentation and module implementations are continuously being populated, and certain sections may be under construction.
+> ⚠️ **Notice & Disclaimer:**  
+> - **WIP Project Notice:** 본 리포지토리는 현재 개발이 진행 중인(Work-In-Progress) 기업 프로젝트 문서입니다. 시스템 아키텍처 및 상세 모듈 구현이 지속적으로 업데이트되고 있으며, 일부 문서나 코드 섹션은 계속 보완 중(under construction)일 수 있습니다.  
+> - **Security & Dummy Data Disclaimer:** 본 리포지토리 및 기술 문서에 포함된 모든 예시 데이터, 수치, 식별자, 소스 코드 샘플 등은 정보 보안 및 기밀 유지를 위해 가공·대체된 **가상 데이터(Dummy Data)** 입니다. 실제 기업 내부의 영업 비밀, 보안 데이터, 실사용 고객 정보는 일절 포함되어 있지 않습니다.
 
 ---
 
