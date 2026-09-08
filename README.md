@@ -17,6 +17,7 @@
 프로젝트 생성부터 URS, RA, RTM, 적격성평가(IQ/OQ/PQ), 시험 수행, VSR, 운영 및 변경관리에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
 
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/d6dc32d6-d414-4174-bfb8-d7358823542b" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/81f022c2-133b-4aa9-a08c-33c768f18d81" />
 
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
