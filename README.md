@@ -14,7 +14,7 @@
 ## 1. Project Overview
 본 프로젝트는 제약·바이오 산업의 핵심 규제인 GMP 및 CSV(Computerized System Validation) 규정을 준수하는 AI 기반 Validation Management Platform 구축 프로젝트입니다. URS(요구사항), RA(위험평가), RTM(추적성 매트릭스), IQ/OQ/PQ(적격성평가) 등 수작업과 문서로 파편화되어 관리되던 전 Validation 과정을 하나의 플랫폼에서 통합 관리합니다.
 
-본 포트폴리오는 해당 플랫폼의 핵심 기반이 되는 **(1) 규제 준수용 관계형 데이터 모델링(RDBMS ERD, 완료)**과 **(2) 산출물 초안 자동 생성 및 AI 감사 대응을 위한 하이브리드 지식 DB(Vector DB & Graph DB) 데이터 파이프라인 구축(진행 중)**에 초점을 맞추고 있습니다.
+본 포트폴리오는 해당 플랫폼의 핵심 기반이 되는 **(1) 규제 준수용 관계형 데이터 모델링(RDBMS ERD, 완료)** 과 **(2) 산출물 초안 자동 생성 및 AI 감사 대응을 위한 하이브리드 지식 DB(Vector DB & Graph DB) 데이터 파이프라인 구축(진행 중)** 에 초점을 맞추고 있습니다.
 
 ---
 
