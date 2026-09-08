@@ -37,7 +37,7 @@
 * **Regulatory Compliance Schema:** 21 CFR Part 11(전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 레벨에서 강제하기 위해 Audit Trail 및 Versioning 전용 테이블 구조와 이력 추적 구조를 설계했습니다.
 * **Complex Traceability Mapping & Normalization:** Validation 프로세스 상의 핵심 엔티티(프로젝트 ➔ URS ➔ RA ➔ RTM ➔ Test Protocol) 간의 복잡한 다대다(N:M) 의존성을 정규화하고, 엔티티 간 영향도(Impact Analysis) 추적 스키마를 정의했습니다.
 
-> ** [Detail Link ] 🔗 [ERD Data Dictionary & Schema Design Document ] ([erd-specifications.md](docs/erd-specifications.md) ) **
+> 🔗 **[ERD Data Dictionary & Schema Design Document](docs/erd-specifications.md)**
 > *(ERD 상세 설계 문서 및 핵심 테이블 명세는 위 링크에서 확인하실 수 있습니다.)*
 
 ---
