@@ -1,4 +1,4 @@
-# Scalable Data Pipeline & Hybrid Knowledge Base Design for Regulated Environments
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/5c28bef3-f863-4724-80cc-66794954ed49" /># Scalable Data Pipeline & Hybrid Knowledge Base Design for Regulated Environments
 
 **Status:** Active / In Progress  
 **Project Start Date:** Aug 2026  
@@ -10,9 +10,13 @@
 > - **Security & Dummy Data Disclaimer:** 본 리포지토리 및 기술 문서에 포함된 모든 예시 데이터, 수치, 식별자, 소스 코드 샘플 등은 정보 보안 및 기밀 유지를 위해 가공·대체된 **가상 데이터(Dummy Data)** 입니다. 실제 기업 내부의 영업 비밀, 보안 데이터, 실사용 고객 정보는 일절 포함되어 있지 않습니다.
 
 ---
-
 ## 1. Project Overview
-본 프로젝트는 제약·바이오 산업의 핵심 규제인 GMP 및 CSV(Computerized System Validation) 규정을 준수하는 AI 기반 Validation Management Platform 구축 프로젝트입니다. URS(요구사항), RA(위험평가), RTM(추적성 매트릭스), IQ/OQ/PQ(적격성평가) 등 수작업과 문서로 파편화되어 관리되던 전 Validation 과정을 하나의 플랫폼에서 통합 관리합니다.
+
+본 프로젝트는 제약·바이오 분야의 GMP 및 CSV(Computerized System Validation) 규정을 준수하며, 파편화되어 있던 Validation 업무 전 과정을 디지털화하는 **AI 기반 Validation Management Platform(DVT)** 구축 프로젝트입니다.
+
+프로젝트 생성부터 URS, RA, RTM, 적격성평가(IQ/OQ/PQ), 시험 수행, VSR, 운영 및 변경관리에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/d6dc32d6-d414-4174-bfb8-d7358823542b" />
 
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
