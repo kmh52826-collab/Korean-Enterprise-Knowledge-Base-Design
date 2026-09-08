@@ -1,4 +1,4 @@
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/5c28bef3-f863-4724-80cc-66794954ed49" /># Scalable Data Pipeline & Hybrid Knowledge Base Design for Regulated Environments
+# Scalable Data Pipeline & Hybrid Knowledge Base Design for Regulated Environments
 
 **Status:** Active / In Progress  
 **Project Start Date:** Aug 2026  
