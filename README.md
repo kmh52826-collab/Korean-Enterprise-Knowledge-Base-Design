@@ -17,6 +17,8 @@
 프로젝트 생성부터 URS, RA, RTM, 적격성평가(IQ/OQ/PQ), 시험 수행, VSR, 운영 및 변경관리에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
 
 <img width="2528" height="1684" alt="Gemini_Generated_Image_atilleatilleatil (1)" src="https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b" />
+<img width="1766" height="853" alt="image" src="https://github.com/user-attachments/assets/dda40e6d-e637-43d5-892e-16d160004f72" />
+<img width="1766" height="312" alt="image" src="https://github.com/user-attachments/assets/81767b01-bab1-4825-9108-cda9a313e4c2" />
 
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
