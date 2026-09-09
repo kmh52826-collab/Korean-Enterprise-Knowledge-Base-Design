@@ -19,6 +19,8 @@
 [![Gemini_Generated_Image](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)
 > 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 다이어그램으로 확인하실 수 있습니다.
 
+[![System Overview & Context](https://github.com/user-attachments/assets/26fe8971-9772-43d5-a1f0-de782b84f96c)](https://github.com/user-attachments/assets/26fe8971-9772-43d5-a1f0-de782b84f96c)
+> 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 다이어그램으로 확인하실 수 있습니다.
 
 <br>
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
