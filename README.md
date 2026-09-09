@@ -16,10 +16,21 @@
 
 프로젝트 생성부터 URS, RA, RTM, 적격성평가(IQ/OQ/PQ), 시험 수행, VSR, 운영 및 변경관리에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
 
-[![Gemini_Generated_Image](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)
-> 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 다이어그램으로 확인하실 수 있습니다.
+[![System Overview & Context](https://github.com/user-attachments/assets/26fe8971-9772-43d5-a1f0-de782b84f96c)](https://github.com/user-attachments/assets/26fe8971-9772-43d5-a1f0-de782b84f96c)
+
+> 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 전체 다이어그램을 확인하실 수 있습니다.
+
+**📌 Architecture Summary**
+* **Validation Lifecycle**: Project Initiation부터 DQ/FRA, IQ/OQ/PQ, RTM, VSR까지 규제 환경(CSV) 전 과정을 종단간(End-to-End) 지원
+* **Platform Services**: AI 기반 초안 생성(Multi-candidate Drafts), Traceability Tracking (URS → RA → Test → VSR), Audit Trail 및 21 CFR Part 11 / ALCOA++ 준수
+* **Hybrid Knowledge Architecture**: 
+  * **RDBMS (PostgreSQL)**: Core Data, Audit Trail, Source of Truth 관리
+  * **Vector DB**: Semantic Search 및 AI Context Retrieval
+  * **Graph DB**: End-to-End Lineage 및 Impact/Dependency Analysis
+  * **Object Storage (S3)**: Document Repository & Evidence Storage
 
 <br>
+
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
 * **규제 준수용 관계형 데이터 모델링 (RDBMS ERD) [완료]**
