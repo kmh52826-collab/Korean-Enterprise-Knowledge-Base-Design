@@ -20,6 +20,13 @@
 
 [![Gemini_Generated_Image](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)](https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b)
 > 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 다이어그램으로 확인하실 수 있습니다.
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b" target="_blank">
+    <img width="2528" height="1684" alt="Gemini_Generated_Image" src="https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b" />
+  </a>
+  <br>
+  <sub>🔍 이미지를 클릭하면 원본 크기의 선명한 화질로 확대해서 보실 수 있습니다.</sub>
+</p>
 
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
