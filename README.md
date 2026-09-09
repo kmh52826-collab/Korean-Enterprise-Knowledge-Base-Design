@@ -18,7 +18,7 @@
 
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/d6dc32d6-d414-4174-bfb8-d7358823542b" />
 <img width="2528" height="1684" alt="image" src="https://github.com/user-attachments/assets/6d6ed3f7-d6c0-4ec5-8a38-086245d168dc" />
-
+<img width="2528" height="1684" alt="Gemini_Generated_Image_atilleatilleatil (1)" src="https://github.com/user-attachments/assets/f4077034-1d0a-4cb9-b738-83b7b13acf0b" />
 
 본 포트폴리오는 플랫폼의 핵심 기반이 되는 두 가지 축에 초점을 맞추고 있습니다:
 
