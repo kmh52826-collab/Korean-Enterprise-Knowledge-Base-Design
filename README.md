@@ -38,7 +38,7 @@
 
 ---
 
-## 2. System Overview & Context
+## 2. Cloud Infrastructure Architecture
 *(설계한 데이터 레이어가 AWS 클라우드 아키텍처 상에서 동작하는 전체 시스템 구성입니다.)*
 
 * **Access & Security:** Route 53, WAF, CloudFront, ALB (보안 및 트래픽 분산)
