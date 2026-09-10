@@ -54,26 +54,26 @@
 
 ## 🚀 Key Technical Contributions & Engineering Design
 
-### 1️⃣ End-to-End Relational Data Modeling & ERD Design `(Completed)`
+### 1. End-to-End Relational Data Modeling & ERD Design (Completed)
 규제가 엄격한 도메인 (Highly Regulated Domain)의 복잡성을 반영하여, 개념적 모델링부터 논리/물리 ERD 설계까지 전체 PostgreSQL 스키마를 직접 구축했습니다.
 
 - **Regulatory Compliance Schema Design:** 21 CFR Part 11 (전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 레벨에서 엄격히 강제하기 위해 Audit Trail 및 Versioning 전용 테이블 구조와 이력 추적 아키텍처를 설계했습니다.
-- **Complex Traceability Mapping & Normalization:** Validation 프로세스 상의 핵심 엔티티 (프로젝트 ➔ URS ➔ RA ➔ RTM ➔ Test Protocol) 간의 복잡한 다대다 (N:M) 의존성을 정규화하고, 엔티티 간 영향도 (Impact Analysis)를 정밀하게 추적할 수 있는 스키마를 정의했습니다.
+- **Complex Traceability Mapping & Normalization:** Validation 프로세스 상의 핵심 엔티티 (프로젝트 -> URS -> RA -> RTM -> Test Protocol) 간의 복잡한 다대다 (N:M) 의존성을 정규화하고, 엔티티 간 영향도 (Impact Analysis)를 정밀하게 추적할 수 있는 스키마를 정의했습니다.
 
 #### 🔗 [View ERD Data Dictionary & Schema Design Document](docs/erd-specifications.md)
 *(ERD 상세 설계 문서 및 핵심 테이블 명세는 위 링크에서 확인하실 수 있습니다.)*
 
-<br>
+---
 
-### 2️⃣ AI Deliverable Draft Generation Pipeline (Vector & Graph-Augmented Retrieval) `(In Progress)`
+### 2. AI Deliverable Draft Generation Pipeline (Vector & Graph-Augmented Retrieval) (In Progress)
 기존에 파일 형태로 파편화되어 있는 사내 규정, 가이드라인, 그리고 이전 프로젝트의 산출물 원본 데이터 (S3 적재)를 활용해, 규제 준수 가이드라인에 부합하는 문서 초안 (Draft)을 자동으로 생성하는 AI 파이프라인을 구축하고 있습니다.
 
 - **Document Ingestion & Vector Embedding:** Amazon S3에 파일 형태로 보관된 비정형 Validation 문서 및 양식들을 청크 (Chunk) 단위로 파싱하고 임베딩하여 **Vector DB (Pinecone / Pgvector 등)** 에 적재하고 있습니다. 이를 통해 단순 키워드 검색을 넘어 문맥 (Semantic) 기반의 정밀한 컨텍스트 검색이 가능하도록 설계했습니다.
 - **Graph-Augmented Context Integration:** 단순 텍스트 유사도를 넘어, URS와 RA 등 Validation 단계별 **문서 간의 상하관계 및 승인 이력 (Graph DB)** 과 **Vector DB의 유사도 검색 (Semantic Search)** 을 연계하여, 규정 정합성과 연계성이 반영된 고품질의 산출물 초안 (Multi-candidate Drafts)을 LLM 연동을 통해 도출하는 파이프라인을 구현 중입니다.
 
-<br>
+---
 
-### 3️⃣ Hybrid Database Architecture for Advanced Audit Search & Traceability `(In Progress)`
+### 3. Hybrid Database Architecture for Advanced Audit Search & Traceability (In Progress)
 단순한 문서 초안 생성을 넘어, 향후 규제 검토자 (Auditor)의 심층 질의와 검증 요구가 들어왔을 때 **AI가 하이브리드 지식 DB를 통해 관련 서류를 직접 찾아내고 승인 이력을 추적**할 수 있도록 데이터베이스 구조를 설계 및 구현하고 있습니다.
 
 - **Graph DB Modeling (Knowledge Graph & Ontology):** 문서 간의 단순 유사도 검색 한계를 극복하기 위해, **"특정 요구사항 (URS)이 어떤 위험평가 (RA)를 거쳐 최종 승인되었는가"** 에 대한 객체 간의 관계와 승인 이력 그래프 모델 (Ontology)을 구상했습니다. 이를 통해 감사관 질의 시 승인 관계망을 정밀 추적 (Lineage Tracking)할 수 있는 DB 스키마를 정의했습니다.
