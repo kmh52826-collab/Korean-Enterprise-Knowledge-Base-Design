@@ -6,7 +6,7 @@
 **Current Progress:** Phase 1 - Relational Data Modeling (Completed) / Phase 2 - AI Pipeline & Vector/Graph DB Architecture (In Progress)
 
 > ⚠️ **Notice & Disclaimer:**  
-> - **WIP Project Notice:** 본 리포지토리는 현재 개발이 진행 중인(Work-In-Progress) 기업 프로젝트 문서입니다. 시스템 아키텍처 및 상세 모듈 구현이 지속적으로 업데이트되고 있으며, 일부 문서나 코드 섹션은 계속 보완 중(under construction)일 수 있습니다.  
+> - **WIP Project Notice:** 본 리포지토리는 현재 개발이 진행 중인(Work-in-Progress) 기업 프로젝트 문서입니다. 시스템 아키텍처 및 상세 모듈 구현이 지속적으로 업데이트되고 있으며, 일부 문서나 코드 섹션은 계속 보완 중(under construction)일 수 있습니다.  
 > - **Security & Dummy Data Disclaimer:** 본 리포지토리 및 기술 문서에 포함된 모든 예시 데이터, 수치, 식별자, 소스 코드 샘플 등은 정보 보안 및 기밀 유지를 위해 가공·대체된 **가상 데이터(Dummy Data)** 입니다. 실제 기업 내부의 영업 비밀, 보안 데이터, 실사용 고객 정보는 일절 포함되어 있지 않습니다.
 
 ---
@@ -27,8 +27,8 @@
 
 | Category | Technologies |
 | :--- | :--- |
-| **Relational Database & Cache** | Amazon RDS (PostgreSQL), Amazon ElastiCache (Redis) |
-| **AI & Knowledge Databases** | Vector DB (Pinecone / Pgvector), Graph DB (Neo4j / Amazon Neptune) |
+| **Relational Database** | Amazon RDS (PostgreSQL) |
+| **AI & Knowledge Databases** | Vector DB, Graph DB (Neo4j / Amazon Neptune) |
 | **Object Storage & AI Pipeline** | Amazon S3, Amazon Bedrock API |
 | **Languages** | Python, SQL |
 
@@ -42,7 +42,7 @@
 
 ### 🎯 Architecture Summary
 - **Validation Lifecycle** : Project Initiation부터 DQ/FRA, IQ/OQ/PQ, RTM, VSR까지 규제 환경 (CSV) 전 과정을 종단간 (End-to-End) 지원
-- **Core AI Audit & Traceability** : 규제 감사관 (Auditor)의 심층 질의에 대해 AI가 하이브리드 지식 DB를 기반으로 관련 서류를 즉시 탐색·제공하고, End-to-End Lineage 및 승인 이력을 자동으로 검증
+- **Core AI Audit & Traceability** : 규제 감사관 (Auditor)의 심층 질의에 대해 AI가 하이브리드 지식 DB를 기반으로 관련 서류를 탐색·제공하고, End-to-End Lineage 및 승인 이력을 추적할 수 있도록 설계
 - **Compliance & Governance** : 21 CFR Part 11 및 ALCOA++ 원칙을 준수하는 데이터베이스 레벨의 Audit Trail 및 이력 관리
 - **Hybrid Knowledge Architecture** : 
   - **RDBMS (PostgreSQL)** : Core Data, Audit Trail, Source of Truth 관리
@@ -68,7 +68,7 @@
 ### 2. AI Deliverable Draft Generation Pipeline (Vector & Graph-Augmented Retrieval) (In Progress)
 기존에 파일 형태로 파편화되어 있는 사내 규정, 가이드라인, 그리고 이전 프로젝트의 산출물 원본 데이터 (S3 적재)를 활용해, 규제 준수 가이드라인에 부합하는 문서 초안 (Draft)을 자동으로 생성하는 AI 파이프라인을 구축하고 있습니다.
 
-- **Document Ingestion & Vector Embedding:** Amazon S3에 파일 형태로 보관된 비정형 Validation 문서 및 양식들을 청크 (Chunk) 단위로 파싱하고 임베딩하여 **Vector DB (Pinecone / Pgvector 등)** 에 적재하고 있습니다. 이를 통해 단순 키워드 검색을 넘어 문맥 (Semantic) 기반의 정밀한 컨텍스트 검색이 가능하도록 설계했습니다.
+- **Document Ingestion & Vector Embedding:** Amazon S3에 파일 형태로 보관된 비정형 Validation 문서 및 양식들을 청크 (Chunk) 단위로 파싱하고 임베딩하여 **Vector DB**에 적재하는 파이프라인을 설계하고 있습니다. 이를 통해 단순 키워드 검색을 넘어 문맥 (Semantic) 기반의 정밀한 컨텍스트 검색이 가능하도록 설계했습니다.
 - **Graph-Augmented Context Integration:** 단순 텍스트 유사도를 넘어, URS와 RA 등 Validation 단계별 **문서 간의 상하관계 및 승인 이력 (Graph DB)** 과 **Vector DB의 유사도 검색 (Semantic Search)** 을 연계하여, 규정 정합성과 연계성이 반영된 고품질의 산출물 초안 (Multi-candidate Drafts)을 LLM 연동을 통해 도출하는 파이프라인을 구현 중입니다.
 
 ---
