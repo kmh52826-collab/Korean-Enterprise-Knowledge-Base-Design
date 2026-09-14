@@ -36,7 +36,7 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 ---
 
 ## 1. 조직·사용자·전역 권한 관리
-<img width="1650" height="1066" alt="image" src="https://github.com/user-attachments/assets/d1f9d215-dafa-46ae-b7ff-75f4bad5b622" />
+<img width="2538" height="1391" alt="image" src="https://github.com/user-attachments/assets/8e3d84d2-0472-46f6-9004-cdb6c28a4bf3" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-global-role-management
 
 ### 구조 개요
