@@ -2,7 +2,7 @@
 
 Validation Management Platform의 전체 데이터 모델을 업무 영역별로 구분하여 정리한 ERD 명세서입니다.
 
-복잡한 전체 스키마를 16개 주제로 분리하고, 각 영역의 주요 테이블과 관계를 ERD 이미지로 제공합니다. 각 섹션에는 해당 영역의 구조 개요와 테이블별 역할을 함께 정리했습니다.
+복잡한 전체 스키마를 16개 주제로 분리하고, 각 영역의 주요 테이블과 관계를 ERD 이미지로 제공합니다. 각 섹션에는 복잡한 선 구조를 빠르게 파악할 수 있는 관계 구조, 해당 영역의 구조 개요와 테이블별 역할을 함께 정리했습니다.
 
 > [!NOTE]
 > 이 저장소는 데이터 모델링 및 시스템 설계 사례를 공유하기 위한 공개용 자료입니다.
@@ -35,9 +35,67 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 
 ---
 
+## 전체 구조 한눈에 보기
+
+```text
+조직 및 사용자 구성
+    ↓
+시스템·장비 식별
+    ↓
+Validation 프로젝트 생성
+    ↓
+프로젝트 참여자 및 수행 활동 구성
+    ↓
+QIA·공급업체 감사
+    ↓
+URS → FDS → DDS → DQ
+    ↓
+FRA 위험평가
+    ↓
+IQ → OQ → PQ 적격성 시험
+    ↓
+추적성 확인 및 RTM 생성
+    ↓
+일탈 검토 및 VSR 작성
+    ↓
+프로젝트 종료
+```
+
+대부분의 업무 데이터는 `validation_project`를 중심으로 연결됩니다. Workflow, 전자서명, 증적 파일 및 Audit Trail은 특정 단계에만 속하지 않고 위 업무 전반에 적용되는 공통 통제 기능입니다.
+
+주요 문서형 산출물은 문서 헤더와 상세 항목을 분리하여 관리합니다.
+
+```text
+fds_spec       → fds_item / fds_interface
+dds_spec       → dds_item
+dq_assessment  → dq_item
+fra_assessment → fra_item
+iq_assessment  → iq_item
+oq_assessment  → oq_item
+pq_assessment  → pq_item
+rtm_assessment → rtm_item
+vsr_assessment → vsr_item
+```
+
+> [!IMPORTANT]
+> `workflow_instance`, `electronic_signature`, `audit_trail`, `traceability_link`, `evidence_link`, `deviation` 및 AI 관련 테이블의 일부 관계는 대상 유형과 대상 ID를 함께 저장하는 다형 참조 구조입니다. 물리 FK로 표현되지 않는 대상 엔터티의 유효성은 애플리케이션 또는 서비스 계층에서 검증해야 합니다.
+
+---
+
 ## 1. 조직·사용자·전역 권한 관리
 <img width="2350" height="1379" alt="image" src="https://github.com/user-attachments/assets/fefb0bf9-5d05-45cb-972d-50fbaabd9745" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-global-role-management
+
+### 관계 구조
+
+```text
+organization
+  └─ app_user
+       ├─ user_role ─ role
+       └─ user_group_member ─ user_group
+                                  └─ group_role ─ role
+                                       └─ validation_project (PROJECT 범위인 경우)
+```
 
 ### 구조 개요
 
@@ -57,11 +115,28 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-glo
 | `user_group_member` | 사용자와 사용자 그룹 간의 다대다 관계를 관리하며, 그룹 참여 상태와 참여 시작·종료 시점 기록 |
 | `group_role` | 사용자 그룹에 역할을 부여하고, 해당 역할의 적용 범위를 전역 또는 특정 프로젝트 단위로 구분하여 관리 |
 
+### 핵심 이해 포인트
+
+- `user_role`은 사용자에게 역할을 직접 부여하고, `group_role`은 그룹 구성원에게 역할을 일괄 적용합니다.
+- `GLOBAL` 범위의 권한과 특정 프로젝트에만 적용되는 `PROJECT` 범위의 권한을 구분합니다.
+- 전역 권한과 실제 프로젝트 참여 역할은 별개이며, 프로젝트 참여자는 `project_member`에서 관리합니다.
+
 ---
 
 ## 2. 시스템·프로젝트·참여자 관리
 <img width="2000" height="1491" alt="image" src="https://github.com/user-attachments/assets/b8625331-f875-41a2-9546-dc2ef32557cd" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-participant-management
+
+### 관계 구조
+
+```text
+organization
+  └─ system_asset
+       └─ validation_project
+            └─ project_member
+                 ├─ app_user
+                 └─ role
+```
 
 ### 구조 개요
 
@@ -80,11 +155,29 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-partic
 | `app_user` | 프로젝트에 참여하거나 프로젝트를 생성·수정하는 사용자 계정과 기본 프로필 관리 |
 | `role` | 프로젝트 참여자에게 부여할 작성자, 검토자, 승인자 등의 역할 기준정보 관리 |
 
+### 핵심 이해 포인트
+
+- 하나의 시스템·장비에 대해 신규 검증, 변경 검증, 재검증 등 여러 Validation 프로젝트를 생성할 수 있습니다.
+- 동일한 사용자도 프로젝트마다 다른 역할로 참여할 수 있습니다.
+- `app_user`와 `role`은 전역 기준정보이고, `project_member`는 특정 프로젝트에서의 실제 역할 배정입니다.
+
 ---
 
 ## 3. Validation 활동·선후행 조건 관리
 <img width="2500" height="1729" alt="image" src="https://github.com/user-attachments/assets/3648a194-0317-43eb-aa29-fd262b715add" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-dependency-management
+
+### 관계 구조
+
+```text
+validation_project
+  └─ project_activity ─ validation_activity
+
+validation_activity
+  └─ activity_dependency
+       ├─ predecessor_activity_id (선행 활동)
+       └─ successor_activity_id   (후행 활동)
+```
 
 ### 구조 개요
 
@@ -104,11 +197,29 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-d
 | `project_activity` | 프로젝트별 수행 대상 활동, 필수 여부, 활성화 여부 및 진행 상태 관리 |
 | `activity_dependency` | 선행 활동, 요구 상태, 조건 유형 및 평가 순서를 기준으로 후행 활동의 활성화 조건 관리 |
 
+### 핵심 이해 포인트
+
+- `project_activity`는 활동 마스터 중 해당 프로젝트에서 실제 수행할 항목을 선택한 결과입니다.
+- `activity_dependency`는 단순 순서뿐 아니라 승인 상태, 추적성 존재, 고위험 항목의 시험 커버리지, 미해결 일탈 여부 등의 업무 조건을 표현합니다.
+- 프로젝트 진행률은 개별 활동의 원천 상태를 기반으로 계산하는 구조입니다.
+
 ---
 
 ## 4. 라이브러리·QIA·공급업체 감사 관리
 <img width="2600" height="1866" alt="image" src="https://github.com/user-attachments/assets/0fa424a7-ec2f-4589-8b5e-75b20e7eefa0" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-audit-management
+
+### 관계 구조
+
+```text
+organization
+  ├─ library_item (URS·IQ·OQ 표준 항목)
+  └─ system_asset
+       └─ validation_project
+            ├─ qia_assessment
+            │    └─ qia_module_item
+            └─ vendor_audit
+```
 
 ### 구조 개요
 
@@ -129,11 +240,29 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-au
 | `qia_module_item` | QIA 문서의 모듈·프로세스별 GxP 세부 평가 항목과 평가 결과 관리 |
 | `vendor_audit` | 공급업체 감사 방식, 일정, 감사 결과, 결함 수, 문서 버전 및 진행 상태 관리 |
 
+### 핵심 이해 포인트
+
+- `library_item`은 프로젝트에 직접 종속되지 않는 재사용 기준정보입니다.
+- QIA와 공급업체 감사는 특정 프로젝트에 종속되는 평가 결과이며, QIA 결과는 이후 Validation 범위와 수행 활동을 정하는 주요 기준입니다.
+- QIA 문서 한 건은 여러 모듈·프로세스 평가 항목을 포함할 수 있습니다.
+
 ---
 
 ## 5. URS·FDS 관리
 <img width="4440" height="3366" alt="image" src="https://github.com/user-attachments/assets/a424ad13-1d60-4e0d-8f99-97d72d1926c1" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
+
+### 관계 구조
+
+```text
+validation_project
+  ├─ requirement (URS)
+  └─ fds_spec
+       ├─ fds_item
+       └─ fds_interface
+
+requirement ─ traceability_link ─ fds_item
+```
 
 ### 구조 개요
 
@@ -154,11 +283,32 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
 | `fds_item` | FDS 문서에 포함되는 기능·화면·인터페이스 항목의 구분, 관리 번호, 기능명, 상세 설명 및 관련 화면 관리 |
 | `fds_interface` | FDS 문서의 시스템 간 인터페이스별 송신·수신 시스템, 연동 데이터, 전송 주기, 전송 방식 및 관련 FDS 번호 관리 |
 
+### 핵심 이해 포인트
+
+- URS는 사용자가 필요로 하는 기능을 정의하고, FDS는 해당 요구사항을 기능·화면·인터페이스 설계로 구체화합니다.
+- FDS는 문서 헤더인 `fds_spec`과 기능 상세인 `fds_item`, 인터페이스 상세인 `fds_interface`로 분리됩니다.
+- URS와 FDS 상세 항목 간 공식 추적 관계는 `traceability_link`에서 관리합니다.
+
 ---
 
 ## 6. DDS·DQ 관리
 <img width="5840" height="4046" alt="image" src="https://github.com/user-attachments/assets/0389d811-f499-4e5f-9db0-530dfa497fce" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
+
+### 관계 구조
+
+```text
+validation_project
+  ├─ requirement (URS)
+  ├─ fds_spec
+  │    └─ fds_item
+  ├─ dds_spec
+  │    └─ dds_item
+  └─ dq_assessment
+       └─ dq_item ─ requirement
+
+URS / FDS / DDS / DQ 상세 항목 ─ traceability_link ─ 상호 추적
+```
 
 ### 구조 개요
 
@@ -182,11 +332,27 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 | `dq_assessment` | 프로젝트별 설계 적격성 평가 문서의 번호, 버전, 개정 순번 및 상태 관리 |
 | `dq_item` | URS 요구사항과 FDS·DDS 설계의 연계 내용, 적격성 평가 결과, 검토자 및 비고 관리 |
 
+### 핵심 이해 포인트
+
+- DDS는 구현 관점의 상세 설계이고, DQ는 해당 설계가 URS를 충족하는지 검토하는 평가입니다.
+- `dq_item`은 URS별 설계 적격성 판정과 검토 결과를 관리합니다.
+- `dq_item`의 화면 표시용 FDS·DDS 매핑과 별개로, 산출물 간 공식적인 범용 추적 관계는 `traceability_link`를 기준으로 해석합니다.
+
 ---
 
 ## 7. FRA 위험평가 관리
 <img width="2575" height="2129" alt="image" src="https://github.com/user-attachments/assets/077a700f-9e8b-483f-ac75-e73a29f8a150" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-management
+
+### 관계 구조
+
+```text
+validation_project
+  ├─ requirement (URS)
+  └─ fra_assessment
+       └─ fra_item
+            └─ requirement (필요한 경우)
+```
 
 ### 구조 개요
 
@@ -206,11 +372,29 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-manag
 | `fra_assessment` | 프로젝트별 FRA 문서의 번호, 제목, 버전, 개정 순번 및 상태 관리 |
 | `fra_item` | 기능별 위험 시나리오, PI·LL·DL 평가값, 위험도, 위험 등급, 완화 전략 및 연결 시험 관리 |
 
+### 핵심 이해 포인트
+
+- FRA는 모든 기능을 같은 강도로 시험하는 대신 위험 수준에 따라 시험과 통제의 우선순위를 정하기 위한 평가입니다.
+- 위험 항목은 필요한 경우 URS와 연결되며, URS에 직접 연결되지 않는 위험 항목도 허용됩니다.
+- 평가 결과는 후속 IQ·OQ·PQ 시험의 범위와 RTM 커버리지 판단에 활용됩니다.
+
 ---
 
 ## 8. IQ·OQ·PQ 적격성 시험 관리
 <img width="3070" height="2543" alt="image" src="https://github.com/user-attachments/assets/dcbb8a59-325e-4e99-9be1-873c70aabc53" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualification-testing-management
+
+### 관계 구조
+
+```text
+validation_project
+  ├─ iq_assessment ─ iq_item
+  ├─ oq_assessment ─ oq_item
+  └─ pq_assessment ─ pq_item
+
+iq_item / oq_item / pq_item
+  └─ deviation (시험 중 일탈 발생 시)
+```
 
 ### 구조 개요
 
@@ -234,11 +418,29 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualificatio
 | `pq_item` | PQ 성능 시험 절차, 기대 결과, 실제 결과, 판정, 수행자 및 수행 시각 관리 |
 | `deviation` | 문서 또는 시험 수행 중 발생한 일탈의 내용, 심각도, 조사·해결 및 종결 승인 상태 관리 |
 
+### 핵심 이해 포인트
+
+- IQ는 설치 적합성, OQ는 기능의 규격 충족 여부, PQ는 실제 운영 조건에서의 지속적인 성능을 확인합니다.
+- 각 시험은 시험 절차인 프로토콜 승인과 실제 수행 결과인 레코드 승인을 구분합니다.
+- 승인된 프로토콜로 시험을 수행한 뒤 실제 결과, 판정, 수행자, 수행 시각을 기록하며 불일치는 `deviation`으로 관리합니다.
+
 ---
 
 ## 9. 설계·위험 산출물 추적성 관리
 <img width="4360" height="5206" alt="image" src="https://github.com/user-attachments/assets/a1587eae-c5f3-47d7-9309-7495b8c0044d" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverable-traceability-management
+
+### 관계 구조
+
+```text
+requirement (URS)
+  ├─ IMPLEMENTED_BY → fds_item
+  ├─ IMPLEMENTED_BY → dds_item
+  ├─ ASSESSED_BY    → dq_item
+  └─ ASSESSED_BY    → fra_item
+
+모든 연결은 traceability_link에서 통합 관리
+```
 
 ### 구조 개요
 
@@ -263,11 +465,30 @@ Validation 프로젝트의 URS 요구사항과 FDS·DDS 설계, DQ 평가 및 FR
 | `fra_item` | URS 또는 기능별 위험 시나리오, 위험도, 위험 등급 및 완화 전략 관리 |
 | `traceability_link` | URS, FDS, DDS, DQ, FRA 항목 간 구현·평가·완화 관계를 다형 참조 방식으로 관리 |
 
+### 핵심 이해 포인트
+
+- `traceability_link`는 출발 엔터티와 대상 엔터티를 연결하는 범용 관계 테이블입니다.
+- 대표 관계 유형은 `IMPLEMENTED_BY`, `ASSESSED_BY`, `VERIFIED_BY`, `MITIGATED_BY`입니다.
+- 다형 참조이므로 `source_entity_id`와 `target_entity_id`에 대상 업무 테이블로의 물리 FK가 없을 수 있으며, 유형별 유효성은 애플리케이션 계층에서 검증해야 합니다.
+
 ---
 
 ## 10. 적격성 시험 추적성·RTM 관리
 <img width="2840" height="2703" alt="image" src="https://github.com/user-attachments/assets/2173e7a8-503a-42f0-b909-66593b263fa5" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/10-qualification-test-traceability-and-rtm-management
+
+### 관계 구조
+
+```text
+requirement (URS)
+  ├─ traceability_link → iq_item
+  ├─ traceability_link → oq_item
+  └─ traceability_link → pq_item
+
+원천 추적 관계 집계
+  └─ rtm_assessment
+       └─ rtm_item (URS별 승인 시점 스냅샷)
+```
 
 ### 구조 개요
 
@@ -292,11 +513,32 @@ Validation 프로젝트의 URS 요구사항과 IQ·OQ·PQ 시험 항목 간 추�
 | `rtm_assessment` | 프로젝트별 URS 건수, FRA 연계율, IQ·OQ 커버리지 및 전체 평균 커버리지의 RTM 스냅샷 관리 |
 | `rtm_item` | URS별 FRA·FDS·DDS 매핑, IQ·OQ·PQ 결과 및 항목별 커버리지의 상세 스냅샷 관리 |
 
+### 핵심 이해 포인트
+
+- `traceability_link`는 현재 운영 중인 원천 추적 관계이고, `rtm_assessment`와 `rtm_item`은 RTM 생성·승인 시점의 스냅샷입니다.
+- 원천 관계가 나중에 변경되더라도 당시 승인된 RTM 결과는 그대로 보존할 수 있습니다.
+- RTM은 미연결 URS, 설계·위험평가·시험 누락, 매핑 실패 및 항목별·전체 커버리지를 확인하는 규제 대응 산출물입니다.
+
 ---
 
 ## 11. VSR·일탈 관리
 <img width="4760" height="4306" alt="image" src="https://github.com/user-attachments/assets/d5c6ffd5-1702-4f1a-8de3-8585984fc5b2" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/11-vsr-and-deviation-management
+
+### 관계 구조
+
+```text
+project_activity 승인 상태
+        +
+rtm_assessment 추적성·커버리지
+        +
+deviation 해결·종결 상태
+        ↓
+vsr_assessment
+  └─ vsr_item (활동별 결과 요약)
+        ↓
+Validation 프로젝트 종료 판단
+```
 
 ### 구조 개요
 
@@ -319,11 +561,29 @@ Validation 프로젝트의 활동 수행 결과, RTM 커버리지 및 일탈 현
 | `vsr_assessment` | 프로젝트별 최종 밸리데이션 결론, 결론 상세 내용, 버전 및 승인 상태 관리 |
 | `vsr_item` | Validation 활동별 문서 번호, 개정 차수, 결과 건수, 일탈 및 승인 정보를 요약 관리 |
 
+### 핵심 이해 포인트
+
+- VSR은 활동 승인 여부, 시험 결과, RTM 커버리지 및 미해결 일탈을 종합하여 최종 결론을 내리는 문서입니다.
+- 정상종료는 선택된 활동의 승인, 추적성 및 일탈 종결 조건을 종합하여 판단합니다.
+- 강제종료는 정상 완료 조건과 별개이며 종료 사유, 요청자 및 처리 시점을 보존합니다.
+
 ---
 
 ## 12. Workflow·승인·전자서명 관리
 <img width="4640" height="3766" alt="image" src="https://github.com/user-attachments/assets/55c8d805-4684-4d27-9288-ad118a65bc37" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/12-workflow-approval-and-electronic-signature-management
+
+### 관계 구조
+
+```text
+validation_project
+  └─ project_member ─ app_user / role
+
+workflow_instance
+  └─ workflow_step
+       └─ approval_action
+            └─ electronic_signature
+```
 
 ### 구조 개요
 
@@ -346,11 +606,26 @@ Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려�
 | `approval_action` | 상신·검토·승인·반려·취소 등 단계별 실제 처리 내용과 처리자 및 처리 시각 관리 |
 | `electronic_signature` | 검토·승인·반려 시 서명자, 서명 의미, 대상 버전, 내용 해시 및 재인증 결과 관리 |
 
+### 핵심 이해 포인트
+
+- `workflow_instance`는 전체 진행 상태, `workflow_step`은 개별 검토·승인 단계, `approval_action`은 실제 처리 행위를 관리합니다.
+- `electronic_signature`는 승인·반려 행위에 대한 본인 확인과 서명 증적이며, 대상 버전과 내용 해시를 함께 보존합니다.
+- Audit Trail은 위 개념들과 별개로 처리 과정에서 발생한 데이터 변경 이력을 기록합니다.
+
 ---
 
 ## 13. 파일·증적·파일 정리 관리
 <img width="2500" height="1791" alt="image" src="https://github.com/user-attachments/assets/be3ac81c-3cb4-46c1-b19e-80c1cc60e362" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cleanup-management
+
+### 관계 구조
+
+```text
+file_cleanup_execution
+  └─ file_asset
+       └─ evidence_link
+            └─ 각 업무 문서 또는 시험 항목
+```
 
 ### 구조 개요
 
@@ -370,11 +645,30 @@ Validation 프로젝트에서 사용하는 첨부파일과 시험 증적의 메�
 | `file_asset` | 첨부파일, 증적파일, 리포트 및 내보내기 파일의 저장 경로, 크기, 형식, 만료 및 정리 상태 관리 |
 | `evidence_link` | 파일과 문서·시험 항목·일탈 간 N:M 증적 연결을 다형 참조 방식으로 관리 |
 
+### 핵심 이해 포인트
+
+- `file_asset`은 파일 자체의 메타데이터이고, `evidence_link`는 해당 파일이 어떤 업무 항목의 증적인지를 표현합니다.
+- 두 영역을 분리하여 하나의 파일을 여러 업무 항목에 연결하거나 하나의 업무 항목에 여러 파일을 연결할 수 있습니다.
+- 파일 정리는 규정상 보존해야 할 증적을 임의 삭제하는 기능이 아니라 임시·만료·고아 파일을 통제된 절차로 정리하고 결과를 기록하는 운영 기능입니다.
+
 ---
 
 ## 14. 리포트·알림·백업 운영 관리
 <img width="2800" height="2423" alt="image" src="https://github.com/user-attachments/assets/5643c343-a8e0-4bf0-a773-d2411268b98b" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/14-report-notification-and-backup-operations-management
+
+### 관계 구조
+
+```text
+report_schedule
+  └─ report_generation
+       └─ file_asset (생성 결과)
+
+workflow_instance / workflow_step
+  └─ notification_delivery
+
+backup_execution (독립 운영 실행 이력)
+```
 
 ### 구조 개요
 
@@ -398,11 +692,28 @@ Validation 프로젝트와 Workflow를 기준으로 운영 리포트의 정기·
 | `notification_delivery` | 검토·승인 요청과 처리기한 관련 알림의 수신자, 채널, 발송 상태, 실패 및 재시도 이력 관리 |
 | `backup_execution` | 데이터베이스와 파일의 정기·수동 백업 유형, 대상, 상태, 저장 위치, 크기 및 재시도 이력 관리 |
 
+### 핵심 이해 포인트
+
+- 이 영역은 인프라 구성 자체가 아니라 운영 과정의 작업 요청, 처리 결과, 실패 및 재시도 이력을 데이터로 관리합니다.
+- 비동기 작업은 일반적으로 `PENDING → PROCESSING → COMPLETED` 흐름을 따르며, 실패 시 재시도 대기 또는 최종 실패 상태로 전환됩니다.
+- 정기 일정 한 건에서 여러 리포트 생성 작업이 발생할 수 있고, 생성 결과는 `file_asset`에 연결됩니다.
+
 ---
 
 ## 15. AI 생성 작업·결과 관리
 <img width="2488" height="2229" alt="image" src="https://github.com/user-attachments/assets/52061c1a-be1e-4375-a75b-1bd04c5ad0d5" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/15-ai-generation-job-and-result-management
+
+### 관계 구조
+
+```text
+ai_generation_job
+  └─ ai_generation_result
+       └─ ai_result_item
+            └─ 사용자 검토·선택
+                 └─ 실제 업무 테이블 반영
+                      └─ 공식 검토·승인 Workflow
+```
 
 ### 구조 개요
 
@@ -422,11 +733,29 @@ Validation 프로젝트의 문서와 항목에 대한 AI 생성 요청을 비동
 | `ai_generation_result` | AI 작업으로 생성된 결과 집합의 제목, 선택 여부, 적용 여부, 선택 사용자 및 선택 시각 관리 |
 | `ai_result_item` | AI가 생성한 개별 요구사항, 위험 시나리오, 시험 항목 또는 문서 섹션의 내용과 적용 대상 관리 |
 
+### 핵심 이해 포인트
+
+- AI 결과는 생성 즉시 공식 산출물이 되지 않으며, 사용자의 검토·선택 후 실제 업무 테이블에 반영됩니다.
+- 생성 원본과 실제 적용 결과를 분리하고, 사용 모델·입력 조건·선택 사용자·반영 여부를 기록합니다.
+- 반영된 결과도 일반 업무 데이터와 동일한 공식 검토·승인 Workflow를 거쳐야 합니다.
+
 ---
 
 ## 16. Audit Trail 관리
 <img width="1563" height="904" alt="image" src="https://github.com/user-attachments/assets/60be2276-6f0d-407e-987f-4a1f4b0a6fdb" />
 Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
+
+### 관계 구조
+
+```text
+organization
+  └─ app_user
+       └─ audit_trail
+
+audit_trail
+  └─ target_table_name + target_record_id
+       └─ 각 감사 대상 업무 레코드 (다형 참조)
+```
 
 ### 구조 개요
 
@@ -441,3 +770,22 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
 | `organization` | 감사 대상 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
 | `app_user` | 주요 데이터 변경을 수행한 사용자 계정과 소속 조직 정보 관리 |
 | `audit_trail` | 데이터 생성·수정·삭제 및 운영 작업의 수행자, 대상, 변경 전후 값, 변경 사유, 요청·세션 정보와 문서 버전 관리 |
+
+### 핵심 이해 포인트
+
+```text
+누가        actor_id / actor_type
+언제        created_at
+무엇을      target_table_name / target_record_id
+어떻게      action_type
+변경 전     old_values
+변경 후     new_values
+왜          reason_for_change
+어디에서    client_ip / request_uri / user_agent
+어떤 요청   request_id / session_id
+어떤 버전   target_version / target_revision_number
+```
+
+- 사용자가 수행한 변경뿐 아니라 시스템 또는 배치 작업도 기록할 수 있으며, 이 경우 사용자 ID는 없을 수 있습니다.
+- Audit Trail은 데이터 변경과 중요 시스템 행위의 이력이고, 전자서명은 승인·반려 등 규제상 서명 행위의 증적입니다.
+- 데이터가 삭제되더라도 삭제 시점의 기존 값을 Audit Trail에 남겨 변경 경위를 추적할 수 있습니다.
