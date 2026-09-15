@@ -13,8 +13,8 @@
 
 ## 1. 문서 개요
 
-- 전체 테이블: **51개**
-- 전체 컬럼: **783개**
+- 전체 테이블: **54개**
+- 전체 컬럼: **815개**
 - 도메인: **25개**
 - 명명 규칙: 테이블 및 컬럼은 `snake_case`, PK는 엔터티별 식별자 컬럼 사용
 - 날짜/시간 기준: DB에는 UTC 저장, 화면에서는 사용자 또는 사업장 Timezone 적용
@@ -40,58 +40,61 @@
 | 2 | Security | 사용자 | [`app_user`](#table-app_user) | `user_id` | `organization_id` | High | Y |
 | 3 | Security | 역할 | [`role`](#table-role) | `role_id` | - | High | Y |
 | 4 | Security | 사용자 역할 | [`user_role`](#table-user_role) | `user_role_id` | `user_id, role_id` | High | Y |
-| 5 | Compliance | 전자서명 | [`electronic_signature`](#table-electronic_signature) | `signature_id` | `signer_id` | Critical | Y |
-| 6 | Compliance | Audit Trail | [`audit_trail`](#table-audit_trail) | `audit_id` | `actor_id` | Critical | Y |
-| 7 | File | 파일 자산 | [`file_asset`](#table-file_asset) | `file_id` | `uploader_id` | High | Y |
-| 8 | File | 증적 파일 연결 | [`evidence_link`](#table-evidence_link) | `evidence_link_id` | `project_id, file_id, created_by, updated_by` | High | Y |
-| 9 | File | 파일 정리 실행 이력 | [`file_cleanup_execution`](#table-file_cleanup_execution) | `file_cleanup_execution_id` | `requested_by, created_by, updated_by` | High | Y |
-| 10 | System | 시스템/장비 식별 정보 | [`system_asset`](#table-system_asset) | `system_id` | `organization_id` | High | Y |
-| 11 | System | 백업 실행 이력 | [`backup_execution`](#table-backup_execution) | `backup_execution_id` | `requested_by, created_by, updated_by` | Critical | Y |
-| 12 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | - | High | Y |
-| 13 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by` | High | Y |
-| 14 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y |
-| 15 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y |
-| 16 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y |
-| 17 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y |
-| 18 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id` | High | Y |
-| 19 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id` | High | Y |
-| 20 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id` | High | Y |
-| 21 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by` | High | Y |
-| 22 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by` | High | Y |
-| 23 | FDS | FDS 상세 항목 | [`fds_item`](#table-fds_item) | `fds_item_id` | `fds_id, created_by, updated_by` | High | Y |
-| 24 | FDS | FDS 인터페이스 정의 | [`fds_interface`](#table-fds_interface) | `fds_interface_id` | `fds_id, created_by, updated_by` | High | Y |
-| 25 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y |
-| 26 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, reviewed_by, created_by, updated_by` | High | Y |
-| 27 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y |
-| 28 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by` | High | Y |
-| 29 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y |
-| 30 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, executed_by, created_by, updated_by` | High | Y |
-| 31 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y |
-| 32 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, executed_by, created_by, updated_by` | High | Y |
-| 33 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y |
-| 34 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, executed_by, created_by, updated_by` | High | Y |
-| 35 | RTM | 요구사항 추적 매트릭스 | [`rtm_assessment`](#table-rtm_assessment) | `rtm_id` | `project_id, created_by, updated_by` | Critical | Y |
-| 36 | RTM | RTM 상세 추적 항목 | [`rtm_item`](#table-rtm_item) | `rtm_item_id` | `rtm_id, requirement_id, created_by, updated_by` | Critical | Y |
-| 37 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by` | Critical | Y |
-| 38 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by` | Critical | Y |
-| 39 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by` | Critical | Y |
-| 40 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, assignee_id, created_by, updated_by` | Critical | Y |
-| 41 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, actor_id, signature_id` | Critical | Y |
-| 42 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y |
-| 43 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by` | High | Y |
-| 44 | DDS | DDS 상세 항목 | [`dds_item`](#table-dds_item) | `dds_item_id` | `dds_id, created_by, updated_by` | High | Y |
-| 45 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, resolved_by, approved_by, created_by, updated_by` | Critical | Y |
-| 46 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, report_schedule_id, created_by, updated_by` | High | Y |
-| 47 | Report | 리포트 실행 일정 | [`report_schedule`](#table-report_schedule) | `report_schedule_id` | `project_id, created_by, updated_by` | High | Y |
-| 48 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
-| 49 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, created_by, updated_by` | High | Y |
-| 50 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
-| 51 | Notification | 알림 발송 | [`notification_delivery`](#table-notification_delivery) | `notification_delivery_id` | `project_id, workflow_instance_id, workflow_step_id, recipient_id, created_by, updated_by` | High | Y |
+| 5 | Security | 사용자 그룹 | [`user_group`](#table-user_group) | `user_group_id` | `organization_id, created_by, updated_by` | High | Y |
+| 6 | Security | 사용자 그룹 구성원 | [`user_group_member`](#table-user_group_member) | `user_group_member_id` | `user_group_id, user_id, created_by, updated_by` | High | Y |
+| 7 | Security | 사용자 그룹 역할 | [`group_role`](#table-group_role) | `group_role_id` | `user_group_id, role_id, project_id, created_by, updated_by` | High | Y |
+| 8 | Compliance | 전자서명 | [`electronic_signature`](#table-electronic_signature) | `signature_id` | `signer_id` | Critical | Y |
+| 9 | Compliance | Audit Trail | [`audit_trail`](#table-audit_trail) | `audit_id` | `actor_id` | Critical | Y |
+| 10 | File | 파일 자산 | [`file_asset`](#table-file_asset) | `file_id` | `uploader_id` | High | Y |
+| 11 | File | 증적 파일 연결 | [`evidence_link`](#table-evidence_link) | `evidence_link_id` | `project_id, file_id, created_by, updated_by` | High | Y |
+| 12 | File | 파일 정리 실행 이력 | [`file_cleanup_execution`](#table-file_cleanup_execution) | `file_cleanup_execution_id` | `requested_by, created_by, updated_by` | High | Y |
+| 13 | System | 시스템/장비 식별 정보 | [`system_asset`](#table-system_asset) | `system_id` | `organization_id` | High | Y |
+| 14 | System | 백업 실행 이력 | [`backup_execution`](#table-backup_execution) | `backup_execution_id` | `requested_by, created_by, updated_by` | Critical | Y |
+| 15 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | - | High | Y |
+| 16 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by` | High | Y |
+| 17 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y |
+| 18 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y |
+| 19 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y |
+| 20 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y |
+| 21 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id` | High | Y |
+| 22 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id` | High | Y |
+| 23 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id` | High | Y |
+| 24 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by` | High | Y |
+| 25 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by` | High | Y |
+| 26 | FDS | FDS 상세 항목 | [`fds_item`](#table-fds_item) | `fds_item_id` | `fds_id, created_by, updated_by` | High | Y |
+| 27 | FDS | FDS 인터페이스 정의 | [`fds_interface`](#table-fds_interface) | `fds_interface_id` | `fds_id, created_by, updated_by` | High | Y |
+| 28 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y |
+| 29 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, reviewed_by, created_by, updated_by` | High | Y |
+| 30 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y |
+| 31 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by` | High | Y |
+| 32 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y |
+| 33 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, executed_by, created_by, updated_by` | High | Y |
+| 34 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y |
+| 35 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, executed_by, created_by, updated_by` | High | Y |
+| 36 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y |
+| 37 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, executed_by, created_by, updated_by` | High | Y |
+| 38 | RTM | 요구사항 추적 매트릭스 | [`rtm_assessment`](#table-rtm_assessment) | `rtm_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 39 | RTM | RTM 상세 추적 항목 | [`rtm_item`](#table-rtm_item) | `rtm_item_id` | `rtm_id, requirement_id, created_by, updated_by` | Critical | Y |
+| 40 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 41 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by` | Critical | Y |
+| 42 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by` | Critical | Y |
+| 43 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, assignee_id, created_by, updated_by` | Critical | Y |
+| 44 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, actor_id, signature_id` | Critical | Y |
+| 45 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 46 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by` | High | Y |
+| 47 | DDS | DDS 상세 항목 | [`dds_item`](#table-dds_item) | `dds_item_id` | `dds_id, created_by, updated_by` | High | Y |
+| 48 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, resolved_by, approved_by, created_by, updated_by` | Critical | Y |
+| 49 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, report_schedule_id, created_by, updated_by` | High | Y |
+| 50 | Report | 리포트 실행 일정 | [`report_schedule`](#table-report_schedule) | `report_schedule_id` | `project_id, created_by, updated_by` | High | Y |
+| 51 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
+| 52 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, created_by, updated_by` | High | Y |
+| 53 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
+| 54 | Notification | 알림 발송 | [`notification_delivery`](#table-notification_delivery) | `notification_delivery_id` | `project_id, workflow_instance_id, workflow_step_id, recipient_id, created_by, updated_by` | High | Y |
 
 ## 4. 도메인별 바로가기
 
 - **Organization**: [`organization`](#table-organization)
-- **Security**: [`app_user`](#table-app_user), [`role`](#table-role), [`user_role`](#table-user_role)
+- **Security**: [`app_user`](#table-app_user), [`role`](#table-role), [`user_role`](#table-user_role), [`user_group`](#table-user_group), [`user_group_member`](#table-user_group_member), [`group_role`](#table-group_role)
 - **Compliance**: [`electronic_signature`](#table-electronic_signature), [`audit_trail`](#table-audit_trail)
 - **File**: [`file_asset`](#table-file_asset), [`evidence_link`](#table-evidence_link), [`file_cleanup_execution`](#table-file_cleanup_execution)
 - **System**: [`system_asset`](#table-system_asset), [`backup_execution`](#table-backup_execution)
@@ -246,10 +249,111 @@
 
 ---
 
+<a id="table-user_group"></a>
+### 5. 사용자 그룹 (`user_group`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | 조직별 사용자 그룹의 기본정보 및 활성 상태 관리 |
+| Primary Key | `user_group_id` |
+| 주요 참조(FK) | `organization_id, created_by, updated_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 784 | 사용자 그룹 ID | `user_group_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자 그룹 고유 식별자 | `UUID` |
+| 785 | 조직 ID | `organization_id` | `uuid` | N | Y | `organization.organization_id` | Y | - | N | Y | N | Y | 사용자 그룹이 속한 조직 ID | `UUID` |
+| 786 | 그룹 코드 | `group_code` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 조직 내 사용자 그룹 식별 코드. 활성 데이터는 (organization_id, group_code) 조합의 중복을 허용하지 않음 | `QA_REVIEWER_GROUP` |
+| 787 | 그룹명 | `group_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 화면에 표시되는 사용자 그룹명 | `QA 검토자 그룹` |
+| 788 | 설명 | `description` | `text` | N | N | - | N | - | N | N | N | Y | 사용자 그룹의 목적 및 적용 범위 설명 | `Validation 문서 QA 검토 담당자 그룹` |
+| 789 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `True` | N | Y | N | Y | 사용자 그룹 활성 여부 | `True` |
+| 790 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 생성 시각(UTC) | `2026-09-01T10:00:00` |
+| 791 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 사용자 그룹을 등록한 사용자 ID | `UUID` |
+| 792 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 최종 수정 시각(UTC) | `2026-09-01T10:00:00` |
+| 793 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 사용자 그룹을 최종 수정한 사용자 ID | `UUID` |
+| 794 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 사용자 그룹 소프트 삭제 시각 | - |
+
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
+
+---
+
+<a id="table-user_group_member"></a>
+### 6. 사용자 그룹 구성원 (`user_group_member`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | 사용자와 사용자 그룹 간 N:M 관계 및 그룹 참여 상태·기간 관리 |
+| Primary Key | `user_group_member_id` |
+| 주요 참조(FK) | `user_group_id, user_id, created_by, updated_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 795 | 그룹 구성원 ID | `user_group_member_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자와 그룹 간 구성원 매핑 고유 식별자. 활성 데이터는 (user_group_id, user_id) 조합의 중복을 허용하지 않음 | `UUID` |
+| 796 | 사용자 그룹 ID | `user_group_id` | `uuid` | N | Y | `user_group.user_group_id` | Y | - | N | Y | N | Y | 사용자가 참여하는 사용자 그룹 ID | `UUID` |
+| 797 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 사용자 그룹에 참여하는 사용자 ID | `UUID` |
+| 798 | 참여 상태 | `member_status` | `varchar(20)` | N | N | - | Y | `ACTIVE` | N | Y | N | Y | 그룹 참여 상태. ACTIVE, INACTIVE, WITHDRAWN | `ACTIVE` |
+| 799 | 참여 시작 시각 | `joined_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 참여가 시작된 시각 | `2026-09-01T10:00:00` |
+| 800 | 참여 종료 시각 | `left_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 사용자 그룹 참여가 종료된 시각. 현재 참여 중이면 NULL | - |
+| 801 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 구성원 정보 생성 시각(UTC) | `2026-09-01T10:00:00` |
+| 802 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 그룹 구성원 정보를 등록한 사용자 ID | `UUID` |
+| 803 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 구성원 정보 최종 수정 시각(UTC) | `2026-09-01T10:00:00` |
+| 804 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 그룹 구성원 정보를 최종 수정한 사용자 ID | `UUID` |
+| 805 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 사용자 그룹 구성원 정보 소프트 삭제 시각 | - |
+
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
+
+---
+
+<a id="table-group_role"></a>
+### 7. 사용자 그룹 역할 (`group_role`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | 사용자 그룹에 역할을 부여하고 전역 또는 프로젝트별 적용 범위 관리 |
+| Primary Key | `group_role_id` |
+| 주요 참조(FK) | `user_group_id, role_id, project_id, created_by, updated_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 806 | 그룹 역할 ID | `group_role_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 사용자 그룹과 역할 간 매핑 고유 식별자. 활성 데이터는 (user_group_id, role_id, scope_type, project_id) 조합의 중복을 허용하지 않음 | `UUID` |
+| 807 | 사용자 그룹 ID | `user_group_id` | `uuid` | N | Y | `user_group.user_group_id` | Y | - | N | Y | N | Y | 역할이 부여되는 사용자 그룹 ID | `UUID` |
+| 808 | 역할 ID | `role_id` | `uuid` | N | Y | `role.role_id` | Y | - | N | Y | N | Y | 사용자 그룹에 부여되는 역할 ID | `UUID` |
+| 809 | 적용 범위 유형 | `scope_type` | `varchar(20)` | N | N | - | Y | `GLOBAL` | N | Y | N | Y | 역할 적용 범위. GLOBAL, PROJECT | `PROJECT` |
+| 810 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | PROJECT 범위일 때 적용되는 Validation 프로젝트 ID. GLOBAL 범위이면 NULL | `UUID` |
+| 811 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 역할 매핑 생성 시각(UTC) | `2026-09-01T10:00:00` |
+| 812 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 사용자 그룹 역할을 등록한 사용자 ID | `UUID` |
+| 813 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 사용자 그룹 역할 매핑 최종 수정 시각(UTC) | `2026-09-01T10:00:00` |
+| 814 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 사용자 그룹 역할을 최종 수정한 사용자 ID | `UUID` |
+| 815 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 사용자 그룹 역할 매핑 소프트 삭제 시각 | - |
+
+[↑ 맨 위로](#dvt-데이터-테이블-정의서)
+
+---
+
 ## Compliance
 
 <a id="table-electronic_signature"></a>
-### 5. 전자서명 (`electronic_signature`)
+### 8. 전자서명 (`electronic_signature`)
 
 | 항목 | 정의 |
 |---|---|
@@ -283,7 +387,7 @@
 ---
 
 <a id="table-audit_trail"></a>
-### 6. Audit Trail (`audit_trail`)
+### 9. Audit Trail (`audit_trail`)
 
 | 항목 | 정의 |
 |---|---|
@@ -325,7 +429,7 @@
 ## File
 
 <a id="table-file_asset"></a>
-### 7. 파일 자산 (`file_asset`)
+### 10. 파일 자산 (`file_asset`)
 
 | 항목 | 정의 |
 |---|---|
@@ -362,7 +466,7 @@
 ---
 
 <a id="table-evidence_link"></a>
-### 8. 증적 파일 연결 (`evidence_link`)
+### 11. 증적 파일 연결 (`evidence_link`)
 
 | 항목 | 정의 |
 |---|---|
@@ -397,7 +501,7 @@
 ---
 
 <a id="table-file_cleanup_execution"></a>
-### 9. 파일 정리 실행 이력 (`file_cleanup_execution`)
+### 12. 파일 정리 실행 이력 (`file_cleanup_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -444,7 +548,7 @@
 ## System
 
 <a id="table-system_asset"></a>
-### 10. 시스템/장비 식별 정보 (`system_asset`)
+### 13. 시스템/장비 식별 정보 (`system_asset`)
 
 | 항목 | 정의 |
 |---|---|
@@ -485,7 +589,7 @@
 ---
 
 <a id="table-backup_execution"></a>
-### 11. 백업 실행 이력 (`backup_execution`)
+### 14. 백업 실행 이력 (`backup_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -531,7 +635,7 @@
 ## Library
 
 <a id="table-library_item"></a>
-### 12. 라이브러리 항목 마스터 (`library_item`)
+### 15. 라이브러리 항목 마스터 (`library_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -568,7 +672,7 @@
 ## Validation
 
 <a id="table-validation_project"></a>
-### 13. Validation 프로젝트 (`validation_project`)
+### 16. Validation 프로젝트 (`validation_project`)
 
 | 항목 | 정의 |
 |---|---|
@@ -608,7 +712,7 @@
 ---
 
 <a id="table-project_member"></a>
-### 14. 프로젝트 참여자 (`project_member`)
+### 17. 프로젝트 참여자 (`project_member`)
 
 | 항목 | 정의 |
 |---|---|
@@ -643,7 +747,7 @@
 ---
 
 <a id="table-validation_activity"></a>
-### 15. 밸리데이션 활동 마스터 (`validation_activity`)
+### 18. 밸리데이션 활동 마스터 (`validation_activity`)
 
 | 항목 | 정의 |
 |---|---|
@@ -676,7 +780,7 @@
 ---
 
 <a id="table-project_activity"></a>
-### 16. 프로젝트 수행 활동 (`project_activity`)
+### 19. 프로젝트 수행 활동 (`project_activity`)
 
 | 항목 | 정의 |
 |---|---|
@@ -714,7 +818,7 @@
 ---
 
 <a id="table-activity_dependency"></a>
-### 17. 활동 선후행 조건 (`activity_dependency`)
+### 20. 활동 선후행 조건 (`activity_dependency`)
 
 | 항목 | 정의 |
 |---|---|
@@ -754,7 +858,7 @@
 ## QIA
 
 <a id="table-qia_assessment"></a>
-### 18. 품질 영향 평가 헤더 (`qia_assessment`)
+### 21. 품질 영향 평가 헤더 (`qia_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -793,7 +897,7 @@
 ---
 
 <a id="table-qia_module_item"></a>
-### 19. QIA 모듈 상세 평가 (`qia_module_item`)
+### 22. QIA 모듈 상세 평가 (`qia_module_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -838,7 +942,7 @@
 ## VA
 
 <a id="table-vendor_audit"></a>
-### 20. 공급업체 감사 평가 (`vendor_audit`)
+### 23. 공급업체 감사 평가 (`vendor_audit`)
 
 | 항목 | 정의 |
 |---|---|
@@ -882,7 +986,7 @@
 ## URS
 
 <a id="table-requirement"></a>
-### 21. 사용자 요구사항 명세 (`requirement`)
+### 24. 사용자 요구사항 명세 (`requirement`)
 
 | 항목 | 정의 |
 |---|---|
@@ -923,7 +1027,7 @@
 ## FDS
 
 <a id="table-fds_spec"></a>
-### 22. 기능 설계 명세서 (`fds_spec`)
+### 25. 기능 설계 명세서 (`fds_spec`)
 
 | 항목 | 정의 |
 |---|---|
@@ -960,7 +1064,7 @@
 ---
 
 <a id="table-fds_item"></a>
-### 23. FDS 상세 항목 (`fds_item`)
+### 26. FDS 상세 항목 (`fds_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -998,7 +1102,7 @@
 ---
 
 <a id="table-fds_interface"></a>
-### 24. FDS 인터페이스 정의 (`fds_interface`)
+### 27. FDS 인터페이스 정의 (`fds_interface`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1037,7 +1141,7 @@
 ## DQ
 
 <a id="table-dq_assessment"></a>
-### 25. 설계 적격성 평가 (`dq_assessment`)
+### 28. 설계 적격성 평가 (`dq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1074,7 +1178,7 @@
 ---
 
 <a id="table-dq_item"></a>
-### 26. DQ 상세 평가 항목 (`dq_item`)
+### 29. DQ 상세 평가 항목 (`dq_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1116,7 +1220,7 @@
 ## FRA
 
 <a id="table-fra_assessment"></a>
-### 27. 기능 위험평가 (`fra_assessment`)
+### 30. 기능 위험평가 (`fra_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1153,7 +1257,7 @@
 ---
 
 <a id="table-fra_item"></a>
-### 28. FRA 위험 상세 항목 (`fra_item`)
+### 31. FRA 위험 상세 항목 (`fra_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1197,7 +1301,7 @@
 ## IQ
 
 <a id="table-iq_assessment"></a>
-### 29. 설치 적격성 평가 (`iq_assessment`)
+### 32. 설치 적격성 평가 (`iq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1235,7 +1339,7 @@
 ---
 
 <a id="table-iq_item"></a>
-### 30. IQ 상세 테스트 항목 (`iq_item`)
+### 33. IQ 상세 테스트 항목 (`iq_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1279,7 +1383,7 @@
 ## OQ
 
 <a id="table-oq_assessment"></a>
-### 31. 운전 적격성 평가 (`oq_assessment`)
+### 34. 운전 적격성 평가 (`oq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1317,7 +1421,7 @@
 ---
 
 <a id="table-oq_item"></a>
-### 32. OQ 상세 테스트 항목 (`oq_item`)
+### 35. OQ 상세 테스트 항목 (`oq_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1361,7 +1465,7 @@
 ## PQ
 
 <a id="table-pq_assessment"></a>
-### 33. 성능 적격성 평가 (`pq_assessment`)
+### 36. 성능 적격성 평가 (`pq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1404,7 +1508,7 @@
 ---
 
 <a id="table-pq_item"></a>
-### 34. PQ 상세 테스트 항목 (`pq_item`)
+### 37. PQ 상세 테스트 항목 (`pq_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1445,7 +1549,7 @@
 ## RTM
 
 <a id="table-rtm_assessment"></a>
-### 35. 요구사항 추적 매트릭스 (`rtm_assessment`)
+### 38. 요구사항 추적 매트릭스 (`rtm_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1487,7 +1591,7 @@
 ---
 
 <a id="table-rtm_item"></a>
-### 36. RTM 상세 추적 항목 (`rtm_item`)
+### 39. RTM 상세 추적 항목 (`rtm_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1531,7 +1635,7 @@
 ## VSR
 
 <a id="table-vsr_assessment"></a>
-### 37. 밸리데이션 종합 보고서 (`vsr_assessment`)
+### 40. 밸리데이션 종합 보고서 (`vsr_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1570,7 +1674,7 @@
 ---
 
 <a id="table-vsr_item"></a>
-### 38. VSR 활동 요약 항목 (`vsr_item`)
+### 41. VSR 활동 요약 항목 (`vsr_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1612,7 +1716,7 @@
 ## Workflow
 
 <a id="table-workflow_instance"></a>
-### 39. Workflow 인스턴스 (`workflow_instance`)
+### 42. Workflow 인스턴스 (`workflow_instance`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1649,7 +1753,7 @@
 ---
 
 <a id="table-workflow_step"></a>
-### 40. Workflow 단계 (`workflow_step`)
+### 43. Workflow 단계 (`workflow_step`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1686,7 +1790,7 @@
 ---
 
 <a id="table-approval_action"></a>
-### 41. 승인 처리 이력 (`approval_action`)
+### 44. 승인 처리 이력 (`approval_action`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1720,7 +1824,7 @@
 ## Traceability
 
 <a id="table-traceability_link"></a>
-### 42. 공통 추적 관계 (`traceability_link`)
+### 45. 공통 추적 관계 (`traceability_link`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1758,7 +1862,7 @@
 ## DDS
 
 <a id="table-dds_spec"></a>
-### 43. 상세 설계 명세서 (`dds_spec`)
+### 46. 상세 설계 명세서 (`dds_spec`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1795,7 +1899,7 @@
 ---
 
 <a id="table-dds_item"></a>
-### 44. DDS 상세 항목 (`dds_item`)
+### 47. DDS 상세 항목 (`dds_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1832,7 +1936,7 @@
 ## Deviation
 
 <a id="table-deviation"></a>
-### 45. 일탈 관리 (`deviation`)
+### 48. 일탈 관리 (`deviation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1876,7 +1980,7 @@
 ## Report
 
 <a id="table-report_generation"></a>
-### 46. 리포트 생성 작업 (`report_generation`)
+### 49. 리포트 생성 작업 (`report_generation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1924,7 +2028,7 @@
 ---
 
 <a id="table-report_schedule"></a>
-### 47. 리포트 실행 일정 (`report_schedule`)
+### 50. 리포트 실행 일정 (`report_schedule`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1967,7 +2071,7 @@
 ## AI
 
 <a id="table-ai_generation_job"></a>
-### 48. AI 생성 작업 (`ai_generation_job`)
+### 51. AI 생성 작업 (`ai_generation_job`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2011,7 +2115,7 @@
 ---
 
 <a id="table-ai_generation_result"></a>
-### 49. AI 생성 결과 (`ai_generation_result`)
+### 52. AI 생성 결과 (`ai_generation_result`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2045,7 +2149,7 @@
 ---
 
 <a id="table-ai_result_item"></a>
-### 50. AI 생성 결과 항목 (`ai_result_item`)
+### 53. AI 생성 결과 항목 (`ai_result_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2083,7 +2187,7 @@
 ## Notification
 
 <a id="table-notification_delivery"></a>
-### 51. 알림 발송 (`notification_delivery`)
+### 54. 알림 발송 (`notification_delivery`)
 
 | 항목 | 정의 |
 |---|---|
