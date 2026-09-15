@@ -12,7 +12,7 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 > 실제 운영 환경에 적용할 때는 조직의 업무 정책, 보안 기준, 개인정보 보호 요건, 데이터 보존 정책 및 관련 규제 요구사항을 별도로 검토해야 합니다.
 
 > **상세 컬럼 정보가 필요한 경우**  
-> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [Data Dictionary](./data-dictionary.md)를 참고하세요.
+> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [Data Dictionary](./Data_Dictionary_검토수정본.md)를 참고하세요.
 
 ## 목차
 
@@ -34,6 +34,15 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 16. [Audit Trail 관리](#16-audit-trail-관리)
 
 ---
+
+## 관계도 읽는 방법
+
+각 관계도는 테이블 정의서에 기재된 FK를 기준으로 정리했습니다. 테이블 아래 가지는 **그 테이블의 컬럼**이며, 화살표는 **참조하는 컬럼 → 참조받는 테이블의 컬럼** 방향입니다. 가지 자체는 실행 순서나 테이블 간 소유 관계를 뜻하지 않습니다.
+
+- `(FK)`: 정의서에 명시된 물리 참조. `NULL 허용`은 값이 없어도 되는 컬럼을 뜻합니다.
+- `[논리 연결]`: 대상 유형과 ID 또는 표시용 값으로 연결하며, 물리 FK와 구분합니다.
+- `[업무 처리]`·`[업무 판단]`: 애플리케이션에서 수행할 절차이며, FK만으로 자동 실행되는 동작이 아닙니다.
+- 관계도에는 주요 업무 관계를 표시하고, 반복되는 작성자·수정자 등은 일부 생략했습니다.
 
 ## 전체 구조 한눈에 보기
 
@@ -60,6 +69,8 @@ IQ → OQ → PQ 적격성 시험
     ↓
 프로젝트 종료
 ```
+
+위 순서는 업무 이해를 위한 예시이며 고정된 실행 순서가 아닙니다. 실제 수행 대상과 활성화 조건은 `project_activity`와 `activity_dependency`에 따릅니다.
 
 대부분의 업무 데이터는 `validation_project`를 중심으로 연결됩니다. Workflow, 전자서명, 증적 파일 및 Audit Trail은 특정 단계에만 속하지 않고 위 업무 전반에 적용되는 공통 통제 기능입니다.
 
@@ -89,19 +100,28 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-glo
 ### 관계 구조
 
 ```text
-organization
-  └─ app_user
-       ├─ user_role ─ role
-       └─ user_group_member ─ user_group
-                                  └─ group_role ─ role
-                                       └─ validation_project (PROJECT 범위인 경우)
+app_user
+  └─ organization_id → organization.organization_id (FK)
+user_role
+  ├─ user_id → app_user.user_id (FK)
+  └─ role_id → role.role_id (FK)
+
+user_group
+  └─ organization_id → organization.organization_id (FK)
+user_group_member
+  ├─ user_group_id → user_group.user_group_id (FK)
+  └─ user_id → app_user.user_id (FK)
+group_role
+  ├─ user_group_id → user_group.user_group_id (FK)
+  ├─ role_id → role.role_id (FK)
+  └─ project_id → validation_project.project_id (FK, NULL 허용)
 ```
 
 ### 구조 개요
 
 조직을 기준으로 사용자 계정을 관리하고, 역할 마스터와 사용자 역할 매핑을 통해 사용자별 전역 권한을 부여하는 구조입니다.
 
-전역 역할은 시스템 전체에 적용되는 권한이며, 프로젝트별 참여 여부와 수행 역할은 별도의 `project_member` 테이블에서 관리합니다.
+`role`은 전역·프로젝트 역할 배정에 공통으로 쓰이는 역할 마스터입니다. `user_role`은 사용자별 전역 역할을, `project_member`는 프로젝트별 참여 여부와 수행 역할을 관리합니다. 그룹 단위의 적용 범위는 `group_role.scope_type`과 `project_id`로 구분합니다. `group_role.is_active`는 해당 역할 배정의 활성 여부입니다.
 
 ### 테이블별 역할 요약
 
@@ -109,7 +129,7 @@ organization
 |---|---|
 | `organization` | 고객사 또는 운영 조직의 기본정보를 관리하고 사용자 소속을 구분하는 기준 테이블 |
 | `app_user` | 사용자 계정, 기본 프로필, 소속 조직 및 계정 상태 관리 |
-| `role` | 시스템 전체에 적용되는 전역 역할과 권한 범위 정의 |
+| `role` | 전역·프로젝트 역할 배정에 공통으로 쓰이는 역할 코드·명칭·설명 관리 |
 | `user_role` | 사용자와 전역 역할 간의 다대다 매핑 및 동일 역할 중복 부여 방지 |
 | `user_group` | 조직별 사용자 그룹의 기본정보와 활성 상태를 관리하고, 여러 사용자에게 권한을 일괄 부여하기 위한 그룹 기준 테이블 |
 | `user_group_member` | 사용자와 사용자 그룹 간의 다대다 관계를 관리하며, 그룹 참여 상태와 참여 시작·종료 시점 기록 |
@@ -130,12 +150,15 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-partic
 ### 관계 구조
 
 ```text
-organization
-  └─ system_asset
-       └─ validation_project
-            └─ project_member
-                 ├─ app_user
-                 └─ role
+system_asset
+  └─ organization_id → organization.organization_id (FK)
+validation_project
+  ├─ system_id → system_asset.system_id (FK)
+  └─ closure_requested_by → app_user.user_id (FK, NULL 허용)
+project_member
+  ├─ project_id → validation_project.project_id (FK)
+  ├─ user_id → app_user.user_id (FK)
+  └─ role_id → role.role_id (FK)
 ```
 
 ### 구조 개요
@@ -170,13 +193,16 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-d
 ### 관계 구조
 
 ```text
-validation_project
-  └─ project_activity ─ validation_activity
+project_activity
+  ├─ project_id → validation_project.project_id (FK)
+  └─ activity_id → validation_activity.activity_id (FK)
 
-validation_activity
-  └─ activity_dependency
-       ├─ predecessor_activity_id (선행 활동)
-       └─ successor_activity_id   (후행 활동)
+activity_dependency
+  ├─ predecessor_activity_id → validation_activity.activity_id (FK, NULL 허용)
+  └─ successor_activity_id → validation_activity.activity_id (FK)
+
+[업무 규칙의 예]
+URS 승인 확인 → FDS 활동 활성화
 ```
 
 ### 구조 개요
@@ -201,7 +227,8 @@ validation_activity
 
 - `project_activity`는 활동 마스터 중 해당 프로젝트에서 실제 수행할 항목을 선택한 결과입니다.
 - `activity_dependency`는 단순 순서뿐 아니라 승인 상태, 추적성 존재, 고위험 항목의 시험 커버리지, 미해결 일탈 여부 등의 업무 조건을 표현합니다.
-- 프로젝트 진행률은 개별 활동의 원천 상태를 기반으로 계산하는 구조입니다.
+- `predecessor_activity_id`와 `successor_activity_id`는 같은 활동 마스터를 각각 선행·후행 역할로 참조합니다. 전체 활동 승인 여부처럼 특정 선행 활동이 없는 조건에서는 선행 ID가 NULL일 수 있습니다.
+- 조건 평가는 애플리케이션이 해당 프로젝트의 실제 활동·산출물 상태를 조회해 수행합니다.
 
 ---
 
@@ -212,13 +239,22 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-au
 ### 관계 구조
 
 ```text
-organization
-  ├─ library_item (URS·IQ·OQ 표준 항목)
-  └─ system_asset
-       └─ validation_project
-            ├─ qia_assessment
-            │    └─ qia_module_item
-            └─ vendor_audit
+library_item (독립 마스터: 다른 테이블을 참조하거나 참조받는 FK 없음)
+
+system_asset
+  └─ organization_id → organization.organization_id (FK)
+validation_project
+  ├─ system_id → system_asset.system_id (FK)
+  └─ closure_requested_by → app_user.user_id (FK, NULL 허용)
+qia_assessment
+  └─ project_id → validation_project.project_id (FK)
+qia_module_item
+  └─ qia_id → qia_assessment.qia_id (FK)
+vendor_audit
+  └─ project_id → validation_project.project_id (FK)
+
+[업무 활용]
+library_item의 표준 콘텐츠 → URS·IQ·OQ 작성에 활용 (FK 관계 아님)
 ```
 
 ### 구조 개요
@@ -242,7 +278,7 @@ organization
 
 ### 핵심 이해 포인트
 
-- `library_item`은 프로젝트에 직접 종속되지 않는 재사용 기준정보입니다.
+- `library_item`에는 조직·프로젝트 FK가 없으며, 현재 정의서의 다른 테이블에서도 `library_item`을 FK로 참조하지 않습니다. 표준 항목의 업무상 재사용과 DB의 직접 연결은 별개입니다.
 - QIA와 공급업체 감사는 특정 프로젝트에 종속되는 평가 결과이며, QIA 결과는 이후 Validation 범위와 수행 활동을 정하는 주요 기준입니다.
 - QIA 문서 한 건은 여러 모듈·프로세스 평가 항목을 포함할 수 있습니다.
 
@@ -255,13 +291,17 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
 ### 관계 구조
 
 ```text
-validation_project
-  ├─ requirement (URS)
-  └─ fds_spec
-       ├─ fds_item
-       └─ fds_interface
+requirement
+  └─ project_id → validation_project.project_id (FK)
+fds_spec
+  └─ project_id → validation_project.project_id (FK)
+fds_item
+  └─ fds_id → fds_spec.fds_id (FK)
+fds_interface
+  └─ fds_id → fds_spec.fds_id (FK)
 
-requirement ─ traceability_link ─ fds_item
+[논리 연결 예: traceability_link의 다형 참조]
+requirement → IMPLEMENTED_BY → fds_item (직접 FK 아님)
 ```
 
 ### 구조 개요
@@ -287,7 +327,7 @@ requirement ─ traceability_link ─ fds_item
 
 - URS는 사용자가 필요로 하는 기능을 정의하고, FDS는 해당 요구사항을 기능·화면·인터페이스 설계로 구체화합니다.
 - FDS는 문서 헤더인 `fds_spec`과 기능 상세인 `fds_item`, 인터페이스 상세인 `fds_interface`로 분리됩니다.
-- URS와 FDS 상세 항목 간 공식 추적 관계는 `traceability_link`에서 관리합니다.
+- URS와 FDS 상세 항목 간 공식 추적 관계는 `traceability_link`의 다형 참조로 관리합니다. `fds_interface.source_system`·`target_system`은 시스템명 문자열이고, `fds_mapping`도 표시용 값이므로 `system_asset` 또는 `fds_item`으로의 FK로 해석하지 않습니다.
 
 ---
 
@@ -298,16 +338,23 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 ### 관계 구조
 
 ```text
-validation_project
-  ├─ requirement (URS)
-  ├─ fds_spec
-  │    └─ fds_item
-  ├─ dds_spec
-  │    └─ dds_item
-  └─ dq_assessment
-       └─ dq_item ─ requirement
+fds_spec
+  └─ project_id → validation_project.project_id (FK)
+fds_item
+  └─ fds_id → fds_spec.fds_id (FK)
+dds_spec
+  └─ project_id → validation_project.project_id (FK)
+dds_item
+  └─ dds_id → dds_spec.dds_id (FK)
+dq_assessment
+  └─ project_id → validation_project.project_id (FK)
+dq_item
+  ├─ dq_id → dq_assessment.dq_id (FK)
+  └─ requirement_id → requirement.requirement_id (FK)
 
-URS / FDS / DDS / DQ 상세 항목 ─ traceability_link ─ 상호 추적
+[논리 연결]
+URS・FDS・DDS・DQ 상세 항목 간 추적은 traceability_link에서 관리
+dq_item.fds_mapping / dds_mapping은 표시용 문자열 (FK 아님)
 ```
 
 ### 구조 개요
@@ -347,11 +394,15 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-manag
 ### 관계 구조
 
 ```text
-validation_project
-  ├─ requirement (URS)
-  └─ fra_assessment
-       └─ fra_item
-            └─ requirement (필요한 경우)
+fra_assessment
+  └─ project_id → validation_project.project_id (FK)
+fra_item
+  ├─ fra_id → fra_assessment.fra_id (FK)
+  └─ requirement_id → requirement.requirement_id (FK, NULL 허용)
+requirement
+  └─ project_id → validation_project.project_id (FK)
+
+fra_item.test_reference: 시험 코드 문자열 (시험 항목으로의 직접 FK 아님)
 ```
 
 ### 구조 개요
@@ -387,13 +438,24 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualificatio
 ### 관계 구조
 
 ```text
-validation_project
-  ├─ iq_assessment ─ iq_item
-  ├─ oq_assessment ─ oq_item
-  └─ pq_assessment ─ pq_item
+iq_assessment
+  └─ project_id → validation_project.project_id (FK)
+iq_item
+  └─ iq_id → iq_assessment.iq_id (FK)
+oq_assessment
+  └─ project_id → validation_project.project_id (FK)
+oq_item
+  └─ oq_id → oq_assessment.oq_id (FK)
+pq_assessment
+  └─ project_id → validation_project.project_id (FK)
+pq_item
+  └─ pq_id → pq_assessment.pq_id (FK)
+deviation
+  └─ project_id → validation_project.project_id (FK)
 
-iq_item / oq_item / pq_item
-  └─ deviation (시험 중 일탈 발생 시)
+[논리 연결]
+deviation.source_entity_type + source_entity_id
+  → iq_item / oq_item / pq_item 등 발생 항목 (다형 참조)
 ```
 
 ### 구조 개요
@@ -433,13 +495,19 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverab
 ### 관계 구조
 
 ```text
+traceability_link
+  └─ project_id → validation_project.project_id (FK)
+
+[논리 연결: 아래는 다형 참조로 저장하는 방향 있는 관계의 예]
 requirement (URS)
   ├─ IMPLEMENTED_BY → fds_item
   ├─ IMPLEMENTED_BY → dds_item
-  ├─ ASSESSED_BY    → dq_item
-  └─ ASSESSED_BY    → fra_item
+  ├─ ASSESSED_BY → dq_item
+  └─ ASSESSED_BY → fra_item
 
-모든 연결은 traceability_link에서 통합 관리
+출발: source_entity_type + source_entity_id
+도착: target_entity_type + target_entity_id
+각 항목으로의 직접 FK는 없음
 ```
 
 ### 구조 개요
@@ -480,14 +548,19 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/10-qualification-test-tracea
 ### 관계 구조
 
 ```text
-requirement (URS)
-  ├─ traceability_link → iq_item
-  ├─ traceability_link → oq_item
-  └─ traceability_link → pq_item
+rtm_assessment
+  └─ project_id → validation_project.project_id (FK)
+rtm_item
+  ├─ rtm_id → rtm_assessment.rtm_id (FK)
+  └─ requirement_id → requirement.requirement_id (FK)
+traceability_link
+  └─ project_id → validation_project.project_id (FK)
 
-원천 추적 관계 집계
-  └─ rtm_assessment
-       └─ rtm_item (URS별 승인 시점 스냅샷)
+[논리 연결 예: traceability_link의 다형 참조]
+requirement → VERIFIED_BY → iq_item / oq_item / pq_item
+
+[업무 처리]
+원천 추적 관계·산출물 정보 집계 → RTM 헤더·상세 스냅샷 작성
 ```
 
 ### 구조 개요
@@ -511,13 +584,13 @@ Validation 프로젝트의 URS 요구사항과 IQ·OQ·PQ 시험 항목 간 추�
 | `pq_item` | 실제 운영 조건에서 수행하는 PQ 성능 시험 절차와 결과 관리 |
 | `traceability_link` | URS와 IQ·OQ·PQ 시험 항목 간 검증 관계를 다형 참조 방식으로 관리 |
 | `rtm_assessment` | 프로젝트별 URS 건수, FRA 연계율, IQ·OQ 커버리지 및 전체 평균 커버리지의 RTM 스냅샷 관리 |
-| `rtm_item` | URS별 FRA·FDS·DDS 매핑, IQ·OQ·PQ 결과 및 항목별 커버리지의 상세 스냅샷 관리 |
+| `rtm_item` | URS별 FRA·FDS·DDS 매핑 문자열, IQ·OQ·PQ 시험 항목 참조 문자열 및 항목별 커버리지의 상세 스냅샷 관리 |
 
 ### 핵심 이해 포인트
 
 - `traceability_link`는 현재 운영 중인 원천 추적 관계이고, `rtm_assessment`와 `rtm_item`은 RTM 생성·승인 시점의 스냅샷입니다.
-- 원천 관계가 나중에 변경되더라도 당시 승인된 RTM 결과는 그대로 보존할 수 있습니다.
-- RTM은 미연결 URS, 설계·위험평가·시험 누락, 매핑 실패 및 항목별·전체 커버리지를 확인하는 규제 대응 산출물입니다.
+- 승인 당시 RTM 결과를 보존하려면 스냅샷 값 저장과 승인 후 변경 통제를 애플리케이션에서 적용해야 합니다. FK나 버전 컬럼의 존재만으로 불변성이 보장되지는 않습니다.
+- RTM은 미연결 URS, 설계·위험평가·시험 누락, 매핑 실패 및 커버리지를 확인하는 산출물입니다. 현재 `rtm_item.iq_result`·`oq_result`·`pq_result`는 설명상 시험 항목 번호를 담는 문자열이므로 시험 PASS/FAIL의 직접 FK나 판정값으로 해석하지 않습니다.
 
 ---
 
@@ -528,16 +601,21 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/11-vsr-and-deviation-managem
 ### 관계 구조
 
 ```text
-project_activity 승인 상태
-        +
-rtm_assessment 추적성·커버리지
-        +
-deviation 해결·종결 상태
-        ↓
 vsr_assessment
-  └─ vsr_item (활동별 결과 요약)
-        ↓
-Validation 프로젝트 종료 판단
+  └─ project_id → validation_project.project_id (FK)
+vsr_item
+  └─ vsr_id → vsr_assessment.vsr_id (FK)
+project_activity
+  ├─ project_id → validation_project.project_id (FK)
+  └─ activity_id → validation_activity.activity_id (FK)
+rtm_assessment
+  └─ project_id → validation_project.project_id (FK)
+deviation
+  └─ project_id → validation_project.project_id (FK)
+
+[업무 판단: VSR에서 각 원천 테이블로의 직접 FK를 뜻하지 않음]
+활동 승인 상태 + RTM 커버리지 + 일탈 현황
+  → VSR 요약·최종 결론 작성 → 프로젝트 종료 판단
 ```
 
 ### 구조 개요
@@ -565,7 +643,8 @@ Validation 프로젝트의 활동 수행 결과, RTM 커버리지 및 일탈 현
 
 - VSR은 활동 승인 여부, 시험 결과, RTM 커버리지 및 미해결 일탈을 종합하여 최종 결론을 내리는 문서입니다.
 - 정상종료는 선택된 활동의 승인, 추적성 및 일탈 종결 조건을 종합하여 판단합니다.
-- 강제종료는 정상 완료 조건과 별개이며 종료 사유, 요청자 및 처리 시점을 보존합니다.
+- `validation_project.closure_type`으로 정상종료(NORMAL)와 강제종료(FORCED)를 구분합니다. 강제종료 시 `closure_reason`이 필수이며, `closure_requested_by`·`closure_requested_at`은 요청자와 요청 시각, `closed_at`은 최종 종료 시각을 기록합니다. 종료 요청자는 `app_user`를 FK로 참조합니다.
+- `vsr_item.activity_code`·`doc_no`·`deviation_info` 등은 요약 값입니다. `project_activity`·`rtm_assessment`·`deviation`으로의 직접 FK는 없습니다.
 
 ---
 
@@ -576,13 +655,22 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/12-workflow-approval-and-ele
 ### 관계 구조
 
 ```text
-validation_project
-  └─ project_member ─ app_user / role
+workflow_step
+  ├─ workflow_instance_id → workflow_instance.workflow_instance_id (FK)
+  └─ assignee_id → app_user.user_id (FK)
+approval_action
+  ├─ workflow_step_id → workflow_step.workflow_step_id (FK)
+  ├─ actor_id → app_user.user_id (FK)
+  └─ signature_id → electronic_signature.signature_id (FK, NULL 허용)
+electronic_signature
+  └─ signer_id → app_user.user_id (FK)
 
-workflow_instance
-  └─ workflow_step
-       └─ approval_action
-            └─ electronic_signature
+[논리 연결]
+workflow_instance / electronic_signature의 target_table_name + target_record_id
+  → 대상 문서 Revision (다형 참조)
+
+[업무상 담당자 선정 기준]
+project_member의 사용자·역할 확인 → workflow_step.assignee_id 지정
 ```
 
 ### 구조 개요
@@ -597,19 +685,21 @@ Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려�
 |---|---|
 | `organization` | 시스템과 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
 | `app_user` | 문서 상신자, 단계 담당자, 실제 처리자 및 전자서명자 정보 관리 |
-| `role` | 프로젝트 참여자와 Workflow 담당자에게 적용할 역할 기준정보 관리 |
+| `role` | 프로젝트 참여자의 역할 기준정보 관리. Workflow 담당자 선정 시 업무상 참조 |
 | `system_asset` | 검토·승인 대상 Validation 프로젝트의 시스템이나 장비 정보 관리 |
 | `validation_project` | Workflow와 프로젝트 참여자가 소속되는 Validation 프로젝트 관리 |
 | `project_member` | 프로젝트별 참여 사용자와 수행 역할, 참여 상태 및 참여 기간 관리 |
 | `workflow_instance` | 대상 문서별 전체 검토·승인 Workflow의 상신 정보, 현재 단계 및 진행 상태 관리 |
 | `workflow_step` | Workflow 내 단계 순서, 단계 유형, 담당자, 처리 기한 및 단계별 상태 관리 |
 | `approval_action` | 상신·검토·승인·반려·취소 등 단계별 실제 처리 내용과 처리자 및 처리 시각 관리 |
-| `electronic_signature` | 검토·승인·반려 시 서명자, 서명 의미, 대상 버전, 내용 해시 및 재인증 결과 관리 |
+| `electronic_signature` | 상신·검토·승인·반려 시 서명자, 서명 의미, 대상 버전, 내용 해시 및 재인증 결과 관리 |
 
 ### 핵심 이해 포인트
 
 - `workflow_instance`는 전체 진행 상태, `workflow_step`은 개별 검토·승인 단계, `approval_action`은 실제 처리 행위를 관리합니다.
 - `electronic_signature`는 승인·반려 행위에 대한 본인 확인과 서명 증적이며, 대상 버전과 내용 해시를 함께 보존합니다.
+- `approval_action.signature_id`가 전자서명을 참조하며 NULL을 허용합니다. 모든 처리 이력에 서명이 필수라는 뜻은 아닙니다.
+- `workflow_instance`에는 `project_id` FK가 없고, `workflow_step`에는 `project_member` 또는 `role` FK가 없습니다. 담당자는 `assignee_id`로 사용자를 직접 참조하고 프로젝트 역할 적합성은 업무 로직으로 확인해야 합니다.
 - Audit Trail은 위 개념들과 별개로 처리 과정에서 발생한 데이터 변경 이력을 기록합니다.
 
 ---
@@ -621,10 +711,18 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cl
 ### 관계 구조
 
 ```text
-file_cleanup_execution
-  └─ file_asset
-       └─ evidence_link
-            └─ 각 업무 문서 또는 시험 항목
+file_asset
+  ├─ uploader_id → app_user.user_id (FK, NULL 허용)
+  └─ cleanup_execution_id → file_cleanup_execution.file_cleanup_execution_id (FK, NULL 허용)
+evidence_link
+  ├─ project_id → validation_project.project_id (FK)
+  └─ file_id → file_asset.file_id (FK)
+
+[논리 연결]
+evidence_link.target_entity_type + target_entity_id
+  → 문서・시험 항목・일탈 (다형 참조)
+
+cleanup_execution_id: 해당 파일을 마지막으로 처리한 정리 실행만 참조
 ```
 
 ### 구조 개요
@@ -649,6 +747,7 @@ Validation 프로젝트에서 사용하는 첨부파일과 시험 증적의 메�
 
 - `file_asset`은 파일 자체의 메타데이터이고, `evidence_link`는 해당 파일이 어떤 업무 항목의 증적인지를 표현합니다.
 - 두 영역을 분리하여 하나의 파일을 여러 업무 항목에 연결하거나 하나의 업무 항목에 여러 파일을 연결할 수 있습니다.
+- `file_asset.cleanup_execution_id`는 마지막 정리 실행만 가리키며 NULL을 허용합니다. 모든 파일의 필수 상위 테이블이 정리 실행이라는 뜻은 아니며, 파일별 전체 정리 이력을 보존하는 별도 N:M 이력 테이블도 현재 정의에는 없습니다.
 - 파일 정리는 규정상 보존해야 할 증적을 임의 삭제하는 기능이 아니라 임시·만료·고아 파일을 통제된 절차로 정리하고 결과를 기록하는 운영 기능입니다.
 
 ---
@@ -660,14 +759,18 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/14-report-notification-and-b
 ### 관계 구조
 
 ```text
+report_generation
+  ├─ report_schedule_id → report_schedule.report_schedule_id (FK, NULL 허용)
+  ├─ result_file_id → file_asset.file_id (FK, NULL 허용)
+  └─ project_id → validation_project.project_id (FK, NULL 허용)
 report_schedule
-  └─ report_generation
-       └─ file_asset (생성 결과)
+  └─ last_report_generation_id → report_generation.report_generation_id (FK, NULL 허용)
+notification_delivery
+  ├─ workflow_instance_id → workflow_instance.workflow_instance_id (FK, NULL 허용)
+  ├─ workflow_step_id → workflow_step.workflow_step_id (FK, NULL 허용)
+  └─ recipient_id → app_user.user_id (FK)
 
-workflow_instance / workflow_step
-  └─ notification_delivery
-
-backup_execution (독립 운영 실행 이력)
+backup_execution: 독立 운영 기록 (사용자 참조는 있으나 system_id / project_id FK 없음)
 ```
 
 ### 구조 개요
@@ -682,7 +785,7 @@ Validation 프로젝트와 Workflow를 기준으로 운영 리포트의 정기·
 |---|---|
 | `organization` | 운영 리포트와 사용자가 속하는 고객사 또는 운영 조직의 기준정보 관리 |
 | `app_user` | 리포트·백업 요청자, 알림 수신자 및 운영 작업 생성·수정자 정보 관리 |
-| `system_asset` | 운영 리포트와 백업의 대상이 되는 시스템이나 장비 정보 관리 |
+| `system_asset` | 프로젝트에 연결된 시스템·장비 기준정보 관리. 백업 실행 테이블과의 직접 FK는 없음 |
 | `validation_project` | 프로젝트 단위 리포트, 알림 및 운영 작업의 기준이 되는 Validation 프로젝트 관리 |
 | `workflow_instance` | 알림 대상이 되는 문서별 전체 검토·승인 Workflow 정보 관리 |
 | `workflow_step` | 승인 요청, 처리기한 도래 및 지연 알림의 기준이 되는 단계별 담당자와 상태 관리 |
@@ -695,7 +798,7 @@ Validation 프로젝트와 Workflow를 기준으로 운영 리포트의 정기·
 ### 핵심 이해 포인트
 
 - 이 영역은 인프라 구성 자체가 아니라 운영 과정의 작업 요청, 처리 결과, 실패 및 재시도 이력을 데이터로 관리합니다.
-- 비동기 작업은 일반적으로 `PENDING → PROCESSING → COMPLETED` 흐름을 따르며, 실패 시 재시도 대기 또는 최종 실패 상태로 전환됩니다.
+- 리포트·백업의 성공 상태는 `COMPLETED`이고, 알림 발송의 성공 상태는 `SENT`입니다. 알림은 `PENDING → PROCESSING → SENT` 흐름을 따르며 실패·재시도·취소 상태를 별도로 관리합니다.
 - 정기 일정 한 건에서 여러 리포트 생성 작업이 발생할 수 있고, 생성 결과는 `file_asset`에 연결됩니다.
 
 ---
@@ -708,11 +811,19 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/15-ai-generation-job-and-res
 
 ```text
 ai_generation_job
-  └─ ai_generation_result
-       └─ ai_result_item
-            └─ 사용자 검토·선택
-                 └─ 실제 업무 테이블 반영
-                      └─ 공식 검토·승인 Workflow
+  └─ project_id → validation_project.project_id (FK, NULL 허용)
+ai_generation_result
+  ├─ ai_job_id → ai_generation_job.ai_job_id (FK)
+  └─ selected_by → app_user.user_id (FK, NULL 허용)
+ai_result_item
+  └─ ai_result_id → ai_generation_result.ai_result_id (FK)
+
+[논리 연결]
+ai_result_item.target_entity_type + target_entity_id
+  → 실제 적용 대상 업무 레코드 (직접 FK 아님)
+
+[업무 처리]
+생성 → 사용자 검토·선택 → 업무 데이터 반영 → 공식 검토·승인
 ```
 
 ### 구조 개요
@@ -737,7 +848,8 @@ Validation 프로젝트의 문서와 항목에 대한 AI 생성 요청을 비동
 
 - AI 결과는 생성 즉시 공식 산출물이 되지 않으며, 사용자의 검토·선택 후 실제 업무 테이블에 반영됩니다.
 - 생성 원본과 실제 적용 결과를 분리하고, 사용 모델·입력 조건·선택 사용자·반영 여부를 기록합니다.
-- 반영된 결과도 일반 업무 데이터와 동일한 공식 검토·승인 Workflow를 거쳐야 합니다.
+- 반영된 결과도 일반 업무 데이터와 동일한 공식 검토·승인 절차를 적용하는 업무 원칙입니다. AI 결과 테이블에서 Workflow로의 직접 FK는 없습니다.
+- `ai_generation_job.project_id`는 NULL을 허용하므로 모든 생성 작업이 특정 프로젝트에 필수로 연결되는 구조는 아닙니다.
 
 ---
 
@@ -748,13 +860,17 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
 ### 관계 구조
 
 ```text
-organization
-  └─ app_user
-       └─ audit_trail
-
 audit_trail
-  └─ target_table_name + target_record_id
-       └─ 각 감사 대상 업무 레코드 (다형 참조)
+  └─ actor_id → app_user.user_id (FK, NULL 허용)
+app_user
+  └─ organization_id → organization.organization_id (FK)
+
+[논리 연결]
+audit_trail.target_table_name + target_record_id
+  → 감사 대상 업무 레코드 (다형 참조)
+
+시스템·배치 기록: actor_id 없이 기록 가능
+이 경우 actor_id 경로만으로는 소속 조직을 식별할 수 없음
 ```
 
 ### 구조 개요
@@ -788,4 +904,5 @@ audit_trail
 
 - 사용자가 수행한 변경뿐 아니라 시스템 또는 배치 작업도 기록할 수 있으며, 이 경우 사용자 ID는 없을 수 있습니다.
 - Audit Trail은 데이터 변경과 중요 시스템 행위의 이력이고, 전자서명은 승인·반려 등 규제상 서명 행위의 증적입니다.
-- 데이터가 삭제되더라도 삭제 시점의 기존 값을 Audit Trail에 남겨 변경 경위를 추적할 수 있습니다.
+- 삭제 시 기존 값을 Audit Trail에 남기도록 구현하면 변경 경위를 추적할 수 있습니다. 현재 `old_values`는 NULL 허용이므로 삭제 전 값의 보존은 업무 로직과 기록 정책에서 보장해야 합니다.
+- `audit_trail`에는 직접 조직 ID가 없습니다. 사용자 없는 시스템·배치 기록의 조직 범위는 대상 레코드 등의 별도 경로로 판단해야 합니다.
