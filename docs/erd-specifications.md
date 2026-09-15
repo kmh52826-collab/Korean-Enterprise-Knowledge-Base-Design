@@ -12,7 +12,7 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 > 실제 운영 환경에 적용할 때는 조직의 업무 정책, 보안 기준, 개인정보 보호 요건, 데이터 보존 정책 및 관련 규제 요구사항을 별도로 검토해야 합니다.
 
 > **상세 컬럼 정보가 필요한 경우**  
-> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [Data Dictionary](./Data_Dictionary.md)를 참고하세요.
+> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [Data Dictionary](./data-dictionary.md)를 참고하세요.
 
 ## 목차
 
