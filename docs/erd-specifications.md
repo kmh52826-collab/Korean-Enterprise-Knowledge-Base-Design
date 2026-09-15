@@ -35,14 +35,7 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 
 ---
 
-## 관계도 읽는 방법
-
-각 관계도는 테이블 정의서에 기재된 FK를 기준으로 정리했습니다. 테이블 아래 가지는 **그 테이블의 컬럼**이며, 화살표는 **참조하는 컬럼 → 참조받는 테이블의 컬럼** 방향입니다. 가지 자체는 실행 순서나 테이블 간 소유 관계를 뜻하지 않습니다.
-
-- `(FK)`: 정의서에 명시된 물리 참조. `NULL 허용`은 값이 없어도 되는 컬럼을 뜻합니다.
-- `[논리 연결]`: 대상 유형과 ID 또는 표시용 값으로 연결하며, 물리 FK와 구분합니다.
-- `[업무 처리]`·`[업무 판단]`: 애플리케이션에서 수행할 절차이며, FK만으로 자동 실행되는 동작이 아닙니다.
-- 관계도에는 주요 업무 관계를 표시하고, 반복되는 작성자·수정자 등은 일부 생략했습니다.
+아래 도식은 주요 테이블 연결과 업무 흐름을 간단히 보여줍니다. 상세 관계는 각 영역의 ERD 이미지와 링크를 참고하세요.
 
 ## 전체 구조 한눈에 보기
 
@@ -100,21 +93,12 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/01-organization-user-and-glo
 ### 관계 구조
 
 ```text
-app_user
-  └─ organization_id → organization.organization_id (FK)
-user_role
-  ├─ user_id → app_user.user_id (FK)
-  └─ role_id → role.role_id (FK)
-
-user_group
-  └─ organization_id → organization.organization_id (FK)
-user_group_member
-  ├─ user_group_id → user_group.user_group_id (FK)
-  └─ user_id → app_user.user_id (FK)
-group_role
-  ├─ user_group_id → user_group.user_group_id (FK)
-  ├─ role_id → role.role_id (FK)
-  └─ project_id → validation_project.project_id (FK, NULL 허용)
+organization
+  └─ app_user
+       ├─ user_role ─ role
+       └─ user_group_member ─ user_group
+                                  └─ group_role ─ role
+                                       └─ validation_project (PROJECT 범위)
 ```
 
 ### 구조 개요
@@ -150,15 +134,12 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/02-system-project-and-partic
 ### 관계 구조
 
 ```text
-system_asset
-  └─ organization_id → organization.organization_id (FK)
-validation_project
-  ├─ system_id → system_asset.system_id (FK)
-  └─ closure_requested_by → app_user.user_id (FK, NULL 허용)
-project_member
-  ├─ project_id → validation_project.project_id (FK)
-  ├─ user_id → app_user.user_id (FK)
-  └─ role_id → role.role_id (FK)
+organization
+  └─ system_asset
+       └─ validation_project
+            └─ project_member
+                 ├─ app_user
+                 └─ role
 ```
 
 ### 구조 개요
@@ -193,16 +174,13 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/03-validation-activity-and-d
 ### 관계 구조
 
 ```text
-project_activity
-  ├─ project_id → validation_project.project_id (FK)
-  └─ activity_id → validation_activity.activity_id (FK)
+validation_project
+  └─ project_activity ─ validation_activity
 
-activity_dependency
-  ├─ predecessor_activity_id → validation_activity.activity_id (FK, NULL 허용)
-  └─ successor_activity_id → validation_activity.activity_id (FK)
-
-[업무 규칙의 예]
-URS 승인 확인 → FDS 활동 활성화
+validation_activity
+  └─ activity_dependency
+       ├─ predecessor_activity_id (선행 활동)
+       └─ successor_activity_id   (후행 활동)
 ```
 
 ### 구조 개요
@@ -239,22 +217,14 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/04-library-qia-and-vendor-au
 ### 관계 구조
 
 ```text
-library_item (독립 마스터: 다른 테이블을 참조하거나 참조받는 FK 없음)
+library_item (독립 마스터: 표준 URS·IQ·OQ 항목)
 
-system_asset
-  └─ organization_id → organization.organization_id (FK)
-validation_project
-  ├─ system_id → system_asset.system_id (FK)
-  └─ closure_requested_by → app_user.user_id (FK, NULL 허용)
-qia_assessment
-  └─ project_id → validation_project.project_id (FK)
-qia_module_item
-  └─ qia_id → qia_assessment.qia_id (FK)
-vendor_audit
-  └─ project_id → validation_project.project_id (FK)
-
-[업무 활용]
-library_item의 표준 콘텐츠 → URS·IQ·OQ 작성에 활용 (FK 관계 아님)
+organization
+  └─ system_asset
+       └─ validation_project
+            ├─ qia_assessment
+            │    └─ qia_module_item
+            └─ vendor_audit
 ```
 
 ### 구조 개요
@@ -291,17 +261,13 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/05-urs-and-fds-management
 ### 관계 구조
 
 ```text
-requirement
-  └─ project_id → validation_project.project_id (FK)
-fds_spec
-  └─ project_id → validation_project.project_id (FK)
-fds_item
-  └─ fds_id → fds_spec.fds_id (FK)
-fds_interface
-  └─ fds_id → fds_spec.fds_id (FK)
+validation_project
+  ├─ requirement (URS)
+  └─ fds_spec
+       ├─ fds_item
+       └─ fds_interface
 
-[논리 연결 예: traceability_link의 다형 참조]
-requirement → IMPLEMENTED_BY → fds_item (직접 FK 아님)
+requirement ─ traceability_link ─ fds_item (논리 연결)
 ```
 
 ### 구조 개요
@@ -338,23 +304,16 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/06-dds-and-dq-management
 ### 관계 구조
 
 ```text
-fds_spec
-  └─ project_id → validation_project.project_id (FK)
-fds_item
-  └─ fds_id → fds_spec.fds_id (FK)
-dds_spec
-  └─ project_id → validation_project.project_id (FK)
-dds_item
-  └─ dds_id → dds_spec.dds_id (FK)
-dq_assessment
-  └─ project_id → validation_project.project_id (FK)
-dq_item
-  ├─ dq_id → dq_assessment.dq_id (FK)
-  └─ requirement_id → requirement.requirement_id (FK)
+validation_project
+  ├─ requirement (URS)
+  ├─ fds_spec
+  │    └─ fds_item
+  ├─ dds_spec
+  │    └─ dds_item
+  └─ dq_assessment
+       └─ dq_item ─ requirement
 
-[논리 연결]
-URS・FDS・DDS・DQ 상세 항목 간 추적은 traceability_link에서 관리
-dq_item.fds_mapping / dds_mapping은 표시용 문자열 (FK 아님)
+URS / FDS / DDS / DQ 상세 항목 ─ traceability_link (논리 연결)
 ```
 
 ### 구조 개요
@@ -394,15 +353,11 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/07-fra-risk-assessment-manag
 ### 관계 구조
 
 ```text
-fra_assessment
-  └─ project_id → validation_project.project_id (FK)
-fra_item
-  ├─ fra_id → fra_assessment.fra_id (FK)
-  └─ requirement_id → requirement.requirement_id (FK, NULL 허용)
-requirement
-  └─ project_id → validation_project.project_id (FK)
-
-fra_item.test_reference: 시험 코드 문자열 (시험 항목으로의 직접 FK 아님)
+validation_project
+  ├─ requirement (URS)
+  └─ fra_assessment
+       └─ fra_item
+            └─ requirement (해당하는 경우)
 ```
 
 ### 구조 개요
@@ -438,24 +393,13 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/08-iq-oq-and-pq-qualificatio
 ### 관계 구조
 
 ```text
-iq_assessment
-  └─ project_id → validation_project.project_id (FK)
-iq_item
-  └─ iq_id → iq_assessment.iq_id (FK)
-oq_assessment
-  └─ project_id → validation_project.project_id (FK)
-oq_item
-  └─ oq_id → oq_assessment.oq_id (FK)
-pq_assessment
-  └─ project_id → validation_project.project_id (FK)
-pq_item
-  └─ pq_id → pq_assessment.pq_id (FK)
-deviation
-  └─ project_id → validation_project.project_id (FK)
+validation_project
+  ├─ iq_assessment ─ iq_item
+  ├─ oq_assessment ─ oq_item
+  └─ pq_assessment ─ pq_item
 
-[논리 연결]
-deviation.source_entity_type + source_entity_id
-  → iq_item / oq_item / pq_item 등 발생 항목 (다형 참조)
+iq_item / oq_item / pq_item
+  └─ deviation (시험 중 일탈 발생 시 논리 연결)
 ```
 
 ### 구조 개요
@@ -495,19 +439,13 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/09-design-and-risk-deliverab
 ### 관계 구조
 
 ```text
-traceability_link
-  └─ project_id → validation_project.project_id (FK)
-
-[논리 연결: 아래는 다형 참조로 저장하는 방향 있는 관계의 예]
 requirement (URS)
   ├─ IMPLEMENTED_BY → fds_item
   ├─ IMPLEMENTED_BY → dds_item
-  ├─ ASSESSED_BY → dq_item
-  └─ ASSESSED_BY → fra_item
+  ├─ ASSESSED_BY    → dq_item
+  └─ ASSESSED_BY    → fra_item
 
-출발: source_entity_type + source_entity_id
-도착: target_entity_type + target_entity_id
-각 항목으로의 직접 FK는 없음
+위 논리 연결은 traceability_link에서 관리
 ```
 
 ### 구조 개요
@@ -548,19 +486,14 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/10-qualification-test-tracea
 ### 관계 구조
 
 ```text
-rtm_assessment
-  └─ project_id → validation_project.project_id (FK)
-rtm_item
-  ├─ rtm_id → rtm_assessment.rtm_id (FK)
-  └─ requirement_id → requirement.requirement_id (FK)
-traceability_link
-  └─ project_id → validation_project.project_id (FK)
+requirement (URS)
+  ├─ traceability_link → iq_item
+  ├─ traceability_link → oq_item
+  └─ traceability_link → pq_item
 
-[논리 연결 예: traceability_link의 다형 참조]
-requirement → VERIFIED_BY → iq_item / oq_item / pq_item
-
-[업무 처리]
-원천 추적 관계·산출물 정보 집계 → RTM 헤더·상세 스냅샷 작성
+원본 추적 관계를 집계 (업무 흐름)
+  └─ rtm_assessment
+       └─ rtm_item (URS별 추적 항목)
 ```
 
 ### 구조 개요
@@ -601,21 +534,16 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/11-vsr-and-deviation-managem
 ### 관계 구조
 
 ```text
+project_activity 승인 상태
+        +
+rtm_assessment 추적성·커버리지
+        +
+deviation 조치·종결 상태
+        ↓ (업무 흐름)
 vsr_assessment
-  └─ project_id → validation_project.project_id (FK)
-vsr_item
-  └─ vsr_id → vsr_assessment.vsr_id (FK)
-project_activity
-  ├─ project_id → validation_project.project_id (FK)
-  └─ activity_id → validation_activity.activity_id (FK)
-rtm_assessment
-  └─ project_id → validation_project.project_id (FK)
-deviation
-  └─ project_id → validation_project.project_id (FK)
-
-[업무 판단: VSR에서 각 원천 테이블로의 직접 FK를 뜻하지 않음]
-활동 승인 상태 + RTM 커버리지 + 일탈 현황
-  → VSR 요약·최종 결론 작성 → 프로젝트 종료 판단
+  └─ vsr_item (활동별 결과 요약)
+        ↓
+Validation 프로젝트 종료 판단
 ```
 
 ### 구조 개요
@@ -655,22 +583,12 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/12-workflow-approval-and-ele
 ### 관계 구조
 
 ```text
-workflow_step
-  ├─ workflow_instance_id → workflow_instance.workflow_instance_id (FK)
-  └─ assignee_id → app_user.user_id (FK)
-approval_action
-  ├─ workflow_step_id → workflow_step.workflow_step_id (FK)
-  ├─ actor_id → app_user.user_id (FK)
-  └─ signature_id → electronic_signature.signature_id (FK, NULL 허용)
-electronic_signature
-  └─ signer_id → app_user.user_id (FK)
+validation_project
+  └─ project_member ─ app_user / role
 
-[논리 연결]
-workflow_instance / electronic_signature의 target_table_name + target_record_id
-  → 대상 문서 Revision (다형 참조)
-
-[업무상 담당자 선정 기준]
-project_member의 사용자·역할 확인 → workflow_step.assignee_id 지정
+workflow_instance
+  └─ workflow_step
+       └─ approval_action ─ electronic_signature (서명이 있는 경우)
 ```
 
 ### 구조 개요
@@ -712,17 +630,9 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/13-file-evidence-and-file-cl
 
 ```text
 file_asset
-  ├─ uploader_id → app_user.user_id (FK, NULL 허용)
-  └─ cleanup_execution_id → file_cleanup_execution.file_cleanup_execution_id (FK, NULL 허용)
-evidence_link
-  ├─ project_id → validation_project.project_id (FK)
-  └─ file_id → file_asset.file_id (FK)
-
-[논리 연결]
-evidence_link.target_entity_type + target_entity_id
-  → 문서・시험 항목・일탈 (다형 참조)
-
-cleanup_execution_id: 해당 파일을 마지막으로 처리한 정리 실행만 참조
+  ├─ file_cleanup_execution (마지막 정리 작업)
+  └─ evidence_link
+       └─ 업무 문서·시험 항목 (논리 연결)
 ```
 
 ### 구조 개요
@@ -759,18 +669,14 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/14-report-notification-and-b
 ### 관계 구조
 
 ```text
-report_generation
-  ├─ report_schedule_id → report_schedule.report_schedule_id (FK, NULL 허용)
-  ├─ result_file_id → file_asset.file_id (FK, NULL 허용)
-  └─ project_id → validation_project.project_id (FK, NULL 허용)
 report_schedule
-  └─ last_report_generation_id → report_generation.report_generation_id (FK, NULL 허용)
-notification_delivery
-  ├─ workflow_instance_id → workflow_instance.workflow_instance_id (FK, NULL 허용)
-  ├─ workflow_step_id → workflow_step.workflow_step_id (FK, NULL 허용)
-  └─ recipient_id → app_user.user_id (FK)
+  └─ report_generation
+       └─ file_asset (생성 결과 파일)
 
-backup_execution: 독立 운영 기록 (사용자 참조는 있으나 system_id / project_id FK 없음)
+workflow_instance / workflow_step
+  └─ notification_delivery
+
+backup_execution (독립적인 운영 실행 이력)
 ```
 
 ### 구조 개요
@@ -811,19 +717,10 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/15-ai-generation-job-and-res
 
 ```text
 ai_generation_job
-  └─ project_id → validation_project.project_id (FK, NULL 허용)
-ai_generation_result
-  ├─ ai_job_id → ai_generation_job.ai_job_id (FK)
-  └─ selected_by → app_user.user_id (FK, NULL 허용)
-ai_result_item
-  └─ ai_result_id → ai_generation_result.ai_result_id (FK)
+  └─ ai_generation_result
+       └─ ai_result_item
 
-[논리 연결]
-ai_result_item.target_entity_type + target_entity_id
-  → 실제 적용 대상 업무 레코드 (직접 FK 아님)
-
-[업무 처리]
-생성 → 사용자 검토·선택 → 업무 데이터 반영 → 공식 검토·승인
+업무 흐름: 사용자 검토·선택 → 업무 데이터 반영 → 공식 검토·승인
 ```
 
 ### 구조 개요
@@ -860,17 +757,12 @@ Link : https://drawsql.app/teams/minho-kim/diagrams/16-audit-trail-management
 ### 관계 구조
 
 ```text
-audit_trail
-  └─ actor_id → app_user.user_id (FK, NULL 허용)
-app_user
-  └─ organization_id → organization.organization_id (FK)
+organization
+  └─ app_user
+       └─ audit_trail (사용자 작업)
 
-[논리 연결]
-audit_trail.target_table_name + target_record_id
-  → 감사 대상 업무 레코드 (다형 참조)
-
-시스템·배치 기록: actor_id 없이 기록 가능
-이 경우 actor_id 경로만으로는 소속 조직을 식별할 수 없음
+audit_trail (시스템·배치 작업도 기록)
+  └─ 대상 업무 레코드 (논리 연결)
 ```
 
 ### 구조 개요
