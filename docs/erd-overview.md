@@ -2,6 +2,8 @@
 
 전체 **54개 테이블**을 **16개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시했습니다.
 
+업무 영역 번호는 이 구조도 내의 구분 번호이며, ERD 명세서의 섹션 번호와 일부 다릅니다.
+
 도식의 실선은 영역 간 구성·업무 흐름을, 점선은 표준 항목 재사용·공통 기능 적용을 나타냅니다. **개별 테이블의 FK나 고정된 실행 순서를 나타내는 선은 아닙니다.** 상세 컬럼과 FK는 테이블 정의서를 참고하세요.
 
 ## 전체 구조도
@@ -128,7 +130,7 @@ ai_result_item"]
 |---|---|
 | `organization` → `system_asset` → `validation_project` | 조직에 속한 시스템·장비를 대상으로 프로젝트를 구성합니다. |
 | `validation_project` → `project_member` | 프로젝트에 참여하는 사용자와 역할을 연결합니다. |
-| `validation_project` → `project_activity` → `validation_activity` | 프로젝트에서 수행할 활동을 활동 마스터와 연결합니다. |
+| `validation_project` → `project_activity` → `validation_activity` | 프로젝트에 배정된 활동을 활동 마스터와 연결하고, 실제 수행 대상 여부는 `is_selected`로 구분합니다. |
 | `validation_activity` ↔ `activity_dependency` | 선행·후행 활동과 활성화 조건을 정의합니다. |
 | 문서 헤더 → 상세 항목 | `fds_spec`과 `fds_item`처럼 문서 단위 정보와 항목별 내용을 나누어 관리합니다. |
 | `traceability_link` → 요구사항·설계·위험·시험 항목 | 대상 유형과 ID를 사용해 산출물 간 추적 관계를 관리합니다. |
