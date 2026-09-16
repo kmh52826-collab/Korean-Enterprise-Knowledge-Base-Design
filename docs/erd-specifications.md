@@ -15,7 +15,7 @@ Validation Management Platform의 전체 데이터 모델을 업무 영역별로
 > 54개 테이블을 업무 영역별로 묶은 [전체 ERD 구조도](./erd-overview.md)를 참고하세요.
 
 > **상세 컬럼 정보가 필요한 경우**  
-> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값 및 업무 규칙은 [Data Dictionary](./data-dictionary.md)를 참고하세요.
+> 각 테이블의 컬럼, 데이터 타입, PK·FK, Null 허용 여부, 기본값, 제약조건 및 업무 규칙은 [Data Dictionary](./data-dictionary.md)를 참고하세요.
 
 ## 목차
 
@@ -125,7 +125,8 @@ organization
 ### 핵심 이해 포인트
 
 - `user_role`은 사용자에게 역할을 직접 부여하고, `group_role`은 그룹 구성원에게 역할을 일괄 적용합니다.
-- `GLOBAL` 범위의 권한과 특정 프로젝트에만 적용되는 `PROJECT` 범위의 권한을 구분합니다.
+- `GLOBAL` 범위는 `project_id`가 NULL이고, 특정 프로젝트에 적용되는 `PROJECT` 범위는 `project_id`가 필수입니다.
+- `group_role`은 삭제되지 않고 `is_active=TRUE`인 매핑에서 중복을 방지합니다. `GLOBAL`은 그룹·역할 조합, `PROJECT`는 그룹·역할·프로젝트 조합을 기준으로 합니다.
 - 전역 권한과 실제 프로젝트 참여 역할은 별개이며, 프로젝트 참여자는 `project_member`에서 관리합니다.
 
 ---
@@ -165,7 +166,7 @@ organization
 ### 핵심 이해 포인트
 
 - 하나의 시스템·장비에 대해 신규 검증, 변경 검증, 재검증 등 여러 Validation 프로젝트를 생성할 수 있습니다.
-- 동일한 사용자도 프로젝트마다 다른 역할로 참여할 수 있습니다.
+- 동일한 사용자도 프로젝트마다 다른 역할로 참여할 수 있습니다. 삭제되지 않고 `member_status=ACTIVE`인 참여 정보에서는 동일한 프로젝트·사용자·역할 조합을 중복 등록할 수 없습니다.
 - `app_user`와 `role`은 전역 기준정보이고, `project_member`는 특정 프로젝트에서의 실제 역할 배정입니다.
 
 ---
@@ -200,16 +201,18 @@ validation_activity
 | `app_user` | 프로젝트와 활동 및 선후행 조건을 등록·수정하는 사용자 정보 관리 |
 | `system_asset` | Validation 대상 시스템이나 장비의 식별정보, GAMP 범주, GxP 구분 및 상태 관리 |
 | `validation_project` | 대상 시스템별 Validation 프로젝트의 범위, 검증 방식, 진행률 및 상태 관리 |
-| `validation_activity` | VP, QIA, VA, URS, FDS, DDS, DQ, FRA, IQ, OQ, PQ, RTM, VSR 등 Validation 활동의 기준정보와 기본 표시 순서 관리 |
+| `validation_activity` | SYSTEM_IDENTIFICATION, VP, QIA, VA, URS, FDS, DDS, DQ, FRA, IQ, OQ, PQ, RTM, VSR 등 Validation 활동의 기준정보와 기본 표시 순서 관리 |
 | `project_activity` | 프로젝트별 수행 대상 활동, 필수 여부, 활성화 여부 및 진행 상태 관리 |
 | `activity_dependency` | 선행 활동, 요구 상태, 조건 유형 및 평가 순서를 기준으로 후행 활동의 활성화 조건 관리 |
 
 ### 핵심 이해 포인트
 
-- `project_activity`는 활동 마스터 중 해당 프로젝트에서 실제 수행할 항목을 선택한 결과입니다.
+- `project_activity`는 프로젝트에 배정된 활동을 관리하고, `is_selected`로 실제 수행 대상을 구분합니다. 삭제되지 않은 데이터에서는 선택 여부와 관계없이 프로젝트·활동 조합을 중복 등록할 수 없습니다.
 - `activity_dependency`는 단순 순서뿐 아니라 승인 상태, 추적성 존재, 고위험 항목의 시험 커버리지, 미해결 일탈 여부 등의 업무 조건을 표현합니다.
-- `predecessor_activity_id`와 `successor_activity_id`는 같은 활동 마스터를 각각 선행·후행 역할로 참조합니다. 전체 활동 승인 여부처럼 특정 선행 활동이 없는 조건에서는 선행 ID가 NULL일 수 있습니다.
-- 조건 평가는 애플리케이션이 해당 프로젝트의 실제 활동·산출물 상태를 조회해 수행합니다.
+- `predecessor_activity_id`와 `successor_activity_id`는 같은 활동 마스터를 각각 선행·후행 역할로 참조합니다. `STATUS` 조건에서는 선행 ID와 `required_status`가 필수이며, 다른 조건에서는 `required_status`를 NULL로 둡니다. 전체 활동 승인 여부처럼 특정 선행 활동이 없는 조건에서는 선행 ID가 NULL일 수 있습니다.
+- 조건 평가는 애플리케이션이 해당 프로젝트의 현재 유효 Revision을 기준으로 수행합니다. `CREATED`는 `condition_value`에 지정한 산출물이 하나 이상 존재한다는 뜻이며, `project_activity` 행의 존재만으로 충족되지 않습니다. 문서 테이블이 없는 시스템 식별·VP 활동은 컨텍스트 확인·활동 선택 등 해당 조건 유형을 사용합니다.
+- `COMPLETED`는 선행 활동 상태가 `COMPLETED` 또는 `APPROVED`이고 수행 완료 집계가 유효할 때, `APPROVED`는 활동 상태가 `APPROVED`이고 현재 대상 산출물이 모두 최종 승인되었을 때 충족합니다. 이전 Revision의 승인만으로 새 Revision의 승인 조건을 충족시키지 않습니다.
+- 삭제되지 않고 `is_active=TRUE`인 조건을 평가하며, 같은 후행 활동의 `REQUIRED` 조건은 모두 충족해야 합니다. `RECOMMENDED`는 안내용입니다. `SKIPPED`나 미선택 상태는 요구 상태를 자동 충족시키지 않으며, `ALL_SELECTED_APPROVED`는 후행 활동 자신을 제외한 선택 활동을 검사하고 대상이 없으면 자동 충족시키지 않습니다.
 
 ---
 
@@ -344,7 +347,7 @@ URS / FDS / DDS / DQ 상세 항목 ─ traceability_link (논리 연결)
 ### 핵심 이해 포인트
 
 - DDS는 구현 관점의 상세 설계이고, DQ는 해당 설계가 URS를 충족하는지 검토하는 평가입니다.
-- `dq_item`은 URS별 설계 적격성 판정과 검토 결과를 관리합니다.
+- `dq_item`은 URS별 설계 적격성 판정과 검토 결과를 관리합니다. `result_status`의 저장값은 `PASS`, `FAIL`, `PENDING`이며, 신규 항목은 `PENDING`(검토 대기)으로 시작합니다.
 - `dq_item`의 화면 표시용 FDS·DDS 매핑과 별개로, 산출물 간 공식적인 범용 추적 관계는 `traceability_link`를 기준으로 해석합니다.
 
 ---
@@ -430,8 +433,10 @@ iq_item / oq_item / pq_item
 ### 핵심 이해 포인트
 
 - IQ는 설치 적합성, OQ는 기능의 규격 충족 여부, PQ는 실제 운영 조건에서의 지속적인 성능을 확인합니다.
-- 각 시험은 시험 절차인 프로토콜 승인과 실제 수행 결과인 레코드 승인을 구분합니다.
-- 승인된 프로토콜로 시험을 수행한 뒤 실제 결과, 판정, 수행자, 수행 시각을 기록하며 불일치는 `deviation`으로 관리합니다.
+- 각 시험은 시험 절차인 프로토콜 승인과 실제 수행 결과인 레코드 승인을 구분합니다. IQ·OQ·PQ 활동의 최종 승인 판정에는 상위 문서의 `protocol_status`와 `record_status`가 모두 `APPROVED`여야 합니다.
+- IQ·OQ의 신규 문서와 항목은 `DRAFT`로 시작합니다. 항목의 프로토콜·레코드 상태는 각각 상위 문서의 상태를 기준으로 같은 Revision 안에서 동기화합니다.
+- 시험 실행은 현재 상위 문서의 프로토콜 승인을 기준으로 허용합니다. IQ·OQ는 항목 상태만으로 실행을 허용하지 않으며, 승인된 프로토콜의 항목 추가·수정·삭제는 새 Revision에서 `DRAFT`로 시작합니다. 실제 결과, 판정, 수행자, 수행 시각을 기록하며 불일치는 `deviation`으로 관리합니다.
+- `pq_assessment.status`는 수행 진행 상태인 `수행 대기 중`, `진행 중`, `완료`를 저장하며 초기값은 `수행 대기 중`입니다. 프로토콜·레코드 승인 상태와 구분합니다.
 
 ---
 
@@ -478,7 +483,8 @@ Validation 프로젝트의 URS 요구사항과 FDS·DDS 설계, DQ 평가 및 FR
 
 - `traceability_link`는 출발 엔터티와 대상 엔터티를 연결하는 범용 관계 테이블입니다.
 - 대표 관계 유형은 `IMPLEMENTED_BY`, `ASSESSED_BY`, `VERIFIED_BY`, `MITIGATED_BY`입니다.
-- 다형 참조이므로 `source_entity_id`와 `target_entity_id`에 대상 업무 테이블로의 물리 FK가 없을 수 있으며, 유형별 유효성은 애플리케이션 계층에서 검증해야 합니다.
+- 다형 참조이므로 `source_entity_id`와 `target_entity_id`에는 대상 업무 테이블로의 물리 FK가 없으며, 유형별 유효성은 애플리케이션 계층에서 검증해야 합니다.
+- 삭제되지 않은 추적 관계에서는 프로젝트·출발 유형/ID·대상 유형/ID·관계 유형의 동일 조합을 중복 등록할 수 없습니다.
 
 ---
 
@@ -572,9 +578,10 @@ Validation 프로젝트의 활동 수행 결과, RTM 커버리지 및 일탈 현
 
 ### 핵심 이해 포인트
 
-- VSR은 활동 승인 여부, 시험 결과, RTM 커버리지 및 미해결 일탈을 종합하여 최종 결론을 내리는 문서입니다.
+- VSR은 활동 승인 여부, 시험 결과, RTM 커버리지 및 미해결 일탈을 종합하여 최종 결론을 내리는 문서입니다. `vsr_item.activity_code`의 요약 대상에는 DDS가 포함되며, 시스템 식별은 프로젝트 컨텍스트로 관리하고 VSR 자체는 상세 집계에서 제외합니다.
 - 정상종료는 선택된 활동의 승인, 추적성 및 일탈 종결 조건을 종합하여 판단합니다.
-- `validation_project.closure_type`으로 정상종료(NORMAL)와 강제종료(FORCED)를 구분합니다. 강제종료 시 `closure_reason`이 필수이며, `closure_requested_by`·`closure_requested_at`은 요청자와 요청 시각, `closed_at`은 최종 종료 시각을 기록합니다. 종료 요청자는 `app_user`를 FK로 참조합니다.
+- `validation_project.closure_type`으로 정상종료(NORMAL)와 강제종료(FORCED)를 구분합니다. 강제종료 시 `closure_reason`이 필수이며, `closure_requested_by`·`closure_requested_at`은 종료 요청 서명의 서명자·서명 시각과 일치해야 합니다. `closed_at`은 최종 종료 시각이며, 종료 요청자는 `app_user`를 FK로 참조합니다.
+- 종료 요청 서명은 `validation_project`와 해당 `project_id`를 대상으로 `SUBMIT`으로 기록합니다. 요청마다 `CLOSE-n` 버전을 부여하고, 서명 의미는 `PROJECT_CLOSE_NORMAL` 또는 `PROJECT_CLOSE_FORCED`로 구분합니다. 최종 종료 시 해당 버전의 서명·보존된 입력·현재 요청값을 대조하며, 요청 내용이 달라졌으면 새 요청 버전과 재서명이 필요합니다.
 - `vsr_item.activity_code`·`doc_no`·`deviation_info` 등은 요약 값입니다. `project_activity`·`rtm_assessment`·`deviation`으로의 직접 FK는 없습니다.
 
 ---
@@ -598,7 +605,7 @@ workflow_instance
 
 Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려까지의 Workflow와 전자서명 증적을 관리하는 구조입니다.
 
-프로젝트 참여자와 역할을 기준으로 단계별 담당자를 지정하고, `workflow_instance`, `workflow_step`, `approval_action`을 통해 전체 Workflow와 실제 처리 이력을 관리합니다. 승인·반려 시 생성되는 전자서명은 대상 문서 버전과 내용 해시를 함께 보존합니다.
+프로젝트 참여자와 역할을 기준으로 단계별 담당자를 지정하고, `workflow_instance`, `workflow_step`, `approval_action`을 통해 전체 Workflow와 실제 처리 이력을 관리합니다. 상신·검토·승인·반려에 연결되는 전자서명은 대상 문서 버전과 내용 해시를 함께 보존합니다. 프로젝트 종료 요청 서명은 별도의 `CLOSE-n` 요청 버전으로 관리합니다.
 
 ### 테이블별 역할 요약
 
@@ -608,18 +615,20 @@ Validation 프로젝트의 문서 상신부터 단계별 검토·승인·반려�
 | `app_user` | 문서 상신자, 단계 담당자, 실제 처리자 및 전자서명자 정보 관리 |
 | `role` | 프로젝트 참여자의 역할 기준정보 관리. Workflow 담당자 선정 시 업무상 참조 |
 | `system_asset` | 검토·승인 대상 Validation 프로젝트의 시스템이나 장비 정보 관리 |
-| `validation_project` | Workflow와 프로젝트 참여자가 소속되는 Validation 프로젝트 관리 |
+| `validation_project` | 검토·승인 대상 문서와 프로젝트 참여자가 소속되는 Validation 프로젝트 관리 |
 | `project_member` | 프로젝트별 참여 사용자와 수행 역할, 참여 상태 및 참여 기간 관리 |
 | `workflow_instance` | 대상 문서별 전체 검토·승인 Workflow의 상신 정보, 현재 단계 및 진행 상태 관리 |
 | `workflow_step` | Workflow 내 단계 순서, 단계 유형, 담당자, 처리 기한 및 단계별 상태 관리 |
 | `approval_action` | 상신·검토·승인·반려·취소 등 단계별 실제 처리 내용과 처리자 및 처리 시각 관리 |
-| `electronic_signature` | 상신·검토·승인·반려 시 서명자, 서명 의미, 대상 버전, 내용 해시 및 재인증 결과 관리 |
+| `electronic_signature` | 문서 상신·검토·승인·반려 및 프로젝트 종료 요청의 서명자, 서명 의미, 대상 버전, 내용 해시와 재인증 결과 관리 |
 
 ### 핵심 이해 포인트
 
 - `workflow_instance`는 전체 진행 상태, `workflow_step`은 개별 검토·승인 단계, `approval_action`은 실제 처리 행위를 관리합니다.
-- `electronic_signature`는 승인·반려 행위에 대한 본인 확인과 서명 증적이며, 대상 버전과 내용 해시를 함께 보존합니다.
-- `approval_action.signature_id`가 전자서명을 참조하며 NULL을 허용합니다. 모든 처리 이력에 서명이 필수라는 뜻은 아닙니다.
+- `electronic_signature`는 문서 상신·검토·승인·반려 및 프로젝트 종료 요청의 본인 확인과 서명 증적입니다. Workflow 처리에 연결할 때 실제 처리자와 서명자, 대상 테이블·레코드·버전, 처리 유형과 서명 동작이 일치하는지 검증합니다.
+- `approval_action.signature_id`가 전자서명을 참조하며 NULL을 허용합니다. `CANCEL`은 서명 없이 취소 사유와 Audit Trail을 기록하고, Workflow를 `CANCELLED`, 남은 미완료 단계를 `SKIPPED`로 처리합니다.
+- 상신 전에 Workflow 단계를 생성하고, `SUBMIT`은 최초 비삭제 단계에 연결합니다. 진행 중 `CANCEL`은 현재 단계, 시작 전 취소는 최초 단계에 연결하며 종료된 Workflow는 취소하지 않습니다. 이러한 연결은 해당 단계의 검토·승인 완료를 뜻하지 않습니다.
+- `workflow_step.step_type`은 `REVIEW` 또는 `APPROVE`이고, `SUBMIT`·`CANCEL`은 `approval_action.action_type`으로 기록합니다. 삭제되지 않은 단계에서는 같은 Workflow 안의 `step_order`가 중복되지 않아야 합니다.
 - `workflow_instance`에는 `project_id` FK가 없고, `workflow_step`에는 `project_member` 또는 `role` FK가 없습니다. 담당자는 `assignee_id`로 사용자를 직접 참조하고 프로젝트 역할 적합성은 업무 로직으로 확인해야 합니다.
 - Audit Trail은 위 개념들과 별개로 처리 과정에서 발생한 데이터 변경 이력을 기록합니다.
 
@@ -659,7 +668,7 @@ Validation 프로젝트에서 사용하는 첨부파일과 시험 증적의 메�
 ### 핵심 이해 포인트
 
 - `file_asset`은 파일 자체의 메타데이터이고, `evidence_link`는 해당 파일이 어떤 업무 항목의 증적인지를 표현합니다.
-- 두 영역을 분리하여 하나의 파일을 여러 업무 항목에 연결하거나 하나의 업무 항목에 여러 파일을 연결할 수 있습니다.
+- 두 영역을 분리하여 하나의 파일을 여러 업무 항목에 연결하거나 하나의 업무 항목에 여러 파일을 연결할 수 있습니다. 삭제되지 않은 증적 연결에서는 프로젝트·파일·대상 유형/ID·증적 유형의 동일 조합을 중복 등록할 수 없습니다.
 - `file_asset.cleanup_execution_id`는 마지막 정리 실행만 가리키며 NULL을 허용합니다. 모든 파일의 필수 상위 테이블이 정리 실행이라는 뜻은 아니며, 파일별 전체 정리 이력을 보존하는 별도 N:M 이력 테이블도 현재 정의에는 없습니다.
 - 파일 정리는 규정상 보존해야 할 증적을 임의 삭제하는 기능이 아니라 임시·만료·고아 파일을 통제된 절차로 정리하고 결과를 기록하는 운영 기능입니다.
 
@@ -772,7 +781,7 @@ audit_trail (시스템·배치 작업도 기록)
 
 조직에 소속된 사용자가 수행한 주요 데이터 변경과 시스템·배치 작업의 처리 이력을 감사 목적으로 보존하는 구조입니다.
 
-`audit_trail`에서 작업 유형, 대상 테이블과 레코드, 변경 전후 값, 변경 사유, 수행 주체, 요청·세션 정보 및 대상 문서 버전을 관리합니다. 감사 대상은 다형 참조 방식으로 식별하며, 시스템 또는 배치 작업은 사용자 없이 기록할 수 있습니다.
+`audit_trail`에서 작업 유형, 대상 테이블과 레코드, 변경 전후 값, 변경 사유, 수행 주체, 요청·세션 정보 및 대상 문서 또는 프로젝트 종료 요청 버전을 관리합니다. 감사 대상은 다형 참조 방식으로 식별하며, 시스템 또는 배치 작업은 사용자 없이 기록할 수 있습니다.
 
 ### 테이블별 역할 요약
 
@@ -780,7 +789,7 @@ audit_trail (시스템·배치 작업도 기록)
 |---|---|
 | `organization` | 감사 대상 사용자가 소속되는 고객사 또는 운영 조직의 기준정보 관리 |
 | `app_user` | 주요 데이터 변경을 수행한 사용자 계정과 소속 조직 정보 관리 |
-| `audit_trail` | 데이터 생성·수정·삭제 및 운영 작업의 수행자, 대상, 변경 전후 값, 변경 사유, 요청·세션 정보와 문서 버전 관리 |
+| `audit_trail` | 데이터 생성·수정·삭제 및 운영 작업의 수행자, 대상, 변경 전후 값, 변경 사유, 요청·세션 정보와 문서·종료 요청 버전 관리 |
 
 ### 핵심 이해 포인트
 
@@ -798,6 +807,8 @@ audit_trail (시스템·배치 작업도 기록)
 ```
 
 - 사용자가 수행한 변경뿐 아니라 시스템 또는 배치 작업도 기록할 수 있으며, 이 경우 사용자 ID는 없을 수 있습니다.
-- Audit Trail은 데이터 변경과 중요 시스템 행위의 이력이고, 전자서명은 승인·반려 등 규제상 서명 행위의 증적입니다.
+- Audit Trail은 데이터 변경과 중요 시스템 행위의 이력이고, 전자서명은 상신·검토·승인·반려 및 프로젝트 종료 요청 등의 서명 증적입니다.
+- 프로젝트 종료 요청은 `UPDATE`, 최종 정상종료는 `PROJECT_CLOSE`, 강제종료는 `PROJECT_FORCE_CLOSE`로 기록하며 전자서명과 같은 `CLOSE-n` 버전을 저장합니다. 종료 요청 기록의 `new_values`에는 서명 입력 문자열 `signed_payload`와 `signature_id`를 보존하고, 해당 문자열의 UTF-8 바이트를 기준으로 전자서명의 SHA-256 해시를 계산합니다.
+- `client_ip`와 개인정보를 포함할 수 있는 `old_values`·`new_values`는 민감 데이터로 관리합니다. `password_hash`는 민감정보이지만 `Audit=N`이며, 해시 원문을 감사로그에 포함하지 않습니다.
 - 삭제 시 기존 값을 Audit Trail에 남기도록 구현하면 변경 경위를 추적할 수 있습니다. 현재 `old_values`는 NULL 허용이므로 삭제 전 값의 보존은 업무 로직과 기록 정책에서 보장해야 합니다.
 - `audit_trail`에는 직접 조직 ID가 없습니다. 사용자 없는 시스템·배치 기록의 조직 범위는 대상 레코드 등의 별도 경로로 판단해야 합니다.
