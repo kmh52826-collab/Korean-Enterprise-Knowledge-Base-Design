@@ -9,9 +9,6 @@ Validation Management Platform의 데이터 모델을 업무 영역별로 정리
 > [!NOTE]
 > 이 문서는 데이터 모델링 및 시스템 설계를 설명하기 위한 자료입니다. 예시값은 비식별 샘플을 사용하며, 특정 조직의 실제 운영 데이터를 나타내지 않습니다.
 
-> **전체 업무 흐름을 보려면**  
-> [전체 구조 한눈에 보기](#overview)를 참고하세요.
->
 > **상세 컬럼 정보가 필요한 경우**  
 > 컬럼, 데이터 타입, PK·FK, NULL 허용 여부, 기본값, 제약조건과 업무 규칙은 [Data Dictionary](./data-dictionary.md)를 참고하세요.
 
@@ -36,56 +33,14 @@ Validation Management Platform의 데이터 모델을 업무 영역별로 정리
 
 ---
 
-<a id="overview"></a>
-
-## 전체 구조 한눈에 보기
-
-```text
-조직·사용자·권한 구성
-    ↓
-시스템 인벤토리 등록·개정·승인
-    ↓
-Validation 프로젝트 생성
-    ├─ 검증 대상 승인 개정 채택
-    └─ 참여자·수행 활동·선후행 조건 구성
-    ↓
-VP 검증 계획 · QIA 품질 영향 평가 · VA 공급업체 감사
-    ↓
-URS 요구사항 · F&DS 설계 문서(FDS·DDS)
-    ↓
-DQ 설계 적격성 평가 · FRA 기능 위험평가
-    ↓
-IQ · OQ · PQ 프로토콜 승인 및 시험 수행
-    └─ FAIL → 일탈 조치·승인 → 재수행 또는 사유를 남긴 종료
-    ↓
-VSR 종합 보고 및 프로젝트 종료 요청·승인
-
-업무 전반의 조회: 요구사항·설계·위험·시험 추적성 및 RTM 대시보드
-공통 통제: 결재 · 전자서명 · 감사기록 · 문서 개정 · 파일·증적 보존
-작성 지원: 라이브러리 · 규정 근거 · AI 초안 생성·선택·적용
-```
-
-위 도식은 업무 이해를 위한 흐름입니다. 실제 수행 범위는 `project_activity`의 선택 활동을 기준으로 하며, 선후행 조건은 프로젝트 생성 시 채택한 `validation_project.dependency_snapshot`으로 평가합니다. 전역 `activity_dependency`의 이후 변경은 기존 프로젝트에 자동 전파하지 않습니다.
-
-FDS와 DDS는 F&DS 활동에 속하는 문서 종류입니다. RTM은 독립 수행·승인 단계가 아니라 추적 관계와 시험 결과를 조회하는 대시보드 기능이며, 프로젝트 진행률의 수행 활동 수에 포함하지 않습니다.
-
-업무 항목의 개정, 시험 수행 회차·결과 정정, 산출물 문서 개정은 서로 구분합니다. 검증 대상 시스템의 당시 상태는 승인 원문과 `project_system_baseline`으로 식별하고, 시험 수행과 문서는 각각 채택한 기준을 보존합니다.
-
 ### 문서와 관계 구조 읽는 방법
+
+관계 구조는 주요 테이블의 구성과 연결을 간단히 보여줍니다. 가지선은 상하위 구성이나 연관 관계를, 화살표는 업무 흐름을 나타냅니다. 상세 연결과 컬럼은 각 주제의 ERD 링크에서 확인할 수 있습니다.
 
 | 구분 | 의미 |
 |---|---|
-| 주 소속 | 해당 ERD의 중심 테이블. 업무 데이터와 관계의 상세 구조를 표시합니다. |
-| 외부 참조 | 다른 ERD가 주 소속인 테이블. 이 그림에서는 PK와 관계 설명에 필요한 컬럼을 표시합니다. |
-| `A --FK--> B` | A의 외래키가 B의 PK를 참조하는 물리 관계입니다. 화살표는 업무 수행 순서를 의미하지 않습니다. |
-| `A ..논리..> B` | 유형+ID 또는 JSON 안의 식별값으로 연결하는 논리 관계입니다. 물리 FK가 아닙니다. |
-
-각 관계 구조는 핵심 연결을 요약합니다. 생성자·수정자 등 반복되는 사용자 참조는 도식에서 일부 생략하며, 정확한 컬럼과 전체 물리 FK는 Data Dictionary를 참고하세요. 역할 요약 표에는 해당 ERD에 표시한 테이블을 모두 포함합니다.
-
-> [!IMPORTANT]
-> 다형 참조와 JSON 내부 참조는 물리 FK 관계선으로 표현되지 않습니다. 이 문서의 논리 관계 도식과 설명을 함께 확인하세요. 대상 존재·프로젝트 소속·정확한 개정은 서버 업무 규칙으로 검증합니다.
->
-> VSR·결재·문서 ERD는 여러 업무 원본 중 대표 대상을 표시합니다. 외부 참조의 일부 컬럼이 그림에 보이지 않는다고 해서 실제 테이블에 해당 컬럼이 없는 것은 아닙니다.
+| 주 소속 | 해당 ERD의 중심이 되는 테이블 |
+| 외부 참조 | 관계를 이해하기 위해 함께 표시한 다른 영역의 테이블 |
 
 ---
 
@@ -93,27 +48,22 @@ FDS와 DDS는 F&DS 활동에 속하는 문서 종류입니다. RTM은 독립 수
 
 ## 1. 조직·사용자·권한
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/01-organization-security)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/01-organization-security>
 
 **주 소속 9개 · 외부 참조 1개 · 총 10개 테이블**
 
 ### 관계 구조
 
 ```text
-app_user --FK--> organization
-user_group --FK--> organization
-user_role --FK--> app_user
-user_role --FK--> role
-user_group_member --FK--> user_group
-user_group_member --FK--> app_user
-group_role --FK--> user_group
-group_role --FK--> role
-group_role --FK--> validation_project          [PROJECT 범위]
-access_permission_grant --FK--> app_user      [개인에게 부여]
-access_permission_grant --FK--> user_group    [그룹에 부여]
-access_permission_grant --FK--> validation_project [PROJECT 범위]
-inventory_role_grant --FK--> app_user         [개인에게 부여]
-inventory_role_grant --FK--> user_group       [그룹에 부여]
+organization
+  ├─ app_user ─ user_role ─ role
+  └─ user_group
+       ├─ user_group_member ─ app_user
+       └─ group_role ─ role
+
+app_user / user_group
+  ├─ access_permission_grant (화면·프로젝트 접근권한)
+  └─ inventory_role_grant (인벤토리 업무 권한)
 ```
 
 ### 구조 개요
@@ -153,34 +103,22 @@ inventory_role_grant --FK--> user_group       [그룹에 부여]
 
 ## 2. 시스템 인벤토리·프로젝트 관리
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/02-inventory-project)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/02-inventory-project>
 
 **주 소속 9개 · 외부 참조 5개 · 총 14개 테이블**
 
 ### 관계 구조
 
 ```text
-system_asset --FK--> organization
-system_asset_revision --FK--> system_asset
-system_asset_revision --FK--> electronic_signature
-validation_project --FK--> system_asset
-project_system_baseline --FK--> validation_project
-project_system_baseline --FK--> system_asset_revision [채택한 승인 이벤트]
-validation_project --FK--> project_system_baseline   [현재 기준]
-project_member --FK--> validation_project
-project_member --FK--> app_user
-project_member --FK--> role
-project_activity --FK--> validation_project
-project_activity --FK--> validation_activity
-activity_dependency --FK--> validation_activity     [선행·후행 활동]
-project_closure_request --FK--> validation_project
-project_closure_request --FK--> workflow_instance
-validation_project --FK--> project_closure_request   [현재 종료 요청]
-validation_project.dependency_snapshot ..논리..> activity_dependency
-workflow_instance ..논리..> system_asset            [대상 유형·ID·개정]
-workflow_instance ..논리..> project_closure_request  [대상 유형·ID·요청 버전]
-electronic_signature ..논리..> system_asset         [대상 유형·ID·개정]
-electronic_signature ..논리..> project_closure_request [대상 유형·ID·요청 버전]
+system_asset (검증 대상 시스템)
+  ├─ system_asset_revision (개정·승인 이력)
+  └─ validation_project
+       ├─ project_system_baseline (채택한 승인 개정)
+       ├─ project_member (참여자)
+       ├─ project_activity ─ validation_activity
+       └─ project_closure_request (종료 요청)
+
+validation_activity ─ activity_dependency (활동 선후행 조건)
 ```
 
 ### 구조 개요
@@ -224,27 +162,20 @@ electronic_signature ..논리..> project_closure_request [대상 유형·ID·요
 
 ## 3. 검증 계획·사전 평가
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/03-planning-assessment)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/03-planning-assessment>
 
 **주 소속 6개 · 외부 참조 4개 · 총 10개 테이블**
 
 ### 관계 구조
 
 ```text
-vp_plan --FK--> validation_project
-vp_section --FK--> vp_plan
-qia_assessment --FK--> validation_project
-qia_module_item --FK--> qia_assessment
-qia_process --FK--> qia_module_item
-vendor_audit --FK--> validation_project
-vendor_audit --FK--> app_user       [감사자 계정]
-vendor_audit --FK--> file_asset     [평가 첨부파일]
-vp_plan --FK--> workflow_instance
-qia_module_item --FK--> workflow_instance
-vendor_audit --FK--> workflow_instance
-workflow_instance ..논리..> vp_plan         [대상 유형·ID·개정]
-workflow_instance ..논리..> qia_module_item [대상 유형·ID·개정]
-workflow_instance ..논리..> vendor_audit    [대상 유형·ID·개정]
+validation_project
+  ├─ vp_plan (검증 계획)
+  │    └─ vp_section (목차·본문)
+  ├─ qia_assessment (품질 영향 평가)
+  │    └─ qia_module_item (모듈)
+  │         └─ qia_process (프로세스)
+  └─ vendor_audit (공급업체 감사)
 ```
 
 ### 구조 개요
@@ -284,40 +215,22 @@ workflow_instance ..논리..> vendor_audit    [대상 유형·ID·개정]
 
 ## 4. 요구사항·설계·위험평가
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/04-requirements-design-risk)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/04-requirements-design-risk>
 
 **주 소속 7개 · 외부 참조 8개 · 총 15개 테이블**
 
 ### 관계 구조
 
 ```text
-requirement --FK--> validation_project
-fds_spec --FK--> validation_project
-dds_spec --FK--> validation_project
-dq_assessment --FK--> validation_project
-fra_assessment --FK--> validation_project
-dq_item --FK--> dq_assessment
-dq_item --FK--> requirement   [평가한 URS 개정]
-dq_item --FK--> fds_spec      [선택한 FDS 승인 개정]
-dq_item --FK--> dds_spec      [선택한 DDS 승인 개정]
-fra_item --FK--> fra_assessment
-fra_item --FK--> requirement  [위험평가 대상 URS 개정]
-fra_item --FK--> regulatory_clause [내부 SOP 조항]
-requirement_regulation --FK--> requirement
-requirement_regulation --FK--> regulatory_clause
-regulatory_clause --FK--> regulatory_source
-regulatory_source --FK--> file_asset
-fds_spec --FK--> file_asset
-dds_spec --FK--> file_asset
-requirement --FK--> library_item [복사 출처]
-fra_item --FK--> library_item    [복사 출처]
-requirement --FK--> workflow_instance
-fds_spec --FK--> workflow_instance
-dds_spec --FK--> workflow_instance
-dq_item --FK--> workflow_instance
-fra_item --FK--> workflow_instance
-workflow_instance ..논리..> requirement / fds_spec / dds_spec / dq_item / fra_item
-                           [target_table_name으로 결정되는 승인 대상·개정]
+validation_project
+  ├─ requirement (URS)
+  ├─ fds_spec (FDS)
+  ├─ dds_spec (DDS)
+  ├─ dq_assessment ─ dq_item (설계 적격성 평가)
+  └─ fra_assessment ─ fra_item (기능 위험평가)
+
+dq_item ─ requirement / fds_spec / dds_spec
+fra_item ─ requirement
 ```
 
 ### 구조 개요
@@ -362,29 +275,19 @@ URS는 검증할 요구사항을, FDS·DDS는 업로드한 기능·상세 설계
 
 ## 5. IQ 설치 적격성 시험
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/05-iq-testing)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/05-iq-testing>
 
 **주 소속 5개 · 외부 참조 8개 · 총 13개 테이블**
 
 ### 관계 구조
 
 ```text
-iq_assessment.project_id --FK--> validation_project.project_id
-iq_item.iq_id --FK--> iq_assessment.iq_id                 [최초 등록 상위]
-iq_assessment.item_revision_refs ..논리..> iq_item       [개정별 실제 구성]
-iq_step.iq_item_id --FK--> iq_item.iq_item_id
-iq_execution.iq_item_id --FK--> iq_item.iq_item_id
-iq_step_execution.execution_id --FK--> iq_execution.execution_id
-iq_step_execution.step_id --FK--> iq_step.step_id
-iq_execution.system_baseline_id --FK--> project_system_baseline.baseline_id
-project_system_baseline.project_id --FK--> validation_project.project_id
-iq_item.source_library_id --FK--> library_item.library_id
-iq_item.protocol_workflow_id --FK--> workflow_instance.workflow_instance_id
-iq_execution.result_workflow_id --FK--> workflow_instance.workflow_instance_id
-iq_execution.execution_signature_id --FK--> electronic_signature.signature_id
-iq_execution.executed_by --FK--> app_user.user_id
-evidence_link.file_id --FK--> file_asset.file_id
-evidence_link.target_entity_id ..논리..> iq_item / iq_execution / iq_step_execution
+validation_project
+  └─ iq_assessment (IQ 평가)
+       └─ iq_item (시험 항목·프로토콜)
+            ├─ iq_step (시험 절차)
+            └─ iq_execution (수행 회차)
+                 └─ iq_step_execution (절차별 결과)
 ```
 
 ### 구조 개요
@@ -427,29 +330,19 @@ IQ는 평가 문서, 시험 프로토콜, 세부 절차, 실제 수행, 절차�
 
 ## 6. OQ 운전 적격성 시험
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/06-oq-testing)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/06-oq-testing>
 
 **주 소속 5개 · 외부 참조 8개 · 총 13개 테이블**
 
 ### 관계 구조
 
 ```text
-oq_assessment.project_id --FK--> validation_project.project_id
-oq_item.oq_id --FK--> oq_assessment.oq_id                 [최초 등록 상위]
-oq_assessment.item_revision_refs ..논리..> oq_item       [개정별 실제 구성]
-oq_step.oq_item_id --FK--> oq_item.oq_item_id
-oq_execution.oq_item_id --FK--> oq_item.oq_item_id
-oq_step_execution.execution_id --FK--> oq_execution.execution_id
-oq_step_execution.step_id --FK--> oq_step.step_id
-oq_execution.system_baseline_id --FK--> project_system_baseline.baseline_id
-project_system_baseline.project_id --FK--> validation_project.project_id
-oq_item.source_library_id --FK--> library_item.library_id
-oq_item.protocol_workflow_id --FK--> workflow_instance.workflow_instance_id
-oq_execution.result_workflow_id --FK--> workflow_instance.workflow_instance_id
-oq_execution.execution_signature_id --FK--> electronic_signature.signature_id
-oq_execution.executed_by --FK--> app_user.user_id
-evidence_link.file_id --FK--> file_asset.file_id
-evidence_link.target_entity_id ..논리..> oq_item / oq_execution / oq_step_execution
+validation_project
+  └─ oq_assessment (OQ 평가)
+       └─ oq_item (시험 항목·프로토콜)
+            ├─ oq_step (시험 절차)
+            └─ oq_execution (수행 회차)
+                 └─ oq_step_execution (절차별 결과)
 ```
 
 ### 구조 개요
@@ -492,29 +385,19 @@ OQ는 운전 적격성을 평가하는 시험 프로토콜과 실제 수행 결�
 
 ## 7. PQ 성능 적격성 시험
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/07-pq-testing)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/07-pq-testing>
 
 **주 소속 5개 · 외부 참조 8개 · 총 13개 테이블**
 
 ### 관계 구조
 
 ```text
-pq_assessment.project_id --FK--> validation_project.project_id
-pq_item.pq_id --FK--> pq_assessment.pq_id                 [최초 등록 상위]
-pq_assessment.item_revision_refs ..논리..> pq_item       [개정별 실제 구성]
-pq_step.pq_item_id --FK--> pq_item.pq_item_id
-pq_execution.pq_item_id --FK--> pq_item.pq_item_id
-pq_step_execution.execution_id --FK--> pq_execution.execution_id
-pq_step_execution.step_id --FK--> pq_step.step_id
-pq_execution.system_baseline_id --FK--> project_system_baseline.baseline_id
-project_system_baseline.project_id --FK--> validation_project.project_id
-pq_item.source_library_id --FK--> library_item.library_id
-pq_item.protocol_workflow_id --FK--> workflow_instance.workflow_instance_id
-pq_execution.result_workflow_id --FK--> workflow_instance.workflow_instance_id
-pq_execution.execution_signature_id --FK--> electronic_signature.signature_id
-pq_execution.executed_by --FK--> app_user.user_id
-evidence_link.file_id --FK--> file_asset.file_id
-evidence_link.target_entity_id ..논리..> pq_item / pq_execution / pq_step_execution
+validation_project
+  └─ pq_assessment (PQ 평가)
+       └─ pq_item (시험 항목·프로토콜)
+            ├─ pq_step (시험 절차)
+            └─ pq_execution (수행 회차)
+                 └─ pq_step_execution (절차별 결과)
 ```
 
 ### 구조 개요
@@ -557,26 +440,21 @@ IQ·OQ와 같은 구조를 사용하되 PQ의 평가·시험·수행 기록은 �
 
 ## 8. 일탈·조치·재수행
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/08-deviation-rerun)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/08-deviation-rerun>
 
 **주 소속 2개 · 외부 참조 7개 · 총 9개 테이블**
 
 ### 관계 구조
 
 ```text
-deviation.project_id --FK--> validation_project.project_id
-deviation_action_round.deviation_id --FK--> deviation.deviation_id
-deviation.current_action_round_id --FK--> deviation_action_round.action_round_id
-deviation_action_round.workflow_instance_id --FK--> workflow_instance.workflow_instance_id
-deviation_action_round.signature_id --FK--> electronic_signature.signature_id
-deviation.completion_signature_id --FK--> electronic_signature.signature_id
-deviation.closure_signature_id --FK--> electronic_signature.signature_id
-deviation.approved_by --FK--> app_user.user_id
+iq_execution / oq_execution / pq_execution (실패한 시험 수행)
+    ↓ 일탈 등록
+deviation
+  └─ deviation_action_round (회차별 조치·승인)
+       ↓ 재수행
+iq_execution / oq_execution / pq_execution (새 수행 기록)
 
-deviation.source_entity_id ..논리..> iq_execution / oq_execution / pq_execution
-deviation.rerun_execution_id ..논리..> iq_execution / oq_execution / pq_execution
-deviation_action_round.failed_execution_id ..논리..> iq_execution / oq_execution / pq_execution
-deviation_action_round.rerun_execution_id ..논리..> iq_execution / oq_execution / pq_execution
+재실패 시 조치 회차 추가
 ```
 
 ### 구조 개요
@@ -615,25 +493,20 @@ deviation_action_round.rerun_execution_id ..논리..> iq_execution / oq_executio
 
 ## 9. 요구사항·시험 추적성
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/09-traceability)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/09-traceability>
 
 **주 소속 1개 · 외부 참조 10개 · 총 11개 테이블**
 
 ### 관계 구조
 
 ```text
-traceability_link.project_id --FK--> validation_project.project_id
-traceability_link.created_by / updated_by --FK--> app_user.user_id
+requirement (URS)
+  └─ traceability_link (추적 관계)
+       ├─ fds_spec / dds_spec (설계)
+       ├─ dq_item / fra_item (설계·위험평가)
+       └─ iq_item / oq_item / pq_item (시험 항목)
 
-traceability_link.source_entity_id / target_entity_id ..논리..> requirement
-traceability_link.source_entity_id / target_entity_id ..논리..> fds_spec / dds_spec
-traceability_link.source_entity_id / target_entity_id ..논리..> dq_item / fra_item
-traceability_link.source_entity_id / target_entity_id ..논리..> iq_item / oq_item / pq_item
-
-dq_item.requirement_id --FK--> requirement.requirement_id
-dq_item.fds_revision_id --FK--> fds_spec.fds_id
-dq_item.dds_revision_id --FK--> dds_spec.dds_id
-fra_item.requirement_id --FK--> requirement.requirement_id
+추적 관계와 시험 결과 → RTM 대시보드
 ```
 
 ### 구조 개요
@@ -674,27 +547,20 @@ fra_item.requirement_id --FK--> requirement.requirement_id
 
 ## 10. VSR 종합 보고
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/10-vsr-summary)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/10-vsr-summary>
 
 **주 소속 2개 · 외부 참조 12개 · 총 14개 테이블**
 
 ### 관계 구조
 
 ```text
-vsr_assessment.project_id --FK--> validation_project.project_id
-vsr_item.vsr_id --FK--> vsr_assessment.vsr_id
-vsr_item.project_activity_id --FK--> project_activity.project_activity_id
-project_activity.project_id --FK--> validation_project.project_id
-vsr_item.document_revision_id --FK--> deliverable_revision.document_revision_id
-vsr_assessment.workflow_instance_id --FK--> workflow_instance.workflow_instance_id
-vsr_assessment.approval_signature_id --FK--> electronic_signature.signature_id
-vsr_assessment.created_by / updated_by --FK--> app_user.user_id
+validation_project
+  └─ vsr_assessment (종합 보고)
+       └─ vsr_item (활동별 결과 요약)
+            ├─ project_activity (수행 활동)
+            └─ deliverable_revision (근거 문서)
 
-vsr_item.source_revision_refs ..논리..> vp_plan / qia_module_item / vendor_audit
-vsr_item.source_revision_refs ..논리..> iq_execution / oq_execution / pq_execution
-deliverable_revision.source_refs ..논리..> vp_plan / qia_module_item / vendor_audit
-deliverable_revision.source_refs ..논리..> iq_execution / oq_execution / pq_execution
-deliverable_revision.source_refs ..논리..> vsr_assessment
+계획·평가·시험 결과 → VSR 집계·승인 → 프로젝트 종료 판단
 ```
 
 ### 구조 개요
@@ -738,38 +604,21 @@ deliverable_revision.source_refs ..논리..> vsr_assessment
 
 ## 11. 결재·전자서명·감사기록
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/11-workflow-signature-audit)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/11-workflow-signature-audit>
 
 **주 소속 7개 · 외부 참조 8개 · 총 15개 테이블**
 
 ### 관계 구조
 
 ```text
-workflow_instance --FK--> validation_project
-workflow_instance --FK--> project_workflow_config
-workflow_step --FK--> workflow_instance
-workflow_step_assignee --FK--> workflow_step
-workflow_step_assignee --FK--> app_user (주 담당자·대체 담당자)
-approval_action --FK--> workflow_step
-approval_action --FK--> workflow_step_assignee
-approval_action --FK--> electronic_signature --FK--> app_user
+project_workflow_config (결재선 설정)
+  └─ workflow_instance (결재 실행)
+       └─ workflow_step (검토·승인 단계)
+            ├─ workflow_step_assignee (담당자 배정)
+            └─ approval_action (처리 이력)
+                 └─ electronic_signature (전자서명)
 
-project_workflow_config --FK--> validation_project
-project_workflow_config --FK--> project_activity
-project_workflow_config --FK--> electronic_signature (설정 적용 서명)
-project_workflow_config.route_definition ..논리..> app_user
-audit_trail --FK--> app_user (사용자 행위의 수행자)
-
-requirement --FK--> workflow_instance (업무 승인·폐기 승인)
-deliverable_revision --FK--> workflow_instance
-deviation_action_round --FK--> workflow_instance
-deviation_action_round --FK--> electronic_signature
-project_closure_request --FK--> workflow_instance
-
-workflow_instance / electronic_signature / audit_trail
-  ..논리..> requirement / deliverable_revision / deviation_action_round
-  ..논리..> system_asset / project_closure_request
-electronic_signature / audit_trail ..논리..> project_workflow_config
+audit_trail (업무 전반의 감사기록)
 ```
 
 ### 구조 개요
@@ -814,36 +663,20 @@ electronic_signature / audit_trail ..논리..> project_workflow_config
 
 ## 12. 산출물·문서 개정·파일
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/12-documents-files)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/12-documents-files>
 
 **주 소속 6개 · 외부 참조 9개 · 총 15개 테이블**
 
 ### 관계 구조
 
 ```text
-deliverable_document --FK--> validation_project
-deliverable_document --FK--> project_activity --FK--> validation_project
-deliverable_revision --FK--> deliverable_document
-deliverable_section --FK--> deliverable_revision
-deliverable_revision --FK--> workflow_instance
-deliverable_revision --FK--> project_system_baseline
-deliverable_revision --FK--> file_asset (보관한 PDF)
+deliverable_document (산출물)
+  └─ deliverable_revision (문서 개정)
+       ├─ deliverable_section (목차·본문)
+       └─ report_generation (PDF 생성)
+            └─ file_asset (결과 파일)
 
-report_generation --FK--> validation_project
-report_generation --FK--> deliverable_revision (산출물 내보내기)
-report_generation --FK--> file_asset (보관한 결과 파일)
-file_asset --FK--> app_user (업로드자)
-evidence_link --FK--> file_asset
-evidence_link --FK--> validation_project
-evidence_link ..논리..> iq_item / iq_execution / iq_step_execution
-evidence_link ..논리..> deliverable_revision
-
-deliverable_revision.source_refs ..논리..> iq_assessment / iq_item / iq_execution
-iq_assessment.item_revision_refs ..논리..> iq_item
-iq_item --FK--> iq_assessment (최초 등록 상위)
-iq_execution --FK--> iq_item
-iq_execution --FK--> project_system_baseline
-iq_step_execution --FK--> iq_execution
+업무 기록 ─ evidence_link (증적 연결) ─ file_asset
 ```
 
 ### 구조 개요
@@ -888,29 +721,20 @@ iq_step_execution --FK--> iq_execution
 
 ## 13. 라이브러리·규정 근거
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/13-library-regulation)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/13-library-regulation>
 
 **주 소속 5개 · 외부 참조 7개 · 총 12개 테이블**
 
 ### 관계 구조
 
 ```text
-regulatory_clause --FK--> regulatory_source --FK--> file_asset
-regulatory_source --FK--> app_user (문서판 확인자)
-file_asset --FK--> app_user (업로드자)
+regulatory_source (규정 문서판)
+  └─ regulatory_clause (규정 조항)
+       ├─ requirement_regulation ─ requirement (URS)
+       └─ library_item_regulation ─ library_item (재사용 항목)
 
-library_item_regulation --FK--> library_item
-library_item_regulation --FK--> regulatory_clause
-requirement_regulation --FK--> requirement
-requirement_regulation --FK--> regulatory_clause
-
-requirement --FK--> library_item
-fra_item --FK--> library_item
-iq_item --FK--> library_item
-oq_item --FK--> library_item
-pq_item --FK--> library_item
-fra_item --FK--> requirement
-fra_item --FK--> regulatory_clause (SOP 근거)
+library_item
+  └─ URS·FRA·IQ·OQ·PQ 작성에 활용
 ```
 
 ### 구조 개요
@@ -942,7 +766,7 @@ fra_item --FK--> regulatory_clause (SOP 근거)
 - **규정의 판본을 구분합니다.** 문서 코드는 판본과 함께 유일하게 식별하고, 새 판본은 새 행으로 등록합니다. 승인된 업무가 사용한 문서판과 조항은 새 내용으로 덮어쓰지 않습니다.
 - **근거는 여러 조항을 연결할 수 있습니다.** `requirement_regulation`과 `library_item_regulation`은 동일 항목·조항의 중복을 방지하면서 여러 근거의 순서와 적용 설명을 보존합니다. 인용 문구는 적용 당시 문서명·판본·조항을 표시하는 사본입니다.
 - **새로운 근거 선택과 과거 참조 보존은 구분합니다.** 신규 선택에는 확인된 문서판의 활성 조항을 사용합니다. 조항이 이후 비활성화되어도 이미 승인에 사용된 참조는 유지합니다.
-- **이 그림의 연결은 물리 FK입니다.** FRA의 `sop_clause_id`도 조항을 직접 참조합니다. 문서 유형이 내부 SOP인지, 라이브러리 모듈별 필수값이 충족되는지 등의 업무 조건은 별도로 검증합니다.
+- **FRA의 SOP 근거는 규정 조항을 직접 참조합니다.** `sop_clause_id`로 해당 조항을 연결합니다. 문서 유형이 내부 SOP인지, 라이브러리 모듈별 필수값이 충족되는지 등의 업무 조건은 별도로 검증합니다.
 
 [↑ 목차로](#top)
 
@@ -952,32 +776,18 @@ fra_item --FK--> regulatory_clause (SOP 근거)
 
 ## 14. AI 생성·적용
 
-[ERD 열기](https://drawsql.app/teams/minho-kim/diagrams/14-ai-generation)
+링크 : <https://drawsql.app/teams/minho-kim/diagrams/14-ai-generation>
 
 **주 소속 3개 · 외부 참조 9개 · 총 12개 테이블**
 
 ### 관계 구조
 
 ```text
-ai_generation_job --FK--> validation_project
-ai_generation_job --FK--> app_user (요청자)
-ai_generation_result --FK--> ai_generation_job
-ai_generation_result --FK--> app_user (선택 사용자)
-ai_result_item --FK--> ai_generation_result
+ai_generation_job (생성 요청)
+  └─ ai_generation_result (결과 묶음)
+       └─ ai_result_item (개별 초안)
 
-ai_generation_job.target_entity_id
-  ..논리..> requirement / fra_item / iq_item / oq_item / pq_item
-  ..논리..> deliverable_revision (문서 생성 요청 대상)
-
-ai_result_item.target_entity_id
-  ..논리..> requirement / fra_item / iq_item / oq_item / pq_item
-  ..논리..> deliverable_section (문서 본문 적용 대상)
-
-deliverable_section --FK--> deliverable_revision
-deliverable_revision.source_refs
-  ..논리..> requirement / fra_item / iq_item / oq_item / pq_item
-requirement --FK--> validation_project
-fra_item --FK--> requirement
+사용자 검토·선택 → 업무 항목·문서 본문에 적용 → 검토·승인
 ```
 
 ### 구조 개요
