@@ -994,7 +994,7 @@ APPROVE 이벤트는 검토 단계별 이벤트가 아닌 최종 승인 완료 �
 
 | 항목 | 정의 |
 |---|---|
-| 설명 | URS, IQ, OQ 재사용 가능 표준 라이브러리 항목 마스터 |
+| 설명 | URS, FRA, IQ, OQ, PQ 재사용 가능 표준 라이브러리 항목 마스터 |
 | Primary Key | `library_id` |
 | 주요 참조(FK) | - |
 | GxP 중요도 | High |
@@ -1381,7 +1381,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 | `ck_project_closure_request_3` | CHECK | `progress_snapshot` | CHECK (progress_snapshot BETWEEN 0 AND 100) |
 | `rule_project_closure_request_4` | 업무 검증 | `closure_type` | closure_type='FORCED'이면 reason은 비어 있을 수 없다. |
 | `rule_project_closure_request_5` | 업무 검증 | - | 동일 프로젝트의 DRAFT/REVIEW/APPROVAL 상태 종료 요청은 최대 한 건이다. |
-| `uq_project_closure_active` | UNIQUE | `project_id` | UNIQUE (project_id) WHERE approval_status IN ('DRAFT','REVIEW','APPROVAL') |
+| `uq_project_closure_active` | UNIQUE | `project_id` | UNIQUE (project_id) WHERE status IN ('DRAFT','REVIEW','APPROVAL') |
 
 #### 업무 규칙
 
@@ -1523,7 +1523,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
 | 357 | QIA ID | `qia_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 평가 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 358 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 358 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 359 | Part 11 Q1 전자기록의 종이기록 대체 여부 | `p11_q1` | `varchar(3)` | N | N | - | Y | `'No'` | N | N | N | Y | 전자 기록이 종이 기록을 대체합니까? 응답 Yes / No | `No` |
 | 360 | Part 11 Q2 전자서명 사용 여부 | `p11_q2` | `varchar(3)` | N | N | - | Y | `'No'` | N | N | N | Y | 전자 서명을 사용합니까? 응답 Yes / No | `No` |
 | 361 | Part 11 Q3 기록 이력의 규제 증빙 여부 | `p11_q3` | `varchar(3)` | N | N | - | Y | `'No'` | N | N | N | Y | 기록 생성·변경 이력이 규제 증빙입니까? 응답 Yes / No | `No` |
@@ -2004,7 +2004,7 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
 | 517 | DQ ID | `dq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 518 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 518 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 519 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 적격성 평가 문서 제목 | `설계 적격성 평가 (URS → FDS/DDS 매핑)` |
 | 520 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
 | 521 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
@@ -2126,7 +2126,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
 | 556 | FRA ID | `fra_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FRA 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 557 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 557 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
 | 558 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | FMEA 기반 기능 위험평가 문서 제목 | `FMEA 기반 기능 위험평가` |
 | 559 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
 | 560 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FRA 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
@@ -3507,8 +3507,7 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 
 | 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
 |---|---|---|---|
-| `rule_traceability_link_1` | UNIQUE | `project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type` | UNIQUE(project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type) |
-| `rule_traceability_link_1_rule` | 업무 검증 | `project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type` | 삭제되지 않은 행에 |
+| `rule_traceability_link_1` | UNIQUE | `project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type` | UNIQUE(project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type) WHERE deleted_at IS NULL |
 | `rule_traceability_link_2` | 업무 검증 | - | 연결 양 끝은 동일 프로젝트에 속하고 등록된 대상 유형 및 실제 개정 행으로 존재해야 한다. |
 | `rule_traceability_link_3` | 업무 검증 | - | REQUIREMENT → IQ_ITEM / OQ_ITEM / PQ_ITEM의 VERIFIED_BY는 하나의 시험에 복수 URS를 연결하는 화면 관계다. |
 | `rule_traceability_link_4` | 업무 검증 | - | FDS_SPEC / DDS_SPEC는 fds_spec.fds_id / dds_spec.dds_id를 의미한다. |
