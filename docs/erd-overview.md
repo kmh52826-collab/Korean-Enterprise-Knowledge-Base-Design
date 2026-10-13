@@ -1,6 +1,6 @@
 # Validation Management Platform 전체 데이터 구조
 
-전체 **73개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
+전체 **76개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
 
 영역 번호와 이름은 [ERD 명세서](./erd-specifications.md)의 1~14번과 일치합니다.
 
@@ -21,7 +21,8 @@ user_group
 user_group_member
 group_role
 access_permission_grant
-inventory_role_grant"]
+inventory_role_grant
+user_signature_credential"]
         PROJECT["② 시스템 인벤토리·<br/>프로젝트 관리
 system_asset
 system_asset_revision
@@ -82,7 +83,8 @@ pq_step_execution"]
 
         DEVIATION["⑧ 일탈·조치·재수행
 deviation
-deviation_action_round"]
+deviation_action_round
+deviation_completion_revision"]
         VSR["⑩ VSR<br/> 종합 보고
 vsr_assessment
 vsr_item"]
@@ -112,7 +114,8 @@ deliverable_section
 report_generation
 file_asset
 file_scan_job
-evidence_link"]
+evidence_link
+file_link_request"]
             WORKFLOW ~~~ DOCUMENTS
         end
 
@@ -173,12 +176,14 @@ traceability_link"]
 | `requirement` · `fds_spec` · `dds_spec` → `dq_item` | 요구사항과 설계 문서의 특정 개정을 연결해 설계 적합성을 평가합니다. |
 | `requirement` → `fra_item` | 요구사항별 위험을 평가하고, `regulatory_clause`를 통해 내부 SOP 근거를 연결합니다. |
 | IQ·OQ·PQ 평가 → 시험 항목·절차 → 수행·절차별 결과 | 시험 내용과 실제 수행 기록을 구분합니다. 평가 개정별 시험 구성을 보존하고, 내용이 바뀌지 않은 시험 개정은 재사용할 수 있습니다. |
-| 실패한 수행 → `deviation` → `deviation_action_round` → 새 수행 | 실패 기록을 보존하면서 회차별 조치와 승인을 관리합니다. 재수행에서 다시 실패하면 다음 조치 회차를 추가합니다. |
+| 실패한 수행 → `deviation` → `deviation_action_round` → 새 수행 | 실패 기록을 보존하면서 회차별 조치와 승인을 관리합니다. 재수행에서 다시 실패하면 다음 조치 회차를 추가합니다. 완료보고·종료 보고는 `deviation_completion_revision`에서 개정·승인합니다. |
 | 업무 결과 → `vsr_assessment` · `vsr_item` → 프로젝트 종료 판단 | 선택한 수행 활동의 결과를 종합하고 집계 당시 근거를 보존합니다. 프로젝트 종료 요청·승인은 별도의 `project_closure_request`에서 관리합니다. |
 | 요구사항·설계·평가·시험 ↔ `traceability_link` | 업무 항목의 특정 개정 사이 추적 관계를 관리합니다. RTM 대시보드는 이 연결과 실제 수행 결과를 함께 조회합니다. |
 | `project_workflow_config` → `workflow_instance` → 단계·담당자·처리 이력 | 결재선 설정과 실제 결재 건을 구분합니다. `workflow_step`·`workflow_step_assignee`에서 단계와 담당자를 관리하고, `approval_action`에서 처리 이력과 전자서명을 연결합니다. |
+| `app_user` → `user_signature_credential` → `electronic_signature` | 서명할 때마다 로그인과 별개인 서명 전용 비밀번호로 본인을 확인한 뒤 서명 기록을 남깁니다. |
 | `deliverable_document` → `deliverable_revision` → `deliverable_section` | 산출물의 식별 정보, 개정, 목차·본문을 나누어 관리합니다. 문서 개정과 근거 업무의 개정·승인은 별도로 보존합니다. |
 | 사용자 업로드 → `file_scan_job` → `file_asset` | 격리 원본의 검사 회차·결과를 기록하고, 최신 회차의 위협 미검출 및 원본 동일성 확인 후 파일 자산을 등록합니다. 재시도는 이전 판정을 보존하는 새 회차로 남깁니다. |
+| 사용자 업로드 → `file_link_request` → 증적·설계 파일·VA 첨부 | 업로드 직후 연결할 업무 대상을 예약하고, 검사를 통과하면 자동으로 연결합니다. 대기·차단·실패한 예약이 있으면 해당 대상의 상신·결과 등록을 진행하지 않습니다. |
 | 업무 기록 ↔ `evidence_link` ↔ `file_asset` | 등록 완료한 파일을 시험·문서의 증적으로 연결합니다. `report_generation`은 PDF 생성 작업과 생성 결과 파일을 관리합니다. |
 | `regulatory_source` → `regulatory_clause` → 요구사항·라이브러리의 규정 근거 | 규정 문서의 판본과 조항을 구분하고, `requirement_regulation`·`library_item_regulation`으로 적용 근거를 연결합니다. |
 | `library_item` → 요구사항·위험평가·시험 항목 | 재사용할 내용을 가져오고 원본 라이브러리를 참조합니다. 가져온 항목은 독립적으로 관리하며 이후 라이브러리 변경을 자동 반영하지 않습니다. |
@@ -189,5 +194,5 @@ traceability_link"]
 - **RTM은 수행 단계가 아닌 조회 기능입니다.** 시험 이후의 필수 단계나 VSR의 별도 집계 활동으로 두지 않습니다.
 - **일탈은 시험 실패 시 분기합니다.** 조치 승인 후 재수행하거나, 재수행 없이 사유와 전자서명을 남기고 종료할 수 있습니다.
 - **FDS와 DDS는 각각 독립된 설계 문서입니다.** 프로젝트 활동에서는 F&DS로 함께 관리합니다.
-- **업로드 완료와 파일 사용 가능은 다릅니다.** 사용자 업로드는 검사 작업이 `COMPLETED`·`NO_THREATS_FOUND`이고 파일 자산 등록까지 끝나야 첨부·다운로드·AI 입력에 사용할 수 있습니다. 신뢰된 서버 내부 생성 파일은 `file_origin`으로 구분하며, 생성에 사용하는 외부 업로드 파일은 먼저 검사를 통과해야 합니다.
+- **업로드 완료와 파일 사용 가능은 다릅니다.** 사용자 업로드는 검사 작업이 `COMPLETED`·`NO_THREATS_FOUND`이고 파일 자산 등록까지 끝나야 첨부·다운로드·AI 입력에 사용할 수 있습니다. 신뢰된 서버 내부 생성 파일은 `file_origin`으로 구분하며, 생성에 사용하는 외부 업로드 파일은 먼저 검사를 통과해야 합니다. 업로드 직후의 연결 대상은 `file_link_request`에 예약해 두고 검사 통과 후 자동으로 연결합니다.
 - **공통 기능은 인벤토리와 프로젝트 업무 전반에 사용됩니다.** 모든 공통 테이블이 프로젝트를 직접 참조하는 것은 아니며, 결재·서명·감사·증적의 업무 대상에는 유형과 식별자를 조합한 연결도 사용합니다.
