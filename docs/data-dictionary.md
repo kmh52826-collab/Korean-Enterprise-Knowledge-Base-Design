@@ -5,6 +5,8 @@
 > Validation Management Platform 데이터 모델 문서  
 > **예시값 기준**: 개인정보 및 민감정보는 비식별 샘플 값으로 표기
 
+업무 영역별 테이블 연결은 **[ERD 명세서](./erd-specifications.md)**, 영역 간 전체 구조는 **[전체 데이터 구조도](./erd-overview.md)** 를 참고하세요.
+
 ## 목차
 
 - [1. 문서 개요](#1-문서-개요)
