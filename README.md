@@ -15,7 +15,7 @@
 
 본 프로젝트는 제약·바이오 분야의 GMP 및 CSV (Computerized System Validation) 규정을 준수하며, 파편화되어 있던 Validation 업무 전 과정을 디지털화하는 **AI 기반 Validation Management Platform** 구축 프로젝트입니다.
 
-검증 계획과 사전 평가부터 URS, 설계(FDS/DDS), 위험평가(FRA), 적격성 시험(IQ/OQ/PQ), 일탈 관리, 종합 보고(VSR)에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
+검증 계획과 사전 평가부터 URS, 설계(FDS/DDS)·설계 적격성 평가(DQ), 위험평가(FRA), 적격성 시험(IQ/OQ/PQ), 일탈 관리, 종합 보고(VSR)에 이르는 **Validation End-to-End 라이프사이클**을 단일 플랫폼에서 통합 관리하도록 설계되었습니다.
 
 외부 AI 엔지니어들이 벡터 DB와 LLM으로 AI 기능을 개발하고, 저는 플랫폼 전체와 AI가 읽고 쓰는 데이터의 설계를 담당합니다. 본 포트폴리오는 그중 제가 맡은 두 가지 축에 초점을 맞추고 있습니다:
 - **규제 준수용 관계형 데이터 모델링 (RDBMS ERD)** `[완료]`
@@ -41,9 +41,9 @@
 > 💡 **Tip:** 위 이미지를 클릭하시면 원본 해상도의 더 크고 선명한 전체 다이어그램을 확인하실 수 있습니다.
 
 ### 🎯 Architecture Summary
-- **Validation Lifecycle** : 검증 계획부터 URS, 설계, FRA, IQ/OQ/PQ, 일탈 관리, VSR까지 규제 환경 (CSV) 전 과정을 종단간 (End-to-End) 지원
+- **Validation Lifecycle** : 검증 계획부터 URS, 설계, DQ, FRA, IQ/OQ/PQ, 일탈 관리, VSR까지 규제 환경 (CSV) 전 과정을 종단간 (End-to-End) 지원
 - **Core AI Audit & Traceability** : 규제 감사관 (Auditor)의 심층 질의에 대해 AI가 하이브리드 지식 기반을 통해 관련 서류를 탐색·제공하고, End-to-End Lineage 및 승인 이력을 추적할 수 있도록 설계
-- **Compliance & Governance** : 21 CFR Part 11 및 ALCOA++ 원칙을 준수하는 데이터베이스 레벨의 Audit Trail 및 이력 관리
+- **Compliance & Governance** : 21 CFR Part 11 및 ALCOA++ 원칙을 준수하는 데이터베이스 제약조건과 서버 검증 기반의 Audit Trail 및 이력 관리
 - **Hybrid Knowledge Architecture** : 
   - **RDBMS (PostgreSQL)** : Core Data, Audit Trail, Source of Truth 관리
   - **Vector DB (pgvector)** : Semantic Search 및 AI Context Retrieval
@@ -55,15 +55,17 @@
 ## 🚀 Key Technical Contributions & Engineering Design
 
 ### 1. End-to-End Relational Data Modeling & ERD Design (Completed)
-규제가 엄격한 도메인 (Highly Regulated Domain)의 복잡성을 반영하여, 개념적 모델링부터 논리/물리 ERD 설계까지 14개 업무 영역, 70개가 넘는 테이블의 PostgreSQL 스키마 전체를 직접 설계했습니다. 요구사항이 바뀔 때마다 설계안을 프로젝트 구성원과 PM에게 보고하고 피드백을 반영하며 여러 차례 개정했습니다.
+규제가 엄격한 도메인 (Highly Regulated Domain)의 복잡성을 반영하여, 개념적 모델링부터 논리/물리 ERD 설계까지 14개 업무 영역, 76개 테이블의 PostgreSQL 스키마 전체를 직접 설계했습니다. 요구사항이 바뀔 때마다 설계안을 프로젝트 구성원과 PM에게 보고하고 피드백을 반영하며 여러 차례 개정했습니다.
 
-- **Regulatory Compliance Schema Design:** 21 CFR Part 11 (전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 레벨에서 강제하도록 설계했습니다. 전자서명은 서명한 원문과 대상 개정을 함께 보존하고, 감사기록은 기존 내용을 수정하지 않고 새 기록만 추가합니다.
+- **Regulatory Compliance Schema Design:** 21 CFR Part 11 (전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 제약조건(PK·FK·CHECK·UNIQUE)과 서버 검증 규칙으로 함께 강제하도록 설계했습니다. 전자서명은 서명한 원문과 대상 개정을 함께 보존하고, 감사기록은 기존 내용을 수정하지 않고 새 기록만 추가합니다.
 - **Revision-Pinned Traceability:** 요구사항(URS)과 설계, 위험평가(FRA), 시험 항목(IQ/OQ/PQ) 사이의 추적 관계가 연결 당시의 정확한 개정을 가리키도록 설계했습니다. 새 개정이 생겨도 과거 승인 근거는 바뀌지 않으며, 요구사항은 근거가 된 규정 조항과 그 판본까지 함께 연결됩니다.
 - **AI Output Provenance:** AI가 생성한 초안은 곧바로 공식 산출물이 되지 않습니다. 생성, 사용자 선택, 업무 적용을 별도의 상태로 관리하고, 각 항목이 직접 작성된 것인지 AI 초안에서 온 것인지 출처를 기록합니다.
-- **Design Trade-off:** 여러 종류의 산출물 개정을 서로 연결하기 위해 다형성 참조(polymorphic reference)를 사용했습니다. 이로 인해 참조 무결성 검증을 데이터베이스 FK가 아닌 애플리케이션 레이어에서 수행해야 하며, 이는 규제 시스템에서 해결해야 할 설계상의 과제로 남아 있습니다.
+- **Design Trade-off:** 여러 종류의 산출물 개정을 서로 연결하기 위해 다형성 참조(polymorphic reference)를 사용했습니다. 이로 인해 참조 무결성 검증을 데이터베이스 FK가 아닌 애플리케이션 레이어에서 수행해야 합니다. 이를 보완하기 위해 저장·상신·승인 시점마다 대상 테이블·PK·개정을 서버에서 검사하는 규칙을 정의했습니다.
 
-#### 🔗 [View ERD Specifications](docs/erd-specifications.md)
-*(업무 영역별 ERD 설계 문서와 테이블 명세는 위 링크에서 확인하실 수 있습니다.)*
+#### 🔗 Data Model Documents
+- [데이터 테이블 정의서](docs/data-dictionary.md) — 76개 테이블의 컬럼·제약조건·업무 규칙
+- [ERD 명세서](docs/erd-specifications.md) — 14개 업무 영역별 테이블 연결
+- [전체 데이터 구조도](docs/erd-overview.md) — 영역 간 전체 구조
 
 ---
 
