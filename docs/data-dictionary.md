@@ -210,11 +210,12 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 | `ck_organization_1` | CHECK | `status` | CHECK (status IN ('ACTIVE','INACTIVE')) |
 | `ck_organization_2` | CHECK | `organization_type` | CHECK (organization_type IN ('HEADQUARTERS','PLANT','LAB','OVERSEAS','SYSTEM','VENDOR')) |
 | `ck_organization_3` | CHECK | `organization_type, ai_enabled` | CHECK (organization_type <> 'SYSTEM' OR ai_enabled = FALSE) |
-| `rule_organization_4` | 업무 검증 | `organization_type` | organization_type='SYSTEM'인 조직은 DB당 1건이며 account_type=SYSTEM 계정만 소속된다. 프로젝트·시스템 자산·사용자 그룹을 소유할 수 없고 화면의 조직 목록·선택지·보고서에 표시하지 않는다. |
+| `rule_organization_4` | 업무 검증 | `organization_type` | organization_type='SYSTEM'인 조직은 DB당 1건이며 account_type=SYSTEM 계정만 소속된다. 프로젝트·시스템 자산·사용자 그룹을 소유할 수 없고 화면의 조직 목록·선택지·보고서에 표시하지 않는다. 삭제하지 않으며 비활성(INACTIVE) 상태도 DB당 1건에 포함한다(uq_organization_system_vendor). 다시 사용할 때는 새로 만들지 않고 같은 행을 다시 활성화한다. |
 | `rule_organization_5` | 업무 검증 | `ai_enabled` | ai_enabled 변경은 관리자 등급(SYSTEM_ADMIN 또는 해당 조직 ADMIN)만 수행하며 변경 전후 값을 Audit Trail(menu_code=ACCOUNTS)에 기록한다. |
 | `rule_organization_6` | 업무 검증 | `sso_enabled` | sso_enabled 변경은 관리자 등급만 수행하며 Audit Trail(menu_code=ACCOUNTS)에 기록한다. 변경 시 소속 HUMAN 계정의 auth_provider·SSO 식별자·password_hash를 조직 단위로 일괄 전환한다(비상 접근 계정 제외). 기존 비밀번호 폐기 시점 등 세부 절차는 운영 절차로 정한다. |
 | `ck_organization_7` | CHECK | `organization_type, sso_enabled` | CHECK (organization_type <> 'SYSTEM' OR sso_enabled = FALSE) |
-| `rule_organization_8` | 업무 검증 | `organization_type` | organization_type='VENDOR'인 조직은 DB당 1건이며 개발사 운영 인력(permission_level=SYSTEM_ADMIN)만 소속된다. 프로젝트·시스템 자산·사용자 그룹을 소유할 수 없고 고객사 화면의 조직 목록·선택지·통계에서 제외한다. sso_enabled는 개발사 IdP 사용 여부에 따라 지정한다. |
+| `rule_organization_8` | 업무 검증 | `organization_type` | organization_type='VENDOR'인 조직은 DB당 1건이며 개발사 운영 인력(permission_level=SYSTEM_ADMIN)만 소속된다. 프로젝트·시스템 자산·사용자 그룹을 소유할 수 없고 고객사 화면의 조직 목록·선택지·통계에서 제외한다. sso_enabled는 개발사 IdP 사용 여부에 따라 지정한다. 삭제하지 않으며 비활성(INACTIVE) 상태도 DB당 1건에 포함한다(uq_organization_system_vendor). 다시 사용할 때는 새로 만들지 않고 같은 행을 다시 활성화한다. |
+| `uq_organization_system_vendor` | UNIQUE | `organization_type` | UNIQUE (organization_type) WHERE organization_type IN ('SYSTEM','VENDOR') |
 
 #### 업무 규칙
 
