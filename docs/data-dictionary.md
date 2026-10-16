@@ -17,8 +17,8 @@
 
 ## 1. 문서 개요
 
-- 전체 테이블: **76개**
-- 전체 컬럼: **1,253개**
+- 전체 테이블: **77개**
+- 전체 컬럼: **1,263개**
 - 도메인: **26개**
 - 명명 규칙: 테이블 및 컬럼은 `snake_case`, PK는 엔터티별 식별자 컬럼 사용
 - 날짜/시간 기준: DB에는 UTC 저장, 화면에서는 사용자 또는 사업장 Timezone 적용
@@ -134,10 +134,11 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 | 70 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
 | 71 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, selected_by, created_by, updated_by` | High | Y |
 | 72 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
-| 73 | Regulation | 규정 근거 문서 | [`regulatory_source`](#table-regulatory_source) | `regulatory_source_id` | `file_id, verified_by, created_by, updated_by` | High | Y |
-| 74 | Regulation | 규정 조항 | [`regulatory_clause`](#table-regulatory_clause) | `regulatory_clause_id` | `regulatory_source_id, created_by, updated_by` | High | Y |
-| 75 | Regulation | 요구사항 규정 근거 | [`requirement_regulation`](#table-requirement_regulation) | `requirement_regulation_id` | `requirement_id, regulatory_clause_id, created_by, updated_by` | High | Y |
-| 76 | Regulation | 라이브러리 규정 근거 | [`library_item_regulation`](#table-library_item_regulation) | `library_item_regulation_id` | `library_id, regulatory_clause_id, created_by, updated_by` | High | Y |
+| 73 | AI | AI 전송 데이터 민감정보 검출 결과 | [`ai_sensitive_detection`](#table-ai_sensitive_detection) | `detection_id` | `ai_job_id, created_by` | High | Y |
+| 74 | Regulation | 규정 근거 문서 | [`regulatory_source`](#table-regulatory_source) | `regulatory_source_id` | `file_id, verified_by, created_by, updated_by` | High | Y |
+| 75 | Regulation | 규정 조항 | [`regulatory_clause`](#table-regulatory_clause) | `regulatory_clause_id` | `regulatory_source_id, created_by, updated_by` | High | Y |
+| 76 | Regulation | 요구사항 규정 근거 | [`requirement_regulation`](#table-requirement_regulation) | `requirement_regulation_id` | `requirement_id, regulatory_clause_id, created_by, updated_by` | High | Y |
+| 77 | Regulation | 라이브러리 규정 근거 | [`library_item_regulation`](#table-library_item_regulation) | `library_item_regulation_id` | `library_id, regulatory_clause_id, created_by, updated_by` | High | Y |
 
 ## 4. 도메인별 바로가기
 
@@ -165,7 +166,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 - **Deviation**: [`deviation`](#table-deviation), [`deviation_action_round`](#table-deviation_action_round), [`deviation_completion_revision`](#table-deviation_completion_revision)
 - **Document**: [`deliverable_document`](#table-deliverable_document), [`deliverable_revision`](#table-deliverable_revision), [`deliverable_section`](#table-deliverable_section)
 - **Report**: [`report_generation`](#table-report_generation)
-- **AI**: [`ai_generation_job`](#table-ai_generation_job), [`ai_generation_result`](#table-ai_generation_result), [`ai_result_item`](#table-ai_result_item)
+- **AI**: [`ai_generation_job`](#table-ai_generation_job), [`ai_generation_result`](#table-ai_generation_result), [`ai_result_item`](#table-ai_result_item), [`ai_sensitive_detection`](#table-ai_sensitive_detection)
 - **Regulation**: [`regulatory_source`](#table-regulatory_source), [`regulatory_clause`](#table-regulatory_clause), [`requirement_regulation`](#table-requirement_regulation), [`library_item_regulation`](#table-library_item_regulation)
 
 ---
@@ -184,7 +185,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 | 주요 참조(FK) | - |
 | GxP 중요도 | High |
 | Audit 대상 | Y |
-| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+| 보존/삭제 원칙 | 감사 가능 기간 보존. 행을 물리 삭제하지 않고 상태값(status)으로만 관리한다 |
 
 #### 컬럼 정의
 
@@ -245,7 +246,7 @@ sso_enabled는 조직의 로그인 방식을 정한다. TRUE인 조직의 사람
 | 주요 참조(FK) | `organization_id` |
 | GxP 중요도 | High |
 | Audit 대상 | Y |
-| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+| 보존/삭제 원칙 | 감사 가능 기간 보존. 행을 물리 삭제하지 않고 상태값(status)으로만 관리한다 |
 
 #### 컬럼 정의
 
@@ -816,7 +817,7 @@ LOGIN_FAILED는 플랫폼이 로그인을 거부한 이벤트다. SSO는 IdP 인
 
 menu_code=SYSTEM_PROCESS는 사람이 아닌 행위자(actor_type=SYSTEM·BATCH)가 남기는 모든 기록에 사용한다. 초기 데이터 시드, 스케줄 배치, 파일 검사 Worker의 검사 상태 전환, 파일 연결 예약(file_link_request)에 따른 자동 연결, 자동 재시도가 모두 해당한다. 이때 업무 영역은 target_table_name·target_record_id로 식별하고, 사용자가 시작한 원래 화면은 같은 대상의 사용자 감사 기록(예: 업로드 완료 기록)으로 이어서 찾는다. 사용자가 화면에서 수행한 변경(USER)과 ANONYMOUS 이벤트에는 SYSTEM_PROCESS를 사용하지 않는다(ck_audit_trail_10).
 
-영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization은 ACCOUNTS, user_signature_credential과 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과(ai_generation_job·ai_generation_result·ai_result_item)는 생성 대상 업무의 활동 코드를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
+영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization은 ACCOUNTS, user_signature_credential과 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과·검출(ai_generation_job·ai_generation_result·ai_result_item·ai_sensitive_detection)는 생성 대상 업무의 활동 코드를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
 
 전자서명 비밀번호 관련 이벤트는 대상 테이블을 user_signature_credential로, 대상 레코드를 해당 credential_id로 기록하며 old_values/new_values에 해시·원문을 포함하지 않는다.
 
@@ -929,7 +930,7 @@ file_origin은 서버가 실제 파일 생성 경로를 확인하여 지정한�
 | 184 | 검사 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 해당 회차의 검사를 시작한 시각. 실행 전 실패·취소이면 NULL 가능 | `2026-09-18T01:00:05Z` |
 | 185 | 검사 종료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 완료·실패·취소를 확정한 시각. 파일 자산 등록 시각과 구분한다 | `2026-09-18T01:00:20Z` |
 | 186 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 작업 상태·검사 결과 또는 결과 파일 연결의 최종 변경 시각 | `2026-09-18T01:00:21Z` |
-| 187 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | FAILED의 기술 오류 코드. 사용 값(참고 목록이며 CHECK로 제한하지 않음): SOURCE_NOT_FOUND(격리 원본 없음), SOURCE_READ_FAILED(원본 읽기 실패), SCANNER_UNAVAILABLE(검사 엔진 연결 실패), SCAN_TIMEOUT(검사 응답 시간 초과), SCANNER_ERROR(검사 엔진 오류 응답), WORKER_IO_FAILED(Worker 임시 파일 처리 실패). 자동으로 다시 시도하며 최대 시도 횟수(처리 정책)를 모두 실패하면 연결 예약은 file_link_request.failure_code=SCAN_FAILED로 차단한다. 위협 발견은 기술 오류가 아니며 scan_result로 기록한다 | `SCAN_TIMEOUT` |
+| 187 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | FAILED의 기술 오류 코드. 사용 값(참고 목록이며 CHECK로 제한하지 않음): SOURCE_NOT_FOUND(격리 원본 없음), SOURCE_READ_FAILED(원본 읽기 실패), SCANNER_UNAVAILABLE(검사 엔진 연결 실패), SCAN_TIMEOUT(검사 응답 시간 초과), SCANNER_ERROR(검사 엔진 오류 응답), WORKER_IO_FAILED(Worker 임시 파일 처리 실패), PROCESSING_STALLED(처리 중 상태로 제한 시간(처리 정책)을 넘긴 회차를 점검 작업이 실패로 기록). 자동으로 다시 시도하며 최대 시도 횟수(처리 정책)를 모두 실패하면 연결 예약은 file_link_request.failure_code=SCAN_FAILED로 차단한다. 위협 발견은 기술 오류가 아니며 scan_result로 기록한다 | `SCAN_TIMEOUT` |
 | 188 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | Y | Y | 기술 실패 상세 사유. 비밀정보·서명 URL·파일 본문을 포함하지 않는다 | `검사 응답시간 초과` |
 | 189 | 등록 파일 ID | `result_file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | Y | Y | N | Y | 위협 미검출 후 원본 동일성을 확인하여 등록한 파일 자산. 등록 전에는 NULL이며 같은 업로드에서 한 회차만 연결한다 | `00000000-0000-0000-0000-000000000001` |
 
@@ -4361,19 +4362,21 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 | 1163 | 작업 유형 | `job_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | ITEM_GENERATION, DOCUMENT_GENERATION | `ITEM_GENERATION` |
 | 1164 | 대상 엔터티 유형 | `target_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_REVISION | `IQ_ITEM` |
 | 1165 | 대상 엔터티 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 기존 대상이면 해당 개정 PK. 새 항목을 생성하는 미리보기는 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
-| 1166 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 생성에 사용한 모델 식별자. 확인한 경우 기록하며 미확인 시 NULL을 허용한다. | - |
-| 1167 | 입력 파라미터 | `input_parameters` | `jsonb` | N | N | - | Y | - | N | N | Y | Y | 화면 입력 목적·범위·기준 URS·생성 개수 또는 생성할 문서 목차 | `{"purpose":"접근권한 검증","scope":"로그인","count":3}` |
-| 1168 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
-| 1169 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 요청 사용자. 자동·배치 요청은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1170 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 요청 접수 시각 | `2026-09-02T00:00:00Z` |
-| 1171 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 시작 시각 | `2026-09-02T00:00:00Z` |
-| 1172 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 완료 시각 | `2026-09-02T00:00:00Z` |
-| 1173 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인 코드 | `LLM_TIMEOUT` |
-| 1174 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 실패 상세 메시지 | `모델 응답시간 초과` |
-| 1175 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1176 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1177 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1178 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1166 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 생성에 사용한 모델 식별자. 날짜가 포함된 고정 버전명으로 저장하며 최신 버전을 가리키는 별칭은 저장하지 않는다. 확인한 경우 기록하며 미확인 시 NULL을 허용한다. | - |
+| 1167 | 프롬프트 버전 | `prompt_version` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | AI 서비스가 사용한 프롬프트 템플릿 버전(WAS↔AI 규약 항목). COMPLETED이면 필수. 같은 버전 이름에 다른 프롬프트를 배포하지 않는다 | `IQ_ITEM_v2` |
+| 1168 | 마스킹 응답 원문 | `masked_response` | `text` | N | N | - | N | - | N | N | Y | Y | AI 서비스가 반환한 응답 원문을 마스킹된 상태 그대로 작업 단위로 보관한다. 마스킹 복원용 대응표는 저장하지 않으므로 이후 다시 만들 수 없다. COMPLETED이면 필수. 검출 규칙에 없는 정보가 남을 수 있어 민감 정보로 분류한다. 감사 시 원본으로 볼 기준(이 값 또는 ai_result_item.content)은 결정 대기 | - |
+| 1169 | 입력 파라미터 | `input_parameters` | `jsonb` | N | N | - | Y | - | N | N | Y | Y | 화면 입력 목적·범위·기준 URS·생성 개수 또는 생성할 문서 목차 | `{"purpose":"접근권한 검증","scope":"로그인","count":3}` |
+| 1170 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
+| 1171 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 요청 사용자. 자동·배치 요청은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1172 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 요청 접수 시각 | `2026-09-02T00:00:00Z` |
+| 1173 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 시작 시각 | `2026-09-02T00:00:00Z` |
+| 1174 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 완료 시각 | `2026-09-02T00:00:00Z` |
+| 1175 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인 코드 | `LLM_TIMEOUT` |
+| 1176 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 실패 상세 메시지 | `모델 응답시간 초과` |
+| 1177 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1178 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1179 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1180 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4382,6 +4385,7 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 | `rule_ai_generation_job_1` | 업무 검증 | `target_entity_id` | ITEM_GENERATION의 신규 항목은 적용 전 target_entity_id NULL을 허용한다. DOCUMENT_GENERATION은 해당 문서 개정에 연결한다. |
 | `rule_ai_generation_job_2` | 업무 검증 | - | 생성 완료가 업무 항목 승인이나 문서 승인을 의미하지 않는다. 선택·적용 후 일반 편집/승인 절차를 따른다. |
 | `rule_ai_generation_job_3` | 업무 검증 | `project_id, requested_by` | 작업 생성 시 판정 기준 조직의 organization.ai_enabled가 TRUE여야 한다. 기준 조직은 project_id가 있으면 프로젝트의 시스템이 속한 조직, 없으면 요청자의 소속 조직이다. SYSTEM 계정은 SYSTEM 조직 소속(ai_enabled=FALSE)이므로 project_id 없는 AI 작업을 요청할 수 없다. FALSE이면 PENDING 행을 만들지 않고 생성을 거부한다. 감사대응 봇 질의도 같은 설정을 따르며 별도 저장 없이 서버에서 거부한다. ai_enabled를 FALSE로 전환할 때 이미 PENDING/PROCESSING인 작업은 완료까지 허용한다. |
+| `rule_ai_generation_job_4` | 업무 검증 | `generation_status, prompt_version, masked_response` | AI 서비스로 보내기 전에 전송 데이터의 민감정보 검출 결과(ai_sensitive_detection)를 저장해야 하며, 저장하지 못하면 전송하지 않는다. WAS→AI 전송은 작업당 한 번이며 목차·항목별 생성과 재시도는 AI 서비스 내부에서 처리하고 최종 결과 또는 실패만 기록한다. COMPLETED이면 prompt_version과 masked_response를 저장한다. |
 | `ck_ai_generation_job_type` | CHECK | `job_type` | CHECK (job_type IN ('ITEM_GENERATION','DOCUMENT_GENERATION')) |
 | `ck_ai_generation_job_target_type` | CHECK | `target_entity_type` | CHECK (target_entity_type IN ('REQUIREMENT','FRA_ITEM','IQ_ITEM','OQ_ITEM','PQ_ITEM','DELIVERABLE_REVISION')) |
 | `ck_ai_generation_job_status` | CHECK | `generation_status` | CHECK (generation_status IN ('PENDING','PROCESSING','COMPLETED','FAILED','CANCELLED')) |
@@ -4408,17 +4412,17 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1179 | AI 결과 ID | `ai_result_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 결과 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1180 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | Y | - | N | Y | N | Y | 상위 AI 작업 | `00000000-0000-0000-0000-000000000001` |
-| 1181 | 결과 제목 | `result_title` | `varchar(300)` | N | N | - | N | - | N | N | N | Y | 결과 제목 | `OQ 테스트 초안` |
-| 1182 | 선택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
-| 1183 | 반영 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 실제 산출물 반영 여부 | `TRUE` |
-| 1184 | 선택 사용자 ID | `selected_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 채택 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1185 | 선택 시각 | `selected_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 채택 시각 | `2026-09-02T00:00:00Z` |
-| 1186 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1187 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1188 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1189 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1181 | AI 결과 ID | `ai_result_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 결과 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1182 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | Y | - | N | Y | N | Y | 상위 AI 작업 | `00000000-0000-0000-0000-000000000001` |
+| 1183 | 결과 제목 | `result_title` | `varchar(300)` | N | N | - | N | - | N | N | N | Y | 결과 제목 | `OQ 테스트 초안` |
+| 1184 | 선택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
+| 1185 | 반영 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 실제 산출물 반영 여부 | `TRUE` |
+| 1186 | 선택 사용자 ID | `selected_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 채택 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1187 | 선택 시각 | `selected_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 채택 시각 | `2026-09-02T00:00:00Z` |
+| 1188 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1189 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1190 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1191 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4452,21 +4456,21 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1190 | AI 결과 항목 ID | `ai_result_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 결과 항목 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1191 | AI 결과 ID | `ai_result_id` | `uuid` | N | Y | `ai_generation_result.ai_result_id` | Y | - | N | Y | N | Y | 상위 결과 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1192 | 항목 순번 | `item_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 결과 표시 순서 | `1` |
-| 1193 | 항목 유형 | `item_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT, FRA_SCENARIO, IQ_TEST, OQ_TEST, PQ_TEST, DOCUMENT_SECTION | `REQUIREMENT` |
-| 1194 | 제목 | `title` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 생성 항목 제목 | `전자서명 기록` |
-| 1195 | 본문 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | AI가 생성한 시험/요구사항/위험평가/목차별 초안 내용 | `내용` |
-| 1196 | 적용 대상 유형 | `target_entity_type` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 적용한 업무 테이블 유형: REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_SECTION | `IQ_ITEM` |
-| 1197 | 적용 대상 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 실제로 적용하여 생성/수정한 개정 PK. 적용 전 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1198 | 채택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
-| 1199 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1200 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1201 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1202 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1203 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 적용 여부 | `FALSE` |
-| 1204 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 | `2026-09-01T00:00:00Z` |
+| 1192 | AI 결과 항목 ID | `ai_result_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 결과 항목 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1193 | AI 결과 ID | `ai_result_id` | `uuid` | N | Y | `ai_generation_result.ai_result_id` | Y | - | N | Y | N | Y | 상위 결과 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1194 | 항목 순번 | `item_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 결과 표시 순서 | `1` |
+| 1195 | 항목 유형 | `item_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT, FRA_SCENARIO, IQ_TEST, OQ_TEST, PQ_TEST, DOCUMENT_SECTION | `REQUIREMENT` |
+| 1196 | 제목 | `title` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 생성 항목 제목 | `전자서명 기록` |
+| 1197 | 본문 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | AI가 생성한 시험/요구사항/위험평가/목차별 초안 내용. 마스킹을 복원한 값으로 저장하며 사용자가 처음 본 제안이자 수정 이력의 기준이다(마스킹된 원문은 ai_generation_job.masked_response) | `내용` |
+| 1198 | 적용 대상 유형 | `target_entity_type` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 적용한 업무 테이블 유형: REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_SECTION | `IQ_ITEM` |
+| 1199 | 적용 대상 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 실제로 적용하여 생성/수정한 개정 PK. 적용 전 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1200 | 채택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
+| 1201 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1202 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1203 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1204 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1205 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 적용 여부 | `FALSE` |
+| 1206 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -4482,10 +4486,55 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 ---
 
+<a id="table-ai_sensitive_detection"></a>
+### 73. AI 전송 데이터 민감정보 검출 결과 (`ai_sensitive_detection`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | AI 생성 작업에서 AI 서비스로 보내기 전에 마스킹한 민감정보의 유형별 검출 건수 |
+| Primary Key | `detection_id` |
+| 주요 참조(FK) | `ai_job_id, created_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 1207 | 검출 ID | `detection_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 검출 결과 행 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1208 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | Y | - | N | Y | N | Y | 검출한 데이터를 보낸 AI 생성 작업 | `00000000-0000-0000-0000-000000000001` |
+| 1209 | 검출 유형 | `detection_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 사용 값(참고 목록이며 CHECK로 제한하지 않음): EMAIL(이메일), PHONE(전화번호), RRN(주민등록번호), ORGANIZATION(고객사·공장·연구소 등 조직명), PERSON(이름). 검출 항목이 늘면 목록에 추가한다 | `EMAIL` |
+| 1210 | 검출 건수 | `detected_count` | `integer` | N | N | - | Y | - | N | N | N | Y | 해당 유형의 검출 건수. 검사한 유형은 0건이어도 기록한다 | `2` |
+| 1211 | 검출 규칙 버전 | `detector_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 검출·마스킹에 사용한 규칙 버전. 같은 버전 이름에 다른 규칙을 배포하지 않는다 | `MASK_RULE_v1` |
+| 1212 | 검출 시각 | `detected_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 검출을 수행한 시각 | `2026-10-16T01:00:00Z` |
+| 1213 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-10-16T01:00:00Z` |
+| 1214 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+
+#### 제약조건
+
+| 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
+|---|---|---|---|
+| `uq_ai_sensitive_detection_type` | UNIQUE | `ai_job_id, detection_type` | UNIQUE (ai_job_id, detection_type) |
+| `ck_ai_sensitive_detection_count` | CHECK | `detected_count` | CHECK (detected_count >= 0) |
+| `rule_ai_sensitive_detection_1` | 업무 검증 | - | 검출된 원래 값(이메일 주소·이름 등)과 마스킹 복원용 대응표는 저장하지 않고 유형별 건수만 저장한다. |
+| `rule_ai_sensitive_detection_2` | 업무 검증 | `ai_job_id, detection_type, detected_count` | 검사한 유형은 0건이어도 1행씩 기록한다. AI 서비스로 보내기 전에 저장을 마치며, 저장하지 못하면 전송하지 않는다(rule_ai_generation_job_4). |
+| `rule_ai_sensitive_detection_3` | 업무 검증 | - | 행은 추가만 하고 수정·삭제하지 않는다. |
+
+#### 업무 규칙
+
+AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝트 정보, 이전 단계 산출물)는 보내기 전에 민감정보를 마스킹하고, 그 결과를 작업 × 유형 1행으로 기록한다. WAS→AI 전송은 작업당 한 번이므로 (ai_job_id, detection_type)은 유일하다. 목차·항목별 생성과 재시도는 AI 서비스 내부에서 처리하며 별도 검출 행을 만들지 않는다. 전송 구조가 바뀌어 작업당 여러 번 보내게 되면 전송 회차 컬럼을 추가한다. 업로드 파일은 현재 범위에서 AI 입력에 사용하지 않는다.
+
+[↑ 맨 위로](#top)
+
+---
+
 ## Regulation
 
 <a id="table-regulatory_source"></a>
-### 73. 규정 근거 문서 (`regulatory_source`)
+### 74. 규정 근거 문서 (`regulatory_source`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4502,23 +4551,23 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1205 | 규정 문서 ID | `regulatory_source_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1206 | 문서 코드 | `source_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 코드 | `REF-001` |
-| 1207 | 문서 유형 | `source_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | REGULATION / GUIDELINE / INTERNAL_SOP | `GUIDELINE` |
-| 1208 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서명 | `검토용 기준 문서` |
-| 1209 | 판본/개정 | `edition` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 판본/개정 | `Rev.1` |
-| 1210 | 발행기관/부서 | `issuing_body` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 발행기관/부서 | `품질보증팀` |
-| 1211 | 출처 URL | `source_url` | `text` | N | N | - | N | - | N | N | N | Y | 출처 URL | `https://example.com/reference` |
-| 1212 | 원본 첨부 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | file_asset.file_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1213 | 적용 시작일 | `effective_from` | `date` | N | N | - | N | - | N | N | N | Y | 적용 시작일 | `2026-09-01` |
-| 1214 | 적용 종료일 | `effective_to` | `date` | N | N | - | N | - | N | N | N | Y | 적용 종료일 | `2026-09-01` |
-| 1215 | 검토 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / VERIFIED / RETIRED | `DRAFT` |
-| 1216 | 확인자 ID | `verified_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1217 | 확인 시각 | `verified_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 확인 시각 | `2026-09-01T00:00:00Z` |
-| 1218 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1219 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1220 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1221 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1215 | 규정 문서 ID | `regulatory_source_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1216 | 문서 코드 | `source_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 코드 | `REF-001` |
+| 1217 | 문서 유형 | `source_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | REGULATION / GUIDELINE / INTERNAL_SOP | `GUIDELINE` |
+| 1218 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서명 | `검토용 기준 문서` |
+| 1219 | 판본/개정 | `edition` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 판본/개정 | `Rev.1` |
+| 1220 | 발행기관/부서 | `issuing_body` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 발행기관/부서 | `품질보증팀` |
+| 1221 | 출처 URL | `source_url` | `text` | N | N | - | N | - | N | N | N | Y | 출처 URL | `https://example.com/reference` |
+| 1222 | 원본 첨부 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | file_asset.file_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1223 | 적용 시작일 | `effective_from` | `date` | N | N | - | N | - | N | N | N | Y | 적용 시작일 | `2026-09-01` |
+| 1224 | 적용 종료일 | `effective_to` | `date` | N | N | - | N | - | N | N | N | Y | 적용 종료일 | `2026-09-01` |
+| 1225 | 검토 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / VERIFIED / RETIRED | `DRAFT` |
+| 1226 | 확인자 ID | `verified_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1227 | 확인 시각 | `verified_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 확인 시각 | `2026-09-01T00:00:00Z` |
+| 1228 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1229 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1230 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1231 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4540,7 +4589,7 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 ---
 
 <a id="table-regulatory_clause"></a>
-### 74. 규정 조항 (`regulatory_clause`)
+### 75. 규정 조항 (`regulatory_clause`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4557,18 +4606,18 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1222 | 조항 ID | `regulatory_clause_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1223 | 규정 문서 ID | `regulatory_source_id` | `uuid` | N | Y | `regulatory_source.regulatory_source_id` | Y | - | N | Y | N | Y | regulatory_source.regulatory_source_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1224 | 조항 코드 | `clause_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 조항 코드 | `4.1` |
-| 1225 | 조항 제목 | `title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 조항 제목 | `접근 관리` |
-| 1226 | 조항 요약 | `summary` | `text` | N | N | - | Y | - | N | N | N | Y | 조항 요약 | `해당 업무에 적용할 요구사항 요약` |
-| 1227 | 원문 위치 | `source_locator` | `text` | N | N | - | N | - | N | N | N | Y | 원문 위치 | `제4장 1절` |
-| 1228 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1229 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 사용 여부 | `TRUE` |
-| 1230 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1231 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1232 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1233 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1232 | 조항 ID | `regulatory_clause_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1233 | 규정 문서 ID | `regulatory_source_id` | `uuid` | N | Y | `regulatory_source.regulatory_source_id` | Y | - | N | Y | N | Y | regulatory_source.regulatory_source_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1234 | 조항 코드 | `clause_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 조항 코드 | `4.1` |
+| 1235 | 조항 제목 | `title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 조항 제목 | `접근 관리` |
+| 1236 | 조항 요약 | `summary` | `text` | N | N | - | Y | - | N | N | N | Y | 조항 요약 | `해당 업무에 적용할 요구사항 요약` |
+| 1237 | 원문 위치 | `source_locator` | `text` | N | N | - | N | - | N | N | N | Y | 원문 위치 | `제4장 1절` |
+| 1238 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1239 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 사용 여부 | `TRUE` |
+| 1240 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1241 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1242 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1243 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4583,7 +4632,7 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 ---
 
 <a id="table-requirement_regulation"></a>
-### 75. 요구사항 규정 근거 (`requirement_regulation`)
+### 76. 요구사항 규정 근거 (`requirement_regulation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4600,16 +4649,16 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1234 | 근거 연결 ID | `requirement_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1235 | 업무 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | requirement.requirement_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1236 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1237 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
-| 1238 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
-| 1239 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1240 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1241 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1242 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1243 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1244 | 근거 연결 ID | `requirement_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1245 | 업무 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | requirement.requirement_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1246 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1247 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
+| 1248 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
+| 1249 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1250 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1251 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1252 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1253 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4624,7 +4673,7 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 ---
 
 <a id="table-library_item_regulation"></a>
-### 76. 라이브러리 규정 근거 (`library_item_regulation`)
+### 77. 라이브러리 규정 근거 (`library_item_regulation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4641,16 +4690,16 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1244 | 근거 연결 ID | `library_item_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1245 | 라이브러리 항목 ID | `library_id` | `uuid` | N | Y | `library_item.library_id` | Y | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1246 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1247 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
-| 1248 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
-| 1249 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1250 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1251 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1252 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1253 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1254 | 근거 연결 ID | `library_item_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1255 | 라이브러리 항목 ID | `library_id` | `uuid` | N | Y | `library_item.library_id` | Y | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1256 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1257 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
+| 1258 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
+| 1259 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1260 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1261 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1262 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1263 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
