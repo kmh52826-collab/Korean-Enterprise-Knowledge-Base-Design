@@ -1,6 +1,6 @@
 # Validation Management Platform 전체 데이터 구조
 
-전체 **76개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
+전체 **77개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
 
 영역 번호와 이름은 [ERD 명세서](./erd-specifications.md)의 1~14번과 일치합니다.
 
@@ -130,7 +130,8 @@ library_item_regulation"]
             AI["⑭ AI 생성·적용
 ai_generation_job
 ai_generation_result
-ai_result_item"]
+ai_result_item
+ai_sensitive_detection"]
             LIBRARY ~~~ AI
         end
 
@@ -188,6 +189,7 @@ traceability_link"]
 | `regulatory_source` → `regulatory_clause` → 요구사항·라이브러리의 규정 근거 | 규정 문서의 판본과 조항을 구분하고, `requirement_regulation`·`library_item_regulation`으로 적용 근거를 연결합니다. |
 | `library_item` → 요구사항·위험평가·시험 항목 | 재사용할 내용을 가져오고 원본 라이브러리를 참조합니다. 가져온 항목은 독립적으로 관리하며 이후 라이브러리 변경을 자동 반영하지 않습니다. |
 | `ai_generation_job` → `ai_generation_result` → `ai_result_item` | AI 생성 요청, 결과 묶음, 개별 초안을 구분합니다. 사용자 선택과 업무 적용을 거친 뒤 해당 업무의 검토·승인 절차를 따릅니다. |
+| `ai_generation_job` → `ai_sensitive_detection` | AI로 보내기 전에 전송 데이터의 민감정보를 마스킹하고 유형별 검출 건수를 남깁니다. 실제 값은 저장하지 않습니다. |
 
 ## 읽을 때 참고할 점
 
