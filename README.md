@@ -55,7 +55,7 @@
 ## 🚀 Key Technical Contributions & Engineering Design
 
 ### 1. End-to-End Relational Data Modeling & ERD Design (Completed)
-규제가 엄격한 도메인 (Highly Regulated Domain)의 복잡성을 반영하여, 개념적 모델링부터 논리/물리 ERD 설계까지 14개 업무 영역, 76개 테이블의 PostgreSQL 스키마 전체를 직접 설계했습니다. 요구사항이 바뀔 때마다 설계안을 프로젝트 구성원과 PM에게 보고하고 피드백을 반영하며 여러 차례 개정했습니다.
+규제가 엄격한 도메인 (Highly Regulated Domain)의 복잡성을 반영하여, 개념적 모델링부터 논리/물리 ERD 설계까지 14개 업무 영역, 77개 테이블의 PostgreSQL 스키마 전체를 직접 설계했습니다. 요구사항이 바뀔 때마다 설계안을 프로젝트 구성원과 PM에게 보고하고 피드백을 반영하며 여러 차례 개정했습니다.
 
 - **Regulatory Compliance Schema Design:** 21 CFR Part 11 (전자서명 및 감사추적) 규정과 ALCOA++ 원칙을 데이터베이스 제약조건(PK·FK·CHECK·UNIQUE)과 서버 검증 규칙으로 함께 강제하도록 설계했습니다. 전자서명은 서명한 원문과 대상 개정을 함께 보존하고, 감사기록은 기존 내용을 수정하지 않고 새 기록만 추가합니다.
 - **Revision-Pinned Traceability:** 요구사항(URS)과 설계, 위험평가(FRA), 시험 항목(IQ/OQ/PQ) 사이의 추적 관계가 연결 당시의 정확한 개정을 가리키도록 설계했습니다. 새 개정이 생겨도 과거 승인 근거는 바뀌지 않으며, 요구사항은 근거가 된 규정 조항과 그 판본까지 함께 연결됩니다.
