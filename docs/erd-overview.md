@@ -1,6 +1,6 @@
 # Validation Management Platform 전체 데이터 구조
 
-전체 **77개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
+전체 **78개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
 
 영역 번호와 이름은 [ERD 명세서](./erd-specifications.md)의 1~14번과 일치합니다.
 
@@ -22,7 +22,8 @@ user_group_member
 group_role
 access_permission_grant
 inventory_role_grant
-user_signature_credential"]
+user_signature_credential
+login_session"]
         PROJECT["② 시스템 인벤토리·<br/>프로젝트 관리
 system_asset
 system_asset_revision
