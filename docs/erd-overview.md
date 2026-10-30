@@ -1,6 +1,6 @@
 # Validation Management Platform 전체 데이터 구조
 
-전체 **78개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
+전체 **80개 테이블**을 **14개 업무 영역**으로 묶은 구조도입니다. 상자 안에는 실제 테이블명을 표시하며, 각 테이블은 한 번씩만 배치했습니다.
 
 영역 번호와 이름은 [ERD 명세서](./erd-specifications.md)의 1~14번과 일치합니다.
 
@@ -30,8 +30,10 @@ system_asset_revision
 validation_project
 project_system_baseline
 project_member
+project_party
 validation_activity
 project_activity
+project_activity_assignment
 activity_dependency
 project_closure_request"]
         SECURITY --> PROJECT
@@ -174,6 +176,7 @@ traceability_link"]
 | `system_asset_revision` → `project_system_baseline` | 프로젝트가 채택한 시스템 승인 개정을 식별합니다. 시험 수행과 문서 개정에도 당시 기준을 연결하여 과거 검증 대상을 보존합니다. |
 | `validation_project` → `project_member` | 프로젝트에 참여하는 사용자와 역할을 관리합니다. |
 | `validation_project` → `project_activity` → `validation_activity` | 프로젝트에서 수행할 활동을 선택합니다. 선후행 조건은 `activity_dependency`를 바탕으로 프로젝트 생성 당시 채택한 기준을 사용합니다. |
+| `validation_project` → `project_party` → `project_activity_assignment` | 프로젝트의 수행 조직과 단계별 작성·수행·지원·검토·승인 배분을 관리합니다. VP 등 산출물에 표시하기 위한 정보이며 결재 담당자 지정과는 별개입니다. |
 | `vp_plan` → `vp_section` / `qia_assessment` → `qia_module_item` → `qia_process` | 검증 계획은 목차·본문으로, 품질 영향 평가는 공통 평가·모듈·프로세스로 나누어 관리합니다. 공급업체 감사는 `vendor_audit`에 기록합니다. |
 | `requirement` · `fds_spec` · `dds_spec` → `dq_item` | 요구사항과 설계 문서의 특정 개정을 연결해 설계 적합성을 평가합니다. |
 | `requirement` → `fra_item` | 요구사항별 위험을 평가하고, `regulatory_clause`를 통해 내부 SOP 근거를 연결합니다. |
