@@ -17,8 +17,8 @@
 
 ## 1. 문서 개요
 
-- 전체 테이블: **84개**
-- 전체 컬럼: **1,361개**
+- 전체 테이블: **85개**
+- 전체 컬럼: **1,371개**
 - 도메인: **26개**
 - 명명 규칙: 테이블 및 컬럼은 `snake_case`, PK는 엔터티별 식별자 컬럼 사용
 - 날짜/시간 기준: DB에는 UTC 저장, 화면에서는 사용자 또는 사업장 Timezone 적용
@@ -56,7 +56,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 
 버전별 질문·판정 규칙 정의(QIA Part 11·GxP 질문, FRA 위험 판정, 활동 선후행 판정 의미)는 별도 마스터 테이블에 두지 않고 버전 이름으로 식별하는 서버 배포 설정으로 관리한다. 같은 버전 이름에 다른 정의를 배포하지 않으며, 각 평가·문서·프로젝트에 복사한 원문(question_set_snapshot, rule_snapshot, evaluation_definition_snapshot, dependency_snapshot)을 감사 근거로 삼는다.
 
-승인 상태를 가진 업무 개정은 상신(REVIEW) 이후 본문·하위 절차·구성·첨부를 잠근다. 상신 전 DRAFT의 저장은 같은 행을 갱신하고 변경 전후 값을 Audit Trail에 기록한다. 반려(REJECTED)와 취소(CANCELLED)는 해당 개정의 종결 상태이며 DRAFT로 되돌리지 않는다. 반려·취소 후의 수정과 승인 후의 변경은 같은 논리키의 새 개정(DRAFT)으로 처리하고, 종결된 개정과 그 Workflow·전자서명은 보존한다(인벤토리는 revision_number 증가, 시험 수행 결과는 같은 attempt_no의 record_revision 증가). 화면에서는 이를 '수정'으로 표시할 수 있으나 DB에는 새 개정 행이 생성된다. 표시 버전(version)은 최종 승인 때만 올린다. 승인 전 개정은 다음 승인 예정 버전을 표시하고 승인 시 확정하며, 반려·취소된 개정과 그 뒤 다시 작성한 개정은 같은 표시 버전을 가지고 PK와 revision_number로 구분한다.
+승인 상태를 가진 업무 개정은 상신(REVIEW) 이후 본문·하위 절차·구성·첨부를 잠근다. 상신 전 DRAFT의 저장은 같은 행을 갱신하고 변경 전후 값을 Audit Trail에 기록한다. 반려(REJECTED)와 취소(CANCELLED)는 해당 개정의 종결 상태이며 DRAFT로 되돌리지 않는다. 반려·취소 후의 수정과 승인 후의 변경은 같은 논리키의 새 개정(DRAFT)으로 처리하고, 종결된 개정과 그 Workflow·전자서명은 보존한다(인벤토리는 revision_number 증가이며 승인 후 변경은 REAPPROVAL_REQUIRED로 표시, 시험 수행 결과는 같은 attempt_no의 record_revision 증가). 화면에서는 이를 '수정'으로 표시할 수 있으나 DB에는 새 개정 행이 생성된다. 표시 버전(version)은 최종 승인 때만 올린다. 승인 전 개정은 다음 승인 예정 버전을 표시하고 승인 시 확정하며, 반려·취소된 개정과 그 뒤 다시 작성한 개정은 같은 표시 버전을 가지고 PK와 revision_number로 구분한다.
 
 ## 3. 테이블 목록
 
@@ -82,70 +82,71 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 | 18 | File | 파일 연결 예약 | [`file_link_request`](#table-file_link_request) | `link_request_id` | `project_id, file_id, evidence_link_id, created_by, updated_by` | High | Y |
 | 19 | System | 시스템/장비 식별 정보 | [`system_asset`](#table-system_asset) | `system_id` | `organization_id` | High | Y |
 | 20 | System | 시스템 인벤토리 개정 이력 | [`system_asset_revision`](#table-system_asset_revision) | `system_revision_id` | `system_id, processed_by, signature_id` | High | Y |
-| 21 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | - | High | Y |
-| 22 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by, closure_requested_by, current_closure_request_id, current_system_baseline_id` | High | Y |
-| 23 | Validation | 프로젝트 검증 대상 개정 | [`project_system_baseline`](#table-project_system_baseline) | `baseline_id` | `project_id, system_revision_id, adopted_by` | Critical | Y |
-| 24 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y |
-| 25 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y |
-| 26 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y |
-| 27 | Validation | 프로젝트 수행 조직 | [`project_party`](#table-project_party) | `party_id` | `project_id, created_by, updated_by` | High | Y |
-| 28 | Validation | 단계별 역할 배분 | [`project_activity_assignment`](#table-project_activity_assignment) | `activity_assignment_id` | `project_activity_id, party_id, created_by, updated_by` | High | Y |
-| 29 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y |
-| 30 | Validation | 프로젝트 종료 요청 | [`project_closure_request`](#table-project_closure_request) | `closure_request_id` | `project_id, requested_by, workflow_instance_id, created_by, updated_by` | High | Y |
-| 31 | VP | 검증 계획 | [`vp_plan`](#table-vp_plan) | `vp_id` | `project_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
-| 32 | VP | 검증 계획 목차 | [`vp_section`](#table-vp_section) | `vp_section_id` | `vp_id, created_by, updated_by` | High | Y |
-| 33 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id, created_by, updated_by` | High | Y |
-| 34 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
-| 35 | QIA | QIA 프로세스 평가 | [`qia_process`](#table-qia_process) | `qia_process_id` | `qia_module_item_id, created_by, updated_by` | High | Y |
-| 36 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id, auditor_user_id, file_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
-| 37 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by, workflow_instance_id, updated_by, disposal_workflow_id, source_library_id` | High | Y |
-| 38 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by, workflow_instance_id, disposal_workflow_id, file_id, uploaded_by` | High | Y |
-| 39 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by, workflow_instance_id, disposal_workflow_id, file_id, uploaded_by` | High | Y |
-| 40 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y |
-| 41 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, created_by, updated_by, fds_revision_id, dds_revision_id, executed_by, workflow_instance_id, disposal_workflow_id` | High | Y |
-| 42 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y |
-| 43 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by, sop_clause_id, workflow_instance_id, disposal_workflow_id, source_library_id` | High | Y |
-| 44 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y |
-| 45 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
-| 46 | IQ | IQ 시험 절차 | [`iq_step`](#table-iq_step) | `step_id` | `iq_item_id, created_by, updated_by` | High | Y |
-| 47 | IQ | IQ 시험 수행 | [`iq_execution`](#table-iq_execution) | `execution_id` | `iq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
-| 48 | IQ | IQ 절차 수행 | [`iq_step_execution`](#table-iq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
-| 49 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y |
-| 50 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
-| 51 | OQ | OQ 시험 절차 | [`oq_step`](#table-oq_step) | `step_id` | `oq_item_id, created_by, updated_by` | High | Y |
-| 52 | OQ | OQ 시험 수행 | [`oq_execution`](#table-oq_execution) | `execution_id` | `oq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
-| 53 | OQ | OQ 절차 수행 | [`oq_step_execution`](#table-oq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
-| 54 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y |
-| 55 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
-| 56 | PQ | PQ 시험 절차 | [`pq_step`](#table-pq_step) | `step_id` | `pq_item_id, created_by, updated_by` | High | Y |
-| 57 | PQ | PQ 시험 수행 | [`pq_execution`](#table-pq_execution) | `execution_id` | `pq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
-| 58 | PQ | PQ 절차 수행 | [`pq_step_execution`](#table-pq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
-| 59 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by, workflow_instance_id, approval_signature_id` | Critical | Y |
-| 60 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by, project_activity_id, document_revision_id` | Critical | Y |
-| 61 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by, project_id, workflow_config_id` | Critical | Y |
-| 62 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, created_by, updated_by` | Critical | Y |
-| 63 | Workflow | 결재 단계 담당자 | [`workflow_step_assignee`](#table-workflow_step_assignee) | `assignment_id` | `workflow_step_id, assignee_id, substitute_user_id, created_by, updated_by` | Critical | Y |
-| 64 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, workflow_step_assignee_id, actor_id, signature_id` | Critical | Y |
-| 65 | Workflow | 프로젝트 결재선 설정 | [`project_workflow_config`](#table-project_workflow_config) | `config_id` | `project_id, project_activity_id, applied_signature_id, created_by, updated_by` | Critical | Y |
-| 66 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y |
-| 67 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, approved_by, created_by, updated_by, action_workflow_id, action_signature_id, completion_signature_id, closure_signature_id, current_action_round_id, current_completion_revision_id` | Critical | Y |
-| 68 | Deviation | 일탈 조치 회차 | [`deviation_action_round`](#table-deviation_action_round) | `action_round_id` | `deviation_id, workflow_instance_id, signature_id, created_by, updated_by` | Critical | Y |
-| 69 | Deviation | 일탈 종결 보고 개정 | [`deviation_completion_revision`](#table-deviation_completion_revision) | `completion_revision_id` | `deviation_id, action_round_id, workflow_instance_id, signature_id, created_by, updated_by` | Critical | Y |
-| 70 | Document | 산출물 문서 | [`deliverable_document`](#table-deliverable_document) | `document_id` | `project_id, project_activity_id, created_by, updated_by` | Critical | Y |
-| 71 | Document | 산출물 개정 | [`deliverable_revision`](#table-deliverable_revision) | `document_revision_id` | `document_id, workflow_instance_id, approved_by, file_id, created_by, updated_by, system_baseline_id` | Critical | Y |
-| 72 | Document | 산출물 목차/본문 | [`deliverable_section`](#table-deliverable_section) | `section_id` | `document_revision_id, created_by, updated_by` | Critical | Y |
-| 73 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, created_by, updated_by, document_revision_id` | High | Y |
-| 74 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
-| 75 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, selected_by, created_by, updated_by` | High | Y |
-| 76 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
-| 77 | AI | AI 전송 데이터 민감정보 검출 결과 | [`ai_sensitive_detection`](#table-ai_sensitive_detection) | `detection_id` | `ai_job_id, chat_message_id, created_by` | High | Y |
-| 78 | AI | AI 감사대응 챗봇 대화 | [`ai_chat_session`](#table-ai_chat_session) | `chat_session_id` | `project_id, user_id, login_session_id, created_by, updated_by` | High | Y |
-| 79 | AI | AI 감사대응 챗봇 메시지 | [`ai_chat_message`](#table-ai_chat_message) | `chat_message_id` | `chat_session_id, question_message_id, created_by` | High | Y |
-| 80 | AI | AI 감사대응 챗봇 답변 근거 | [`ai_chat_citation`](#table-ai_chat_citation) | `chat_citation_id` | `chat_message_id, created_by` | High | Y |
-| 81 | Regulation | 규정 근거 문서 | [`regulatory_source`](#table-regulatory_source) | `regulatory_source_id` | `file_id, verified_by, created_by, updated_by` | High | Y |
-| 82 | Regulation | 규정 조항 | [`regulatory_clause`](#table-regulatory_clause) | `regulatory_clause_id` | `regulatory_source_id, created_by, updated_by` | High | Y |
-| 83 | Regulation | 요구사항 규정 근거 | [`requirement_regulation`](#table-requirement_regulation) | `requirement_regulation_id` | `requirement_id, regulatory_clause_id, created_by, updated_by` | High | Y |
-| 84 | Regulation | 라이브러리 규정 근거 | [`library_item_regulation`](#table-library_item_regulation) | `library_item_regulation_id` | `library_id, regulatory_clause_id, created_by, updated_by` | High | Y |
+| 21 | Library | 라이브러리 항목 마스터 | [`library_item`](#table-library_item) | `library_id` | `urs_category_id` | High | Y |
+| 22 | Library | URS 분류 | [`urs_category`](#table-urs_category) | `category_id` | `parent_category_id, created_by, updated_by` | High | Y |
+| 23 | Validation | Validation 프로젝트 | [`validation_project`](#table-validation_project) | `project_id` | `system_id, created_by, updated_by, closure_requested_by, current_closure_request_id, current_system_baseline_id` | High | Y |
+| 24 | Validation | 프로젝트 검증 대상 개정 | [`project_system_baseline`](#table-project_system_baseline) | `baseline_id` | `project_id, system_revision_id, adopted_by` | Critical | Y |
+| 25 | Validation | 프로젝트 참여자 | [`project_member`](#table-project_member) | `project_member_id` | `project_id, user_id, role_id, created_by, updated_by` | High | Y |
+| 26 | Validation | 밸리데이션 활동 마스터 | [`validation_activity`](#table-validation_activity) | `activity_id` | `created_by, updated_by` | High | Y |
+| 27 | Validation | 프로젝트 수행 활동 | [`project_activity`](#table-project_activity) | `project_activity_id` | `project_id, activity_id, created_by, updated_by` | Critical | Y |
+| 28 | Validation | 프로젝트 수행 조직 | [`project_party`](#table-project_party) | `party_id` | `project_id, created_by, updated_by` | High | Y |
+| 29 | Validation | 단계별 역할 배분 | [`project_activity_assignment`](#table-project_activity_assignment) | `activity_assignment_id` | `project_activity_id, party_id, created_by, updated_by` | High | Y |
+| 30 | Validation | 활동 선후행 조건 | [`activity_dependency`](#table-activity_dependency) | `activity_dependency_id` | `successor_activity_id, predecessor_activity_id, created_by, updated_by` | Critical | Y |
+| 31 | Validation | 프로젝트 종료 요청 | [`project_closure_request`](#table-project_closure_request) | `closure_request_id` | `project_id, requested_by, workflow_instance_id, created_by, updated_by` | High | Y |
+| 32 | VP | 검증 계획 | [`vp_plan`](#table-vp_plan) | `vp_id` | `project_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
+| 33 | VP | 검증 계획 목차 | [`vp_section`](#table-vp_section) | `vp_section_id` | `vp_id, created_by, updated_by` | High | Y |
+| 34 | QIA | 품질 영향 평가 헤더 | [`qia_assessment`](#table-qia_assessment) | `qia_id` | `project_id, created_by, updated_by` | High | Y |
+| 35 | QIA | QIA 모듈 상세 평가 | [`qia_module_item`](#table-qia_module_item) | `qia_module_item_id` | `qia_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
+| 36 | QIA | QIA 프로세스 평가 | [`qia_process`](#table-qia_process) | `qia_process_id` | `qia_module_item_id, created_by, updated_by` | High | Y |
+| 37 | VA | 공급업체 감사 평가 | [`vendor_audit`](#table-vendor_audit) | `audit_id` | `project_id, auditor_user_id, file_id, workflow_instance_id, created_by, updated_by, disposal_workflow_id` | High | Y |
+| 38 | URS | 사용자 요구사항 명세 | [`requirement`](#table-requirement) | `requirement_id` | `project_id, created_by, workflow_instance_id, updated_by, disposal_workflow_id, source_library_id, urs_category_id` | High | Y |
+| 39 | FDS | 기능 설계 명세서 | [`fds_spec`](#table-fds_spec) | `fds_id` | `project_id, created_by, updated_by, workflow_instance_id, disposal_workflow_id, file_id, uploaded_by` | High | Y |
+| 40 | DDS | 상세 설계 명세서 | [`dds_spec`](#table-dds_spec) | `dds_id` | `project_id, created_by, updated_by, workflow_instance_id, disposal_workflow_id, file_id, uploaded_by` | High | Y |
+| 41 | DQ | 설계 적격성 평가 | [`dq_assessment`](#table-dq_assessment) | `dq_id` | `project_id, created_by, updated_by` | High | Y |
+| 42 | DQ | DQ 상세 평가 항목 | [`dq_item`](#table-dq_item) | `dq_item_id` | `dq_id, requirement_id, created_by, updated_by, fds_revision_id, dds_revision_id, executed_by, workflow_instance_id, disposal_workflow_id` | High | Y |
+| 43 | FRA | 기능 위험평가 | [`fra_assessment`](#table-fra_assessment) | `fra_id` | `project_id, created_by, updated_by` | High | Y |
+| 44 | FRA | FRA 위험 상세 항목 | [`fra_item`](#table-fra_item) | `fra_item_id` | `fra_id, requirement_id, created_by, updated_by, sop_clause_id, workflow_instance_id, disposal_workflow_id, source_library_id` | High | Y |
+| 45 | IQ | 설치 적격성 평가 | [`iq_assessment`](#table-iq_assessment) | `iq_id` | `project_id, created_by, updated_by` | High | Y |
+| 46 | IQ | IQ 상세 테스트 항목 | [`iq_item`](#table-iq_item) | `iq_item_id` | `iq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
+| 47 | IQ | IQ 시험 절차 | [`iq_step`](#table-iq_step) | `step_id` | `iq_item_id, created_by, updated_by` | High | Y |
+| 48 | IQ | IQ 시험 수행 | [`iq_execution`](#table-iq_execution) | `execution_id` | `iq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
+| 49 | IQ | IQ 절차 수행 | [`iq_step_execution`](#table-iq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
+| 50 | OQ | 운전 적격성 평가 | [`oq_assessment`](#table-oq_assessment) | `oq_id` | `project_id, created_by, updated_by` | High | Y |
+| 51 | OQ | OQ 상세 테스트 항목 | [`oq_item`](#table-oq_item) | `oq_item_id` | `oq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
+| 52 | OQ | OQ 시험 절차 | [`oq_step`](#table-oq_step) | `step_id` | `oq_item_id, created_by, updated_by` | High | Y |
+| 53 | OQ | OQ 시험 수행 | [`oq_execution`](#table-oq_execution) | `execution_id` | `oq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
+| 54 | OQ | OQ 절차 수행 | [`oq_step_execution`](#table-oq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
+| 55 | PQ | 성능 적격성 평가 | [`pq_assessment`](#table-pq_assessment) | `pq_id` | `project_id, created_by, updated_by` | High | Y |
+| 56 | PQ | PQ 상세 테스트 항목 | [`pq_item`](#table-pq_item) | `pq_item_id` | `pq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` | High | Y |
+| 57 | PQ | PQ 시험 절차 | [`pq_step`](#table-pq_step) | `step_id` | `pq_item_id, created_by, updated_by` | High | Y |
+| 58 | PQ | PQ 시험 수행 | [`pq_execution`](#table-pq_execution) | `execution_id` | `pq_item_id, executed_by, execution_signature_id, abort_signature_id, result_workflow_id, created_by, updated_by, system_baseline_id` | High | Y |
+| 59 | PQ | PQ 절차 수행 | [`pq_step_execution`](#table-pq_step_execution) | `step_execution_id` | `execution_id, step_id, confirmed_by, created_by, updated_by` | High | Y |
+| 60 | VSR | 밸리데이션 종합 보고서 | [`vsr_assessment`](#table-vsr_assessment) | `vsr_id` | `project_id, created_by, updated_by, workflow_instance_id, approval_signature_id` | Critical | Y |
+| 61 | VSR | VSR 활동 요약 항목 | [`vsr_item`](#table-vsr_item) | `vsr_item_id` | `vsr_id, created_by, updated_by, project_activity_id, document_revision_id` | Critical | Y |
+| 62 | Workflow | Workflow 인스턴스 | [`workflow_instance`](#table-workflow_instance) | `workflow_instance_id` | `requested_by, created_by, updated_by, project_id, workflow_config_id` | Critical | Y |
+| 63 | Workflow | Workflow 단계 | [`workflow_step`](#table-workflow_step) | `workflow_step_id` | `workflow_instance_id, created_by, updated_by` | Critical | Y |
+| 64 | Workflow | 결재 단계 담당자 | [`workflow_step_assignee`](#table-workflow_step_assignee) | `assignment_id` | `workflow_step_id, assignee_id, substitute_user_id, created_by, updated_by` | Critical | Y |
+| 65 | Workflow | 승인 처리 이력 | [`approval_action`](#table-approval_action) | `approval_action_id` | `workflow_step_id, workflow_step_assignee_id, actor_id, signature_id` | Critical | Y |
+| 66 | Workflow | 프로젝트 결재선 설정 | [`project_workflow_config`](#table-project_workflow_config) | `config_id` | `project_id, project_activity_id, applied_signature_id, created_by, updated_by` | Critical | Y |
+| 67 | Traceability | 공통 추적 관계 | [`traceability_link`](#table-traceability_link) | `traceability_link_id` | `project_id, created_by, updated_by` | Critical | Y |
+| 68 | Deviation | 일탈 관리 | [`deviation`](#table-deviation) | `deviation_id` | `project_id, approved_by, created_by, updated_by, action_workflow_id, action_signature_id, completion_signature_id, closure_signature_id, current_action_round_id, current_completion_revision_id` | Critical | Y |
+| 69 | Deviation | 일탈 조치 회차 | [`deviation_action_round`](#table-deviation_action_round) | `action_round_id` | `deviation_id, workflow_instance_id, signature_id, created_by, updated_by` | Critical | Y |
+| 70 | Deviation | 일탈 종결 보고 개정 | [`deviation_completion_revision`](#table-deviation_completion_revision) | `completion_revision_id` | `deviation_id, action_round_id, workflow_instance_id, signature_id, created_by, updated_by` | Critical | Y |
+| 71 | Document | 산출물 문서 | [`deliverable_document`](#table-deliverable_document) | `document_id` | `project_id, project_activity_id, created_by, updated_by` | Critical | Y |
+| 72 | Document | 산출물 개정 | [`deliverable_revision`](#table-deliverable_revision) | `document_revision_id` | `document_id, workflow_instance_id, approved_by, file_id, created_by, updated_by, system_baseline_id` | Critical | Y |
+| 73 | Document | 산출물 목차/본문 | [`deliverable_section`](#table-deliverable_section) | `section_id` | `document_revision_id, created_by, updated_by` | Critical | Y |
+| 74 | Report | 리포트 생성 작업 | [`report_generation`](#table-report_generation) | `report_generation_id` | `project_id, requested_by, result_file_id, created_by, updated_by, document_revision_id, vp_id` | High | Y |
+| 75 | AI | AI 생성 작업 | [`ai_generation_job`](#table-ai_generation_job) | `ai_job_id` | `project_id, requested_by, created_by, updated_by` | High | Y |
+| 76 | AI | AI 생성 결과 | [`ai_generation_result`](#table-ai_generation_result) | `ai_result_id` | `ai_job_id, selected_by, created_by, updated_by` | High | Y |
+| 77 | AI | AI 생성 결과 항목 | [`ai_result_item`](#table-ai_result_item) | `ai_result_item_id` | `ai_result_id, created_by, updated_by` | High | Y |
+| 78 | AI | AI 전송 데이터 민감정보 검출 결과 | [`ai_sensitive_detection`](#table-ai_sensitive_detection) | `detection_id` | `ai_job_id, chat_message_id, created_by` | High | Y |
+| 79 | AI | AI 감사대응 챗봇 대화 | [`ai_chat_session`](#table-ai_chat_session) | `chat_session_id` | `project_id, user_id, login_session_id, created_by, updated_by` | High | Y |
+| 80 | AI | AI 감사대응 챗봇 메시지 | [`ai_chat_message`](#table-ai_chat_message) | `chat_message_id` | `chat_session_id, question_message_id, created_by` | High | Y |
+| 81 | AI | AI 감사대응 챗봇 답변 근거 | [`ai_chat_citation`](#table-ai_chat_citation) | `chat_citation_id` | `chat_message_id, created_by` | High | Y |
+| 82 | Regulation | 규정 근거 문서 | [`regulatory_source`](#table-regulatory_source) | `regulatory_source_id` | `file_id, verified_by, created_by, updated_by` | High | Y |
+| 83 | Regulation | 규정 조항 | [`regulatory_clause`](#table-regulatory_clause) | `regulatory_clause_id` | `regulatory_source_id, created_by, updated_by` | High | Y |
+| 84 | Regulation | 요구사항 규정 근거 | [`requirement_regulation`](#table-requirement_regulation) | `requirement_regulation_id` | `requirement_id, regulatory_clause_id, created_by, updated_by` | High | Y |
+| 85 | Regulation | 라이브러리 규정 근거 | [`library_item_regulation`](#table-library_item_regulation) | `library_item_regulation_id` | `library_id, regulatory_clause_id, created_by, updated_by` | High | Y |
 
 ## 4. 도메인별 바로가기
 
@@ -154,7 +155,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 - **Compliance**: [`electronic_signature`](#table-electronic_signature), [`audit_trail`](#table-audit_trail)
 - **File**: [`file_asset`](#table-file_asset), [`file_scan_job`](#table-file_scan_job), [`evidence_link`](#table-evidence_link), [`file_link_request`](#table-file_link_request)
 - **System**: [`system_asset`](#table-system_asset), [`system_asset_revision`](#table-system_asset_revision)
-- **Library**: [`library_item`](#table-library_item)
+- **Library**: [`library_item`](#table-library_item), [`urs_category`](#table-urs_category)
 - **Validation**: [`validation_project`](#table-validation_project), [`project_system_baseline`](#table-project_system_baseline), [`project_member`](#table-project_member), [`validation_activity`](#table-validation_activity), [`project_activity`](#table-project_activity), [`project_party`](#table-project_party), [`project_activity_assignment`](#table-project_activity_assignment), [`activity_dependency`](#table-activity_dependency), [`project_closure_request`](#table-project_closure_request)
 - **VP**: [`vp_plan`](#table-vp_plan), [`vp_section`](#table-vp_section)
 - **QIA**: [`qia_assessment`](#table-qia_assessment), [`qia_module_item`](#table-qia_module_item), [`qia_process`](#table-qia_process)
@@ -685,7 +686,7 @@ account_type=SYSTEM은 배치·자동 처리의 수행 주체를 나타내는 �
 | `ck_user_signature_credential_4` | CHECK | `failed_attempt_count` | CHECK (failed_attempt_count >= 0) |
 | `ck_user_signature_credential_6` | CHECK | `credential_status, reset_requested_by, reset_requested_at` | CHECK (credential_status <> 'RESET_REQUIRED' OR (reset_requested_by IS NOT NULL AND reset_requested_at IS NOT NULL)) |
 | `rule_user_signature_credential_7` | 업무 검증 | `user_id` | user_id는 account_type=HUMAN 계정만 허용한다. SYSTEM 계정과 비상 접근 계정(SSO 사용 조직의 LOCAL 계정)에는 행을 만들지 않는다. SSO 미사용 조직의 LOCAL 계정은 행을 만든다. |
-| `rule_user_signature_credential_8` | 업무 검증 | `signature_password_hash, previous_signature_password_hash` | 설정·변경은 본인만 수행하며 현재 서명 비밀번호로 본인을 확인한다. 최초 설정(NOT_SET)과 재설정(RESET_REQUIRED)은 현재 서명 비밀번호를 쓸 수 없으므로 로그인 재인증(SSO 계정은 SSO, LOCAL 계정은 로그인 비밀번호)으로 본인을 확인한다. 본인 메일 재설정은 유효한 메일 링크와 같은 계정의 로그인 상태로 본인을 확인한다(email_link_token). 관리자는 RESET_REQUIRED 전환만 가능하며 NOT_SET 상태는 전환하지 않고 유지한다. 관리자는 값을 지정하거나 조회할 수 없다. 새 비밀번호는 직전 비밀번호(previous_signature_password_hash)와 같을 수 없다(요구사항 1.3). 새 비밀번호는 10자 이상이며 영문 대문자·소문자·숫자·특수문자를 각 1자 이상 포함해야 한다(요구사항 1.3). 길이·조합은 운영 설정값으로 관리한다. |
+| `rule_user_signature_credential_8` | 업무 검증 | `signature_password_hash, previous_signature_password_hash` | 설정·변경은 본인만 수행하며 현재 서명 비밀번호로 본인을 확인한다. 최초 설정(NOT_SET)과 재설정(RESET_REQUIRED)은 현재 서명 비밀번호를 쓸 수 없으므로 로그인 재인증(SSO 계정은 SSO, LOCAL 계정은 로그인 비밀번호)으로 본인을 확인한다. 본인 메일 재설정은 유효한 메일 링크와 같은 계정의 로그인 상태로 본인을 확인한다(email_link_token). 관리자는 RESET_REQUIRED 전환만 가능하며 NOT_SET 상태는 전환하지 않고 유지한다. 관리자는 값을 지정하거나 조회할 수 없다. 새 비밀번호는 직전 비밀번호(previous_signature_password_hash)와 같을 수 없다(요구사항 1.3). 새 비밀번호는 10자 이상이며 영문·숫자·특수문자를 각 1자 이상 포함해야 한다(요구사항 1.3, 로그인 비밀번호 rule_app_user_12와 같은 기준). 길이·조합은 운영 설정값으로 관리한다. |
 | `rule_user_signature_credential_9` | 업무 검증 | `credential_status, failed_attempt_count, expires_at` | 재인증 실패 시 failed_attempt_count를 증가시키고 5회 연속 실패하면 LOCKED로 전환한다(요구사항 1.3). 시간이 지나도 자동으로 해제하지 않는다. 사용자가 메일 링크로 직접 재설정하거나(email_link_token), 관리자가 초기화(RESET_REQUIRED 전환)한 뒤 로그인 재인증 후 새 서명 비밀번호를 설정하면 ACTIVE로 돌아가고 failed_attempt_count를 0으로 초기화한다. 성공 시 0으로 초기화한다. expires_at 경과 시 서명을 거부하고 변경을 요구한다. 만료 주기는 180일(요구사항 1.3)이며 운영 설정값으로 관리한다. 만료 7일·3일·1일 전에 사용자에게 변경을 안내한다. |
 | `rule_user_signature_credential_10` | 업무 검증 | - | 설정·변경은 SIGNATURE_PASSWORD_SET, 관리자 재설정 요청과 본인 재설정 메일 요청은 SIGNATURE_PASSWORD_RESET, 재인증 실패는 SIGNATURE_FAILED, 잠금·해제는 credential_status 변경 UPDATE로 Audit Trail(menu_code=AUTH)에 기록한다. 해시·원문·입력값은 기록하지 않는다. |
 | `ck_user_signature_credential_11` | CHECK | `credential_status, acknowledged_at` | CHECK (credential_status = 'NOT_SET' OR acknowledged_at IS NOT NULL) |
@@ -694,7 +695,7 @@ account_type=SYSTEM은 배치·자동 처리의 수행 주체를 나타내는 �
 
 전자서명 재인증은 이 테이블의 서명 전용 비밀번호로만 수행한다. SSO 사용 조직에서는 플랫폼이 로그인 비밀번호를 보유하지 않으므로, 전자서명의 본인 확인(21 CFR Part 11 §11.200(a)의 식별 코드+비밀번호 두 요소)을 로그인과 분리된 서명 비밀번호로 충족한다. SSO 미사용 조직도 같은 절차를 적용하여 로그인 비밀번호와 서명 비밀번호를 분리한다. 로그인 방식(SSO/LOCAL)과 무관하게 동일한 절차를 적용한다.
 
-credential_status가 NOT_SET·LOCKED·RESET_REQUIRED이거나 expires_at이 경과한 사용자는 전자서명이 필요한 상신·검토·승인·폐기·시험 수행 확인을 수행할 수 없다. 화면은 서명 전에 설정·변경을 먼저 요구한다.
+credential_status가 NOT_SET·LOCKED·RESET_REQUIRED이거나 expires_at이 경과한 사용자는 전자서명이 필요한 상신·검토·승인·반려·회수·폐기·시험 수행 확인·중단을 수행할 수 없다. 화면은 서명 전에 설정·변경을 먼저 요구한다.
 
 재인증 처리 순서: 서명 요청 시 서명자 user_id의 행을 잠그고 ACTIVE·미만료·미잠금을 확인한 뒤 입력값을 해시와 대조한다. 성공하면 failed_attempt_count를 0으로 초기화하고 같은 트랜잭션에서 electronic_signature 행(authentication_method=SIGNATURE_PASSWORD, authentication_result=SUCCESS)과 대상 상태 전환·감사기록을 확정한다. 실패하면 서명 행을 만들지 않고 실패 횟수 증가와 SIGNATURE_FAILED 감사기록만 저장한다.
 
@@ -821,7 +822,7 @@ credential_status가 NOT_SET·LOCKED·RESET_REQUIRED이거나 expires_at이 경�
 
 | 항목 | 정의 |
 |---|---|
-| 설명 | 상신·검토·승인·폐기·수행 확인·결재선 적용 및 종료 요청의 전자서명 기록 |
+| 설명 | 상신·검토·승인·반려·회수·폐기·수행 확인·중단·결재선 적용 및 종료 요청의 전자서명 기록 |
 | Primary Key | `signature_id` |
 | 주요 참조(FK) | `signer_id` |
 | GxP 중요도 | Critical |
@@ -838,7 +839,7 @@ credential_status가 NOT_SET·LOCKED·RESET_REQUIRED이거나 expires_at이 경�
 | 138 | 서명자 ID | `signer_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 | 139 | 대상 테이블명 | `target_table_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 실제 대상 테이블명. 업무 항목 개정, 산출물 개정, 종료 요청을 구분. 인벤토리는 system_asset PK와 revision_number로 식별 | `requirement` |
 | 140 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 서명이 적용된 레코드 PK값 | `00000000-0000-0000-0000-000000000001` |
-| 141 | 서명 단계 | `signature_action` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | SUBMIT / REVIEW / APPROVE / REJECT / DISPOSE / CONFIG_APPLY / EXECUTE / ABORT. 서명 의미와 대상 업무를 함께 기록. ABORT는 IQ/OQ/PQ 시험 수행 중단 또는 작성 중 결과 정정 취소 | `APPROVE` |
+| 141 | 서명 단계 | `signature_action` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | SUBMIT / REVIEW / APPROVE / REJECT / CANCEL / DISPOSE / CONFIG_APPLY / EXECUTE / ABORT. 서명 의미와 대상 업무를 함께 기록. CANCEL은 결재 회수, ABORT는 IQ/OQ/PQ 시험 수행 중단 또는 작성 중 결과 정정 취소 | `APPROVE` |
 | 142 | 서명 목적 | `signature_meaning` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 상신/검토/승인/폐기/시험 수행 확인/시험 중단·정정 취소의 업무 의미. 종료 요청은 PROJECT_CLOSE_NORMAL 또는 PROJECT_CLOSE_FORCED | `문서 최종 승인` |
 | 143 | 서명 타임스탬프 | `signed_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 전자서명 수행 타임스탬프 | `2026-08-26T16:30:00Z` |
 | 144 | 대상 버전 | `target_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 개정 표시 버전 또는 개정번호. 종료 요청 CLOSE-{request_version}, 일탈 조치 ACTION-{round_number}-{revision_number}, 완료보고 COMPLETE-{조치 회차}-{revision_number}, 미수행 종료 CLOSE-{조치 회차}-{revision_number}(deviation_completion_revision). 시험 수행은 회차·결과 개정을 함께 식별한다. | `v1.0` |
@@ -861,7 +862,7 @@ credential_status가 NOT_SET·LOCKED·RESET_REQUIRED이거나 expires_at이 경�
 | `ck_signature_auth_method` | CHECK | `authentication_method` | CHECK (authentication_method = 'SIGNATURE_PASSWORD') |
 | `ck_signature_auth_result` | CHECK | `authentication_result` | CHECK (authentication_result = 'SUCCESS') |
 | `rule_electronic_signature_4` | 업무 검증 | `signer_id` | signer_id는 account_type=HUMAN인 활성 계정이어야 하며 비상 접근 계정(SSO 사용 조직의 LOCAL 계정)이 아니어야 한다. SYSTEM 계정과 비상 접근 계정은 서명할 수 없고, SSO 미사용 조직의 LOCAL 계정은 서명할 수 있다. |
-| `ck_signature_action` | CHECK | `signature_action` | CHECK (signature_action IN ('SUBMIT','REVIEW','APPROVE','REJECT','DISPOSE','CONFIG_APPLY','EXECUTE','ABORT')) |
+| `ck_signature_action` | CHECK | `signature_action` | CHECK (signature_action IN ('SUBMIT','REVIEW','APPROVE','REJECT','CANCEL','DISPOSE','CONFIG_APPLY','EXECUTE','ABORT')) |
 
 #### 업무 규칙
 
@@ -936,7 +937,8 @@ signed_payload는 서명자가 확인한 본문, 순서가 있는 하위 절차,
 | `rule_audit_trail_9` | 업무 검증 | `menu_code` | USER·ANONYMOUS 행위의 menu_code는 업무 규칙의 영역 매핑에 따라, SYSTEM·BATCH 행위는 SYSTEM_PROCESS로 서버가 지정하며 요청 값으로 정하지 않는다. 매핑에 없는 테이블을 추가할 때는 매핑을 함께 정의한다. |
 | `ck_audit_trail_10` | CHECK | `actor_type, menu_code` | CHECK ((actor_type IN ('SYSTEM','BATCH')) = (menu_code = 'SYSTEM_PROCESS')) |
 | `rule_audit_trail_11` | 업무 검증 | `action_type, target_table_name, target_record_id` | 결재 처리(approval_action)가 생기면 결재 대상 업무 행을 target으로 같은 이름의 action_type(SUBMIT·REVIEW·APPROVE·REJECT·CANCEL, 회수는 CANCEL)을 기록한다. 폐기가 완료되면(lifecycle_status=DISPOSED 또는 is_disposed=TRUE 전환) 대상 행에 DISPOSE를 기록한다. 역할·권한의 부여·변경·회수(user_role, group_role, user_group_member, access_permission_grant, inventory_role_grant)는 CREATE·UPDATE 대신 PERMISSION_CHANGE로 기록한다. |
-| `rule_audit_trail_12` | 업무 검증 | `action_type, target_table_name, target_record_id, menu_code` | 사용자가 저장된 파일(첨부·증적·FDS/DDS 파일·VA 첨부·규정 원문 등 file_asset)을 내려받으면 FILE_DOWNLOAD를 target_table_name=file_asset, target_record_id=file_id로 기록한다. menu_code는 영역 매핑(파일은 연결 대상 업무의 코드)을 따른다. 리포트 생성 결과(report_generation) 다운로드는 REPORT_DOWNLOAD, 데이터 내보내기는 EXPORT로 기록하며 미리보기는 기록하지 않는다. |
+| `rule_audit_trail_12` | 업무 검증 | `action_type, target_table_name, target_record_id, menu_code` | 사용자가 저장된 파일(첨부·증적·FDS/DDS 파일·VA 첨부·규정 원문 등 file_asset)을 내려받으면 FILE_DOWNLOAD를 target_table_name=file_asset, target_record_id=file_id로 기록한다. menu_code는 영역 매핑(파일은 연결 대상 업무의 코드)을 따른다. PDF를 생성하면 REPORT_GENERATE, 생성 결과(report_generation)를 내려받으면 REPORT_DOWNLOAD를 기록하므로 생성 직후 내려받으면 두 행이 남는다. 데이터 내보내기는 EXPORT로 기록하며 미리보기는 기록하지 않는다. |
+| `ck_audit_trail_target_pair` | CHECK | `target_table_name, target_record_id` | CHECK ((target_table_name IS NULL AND target_record_id IS NULL) OR (target_table_name IS NOT NULL AND target_record_id IS NOT NULL)) |
 
 #### 업무 규칙
 
@@ -944,7 +946,7 @@ LOGIN_FAILED는 플랫폼이 로그인을 거부한 이벤트다. SSO는 IdP 인
 
 menu_code=SYSTEM_PROCESS는 사람이 아닌 행위자(actor_type=SYSTEM·BATCH)가 남기는 모든 기록에 사용한다. 초기 데이터 시드, 스케줄 배치, 파일 검사 Worker의 검사 상태 전환, 파일 연결 예약(file_link_request)에 따른 자동 연결, 자동 재시도가 모두 해당한다. 이때 업무 영역은 target_table_name·target_record_id로 식별하고, 사용자가 시작한 원래 화면은 같은 대상의 사용자 감사 기록(예: 업로드 완료 기록)으로 이어서 찾는다. 사용자가 화면에서 수행한 변경(USER)과 ANONYMOUS 이벤트에는 SYSTEM_PROCESS를 사용하지 않는다(ck_audit_trail_10).
 
-영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization은 ACCOUNTS, user_signature_credential·login_session과 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과·검출(ai_generation_job·ai_generation_result·ai_result_item·ai_sensitive_detection)는 생성 대상 업무의 활동 코드를 사용하고, 감사대응 챗봇(ai_chat_session·ai_chat_message·ai_chat_citation)과 챗봇 질문의 검출 행(chat_message_id가 있는 ai_sensitive_detection)은 PROJECT를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
+영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization, 초대 메일 링크(email_link_token, purpose=INVITATION)는 ACCOUNTS, user_signature_credential·login_session, 서명 비밀번호 재설정 메일 링크(email_link_token, purpose=SIGNATURE_PASSWORD_RESET)와 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·urs_category·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_party·project_activity_assignment·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드(VP PDF는 VP)·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과·검출(ai_generation_job·ai_generation_result·ai_result_item·ai_sensitive_detection)는 생성 대상 업무의 활동 코드를 사용하고, 감사대응 챗봇(ai_chat_session·ai_chat_message·ai_chat_citation)과 챗봇 질문의 검출 행(chat_message_id가 있는 ai_sensitive_detection)은 PROJECT를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
 
 전자서명 비밀번호 관련 이벤트는 대상 테이블을 user_signature_credential로, 대상 레코드를 해당 credential_id로 기록하며 old_values/new_values에 해시·원문을 포함하지 않는다.
 
@@ -1211,7 +1213,7 @@ IQ/OQ/PQ 절차 증적을 새로 업로드하면 file_link_request(EVIDENCE)로 
 | `ck_file_link_failure_code` | CHECK | `request_status, failure_code` | CHECK ((failure_code IS NULL OR failure_code IN ('THREATS_FOUND','ENCRYPTED','FORMAT_MISMATCH','UNSUPPORTED_EXTENSION','SOURCE_MISMATCH','ENGINE_UNSCANNABLE','SIZE_LIMIT_EXCEEDED','SCAN_FAILED','SCAN_CANCELLED','TARGET_NOT_FOUND','TARGET_LOCKED','FILE_NOT_FOUND','FILE_PROJECT_MISMATCH','FILE_CATEGORY_MISMATCH')) AND (request_status <> 'BLOCKED' OR failure_code IN ('THREATS_FOUND','ENCRYPTED','FORMAT_MISMATCH','UNSUPPORTED_EXTENSION','SOURCE_MISMATCH','ENGINE_UNSCANNABLE','SIZE_LIMIT_EXCEEDED','SCAN_FAILED','SCAN_CANCELLED')) AND (request_status <> 'FAILED' OR failure_code IN ('TARGET_NOT_FOUND','TARGET_LOCKED','FILE_NOT_FOUND','FILE_PROJECT_MISMATCH','FILE_CATEGORY_MISMATCH'))) |
 | `rule_file_link_request_1` | 업무 검증 | `created_by, upload_id, target_entity_type, target_entity_id` | 예약자는 해당 업로드를 올린 사용자(file_scan_job.uploaded_by)와 같아야 한다. 연결 대상은 존재하고 같은 프로젝트에 속하며 수정 가능한 상태여야 하고 예약자에게 대상 편집 권한이 있어야 한다. 수정 가능한 상태는 FDS·DDS·VA는 상신(REVIEW) 전, IQ/OQ/PQ 절차 수행은 상위 수행(*_execution)의 execution_status가 IN_PROGRESS일 때(결과 등록 전)이다. |
 | `rule_file_link_request_2` | 업무 검증 | `request_status` | 연결 처리는 예약 행을 잠근 뒤 상태를 바꾼다. 예약 시점에 이미 검사를 통과했으면 즉시 연결하고, 아니면 Worker가 검사 통과 후 연결한다. 파일 등록(file_asset)과 업무 연결은 트랜잭션을 나눠, 연결이 실패해도 검사를 통과한 파일은 유지하고 FAILED와 사유를 남긴다. |
-| `rule_file_link_request_3` | 업무 검증 | `request_status` | 사용자가 취소하면 WAITING·BLOCKED·FAILED 예약을 CANCELLED로 바꾼다. FDS·DDS 초안을 삭제(deleted_at)하거나 IQ/OQ/PQ 절차 수행의 상위 수행이 중단(ABORTED)되면 그 대상의 미연결(WAITING·BLOCKED·FAILED) 예약을 같은 트랜잭션에서 CANCELLED로 바꾼다. LINKED 예약은 취소하지 않는다. |
+| `rule_file_link_request_3` | 업무 검증 | `request_status` | 사용자가 취소하면 WAITING·BLOCKED·FAILED 예약을 CANCELLED로 바꾼다. FDS·DDS 초안을 삭제(deleted_at)하거나 IQ/OQ/PQ 절차 수행의 상위 수행이 중단(ABORTED)되면 그 대상의 미연결(WAITING·BLOCKED·FAILED) 예약을 같은 트랜잭션에서 CANCELLED로 바꾼다. 사용자가 BLOCKED·FAILED 예약의 파일을 다시 업로드하면 새 예약을 만들고 이전 예약을 같은 트랜잭션에서 CANCELLED로 바꾼다. LINKED 예약은 취소하지 않는다. |
 | `rule_file_link_request_4` | 업무 검증 | `target_entity_type, target_entity_id, request_status` | 대상의 상신·결과 등록 전에 WAITING·BLOCKED·FAILED 예약이 있는지 확인하고, 있으면 진행을 허용하지 않는다. BLOCKED·FAILED는 사용자가 취소하거나 다시 업로드해 해소한다. |
 
 #### 업무 규칙
@@ -1293,14 +1295,15 @@ IQ/OQ/PQ 절차 증적을 새로 업로드하면 file_link_request(EVIDENCE)로 
 | `ck_system_asset_8` | CHECK | `lifecycle_status, disposed_at, disposal_reason` | CHECK (lifecycle_status <> 'DISPOSED' OR (disposed_at IS NOT NULL AND disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0)) |
 | `rule_system_asset_9` | 업무 검증 | `lifecycle_status` | DISPOSED 전환은 system_asset_revision의 DISPOSE 이벤트(폐기 전자서명 필수, rule_system_asset_revision_4)와 같은 트랜잭션으로 저장하며 disposed_at은 그 서명 시각과 같다. |
 | `ck_system_asset_10` | CHECK | `introduction_type` | CHECK (introduction_type IN ('COMMERCIAL_PACKAGE','SAAS_SUBSCRIPTION','IN_HOUSE_DEVELOPMENT','EXISTING_SYSTEM_EXTENSION')) |
+| `ck_system_asset_cs_fields` | CHECK | `is_cs_included, software_version, gamp_category, gxp_applicability, part11_applicability` | CHECK (is_cs_included = FALSE OR (software_version IS NOT NULL AND gamp_category IS NOT NULL AND gxp_applicability IS NOT NULL AND part11_applicability IS NOT NULL)) |
 
 #### 업무 규칙
 
-컴퓨터화 여부에 따라 소프트웨어 버전·GAMP·GxP·Part 11의 화면 필수값을 검사한다. 분류 3단계는 선택 가능한 조합만 허용한다.
+CS 포함(is_cs_included=TRUE)이면 소프트웨어 버전·GAMP·GxP·Part 11이 필수이다(ck_system_asset_cs_fields). 분류 3단계는 선택 가능한 조합만 허용한다.
 
 연결 프로젝트 목록은 validation_project.system_id로 조회한다. 개정·승인·폐기 이력은 system_asset_revision 및 전자서명/감사기록으로 연결한다.
 
-승인 완료된 정보를 변경할 때 개정번호를 증가시키고 재승인 상태를 표시한다. 소프트웨어 버전 자체의 변경과 인벤토리 문서 개정을 혼동하지 않는다.
+승인 완료된 정보를 변경할 때 개정번호를 증가시키고 approval_status를 REAPPROVAL_REQUIRED(재승인 필요)로 둔다. 이 상태에서는 작성 중(DRAFT)처럼 수정할 수 있고 상신하면 REVIEW로 전환한다. 소프트웨어 버전 자체의 변경과 인벤토리 문서 개정을 혼동하지 않는다.
 
 승인되었거나 반려·취소된 업무 필드의 수정은 새 revision_number와 재승인으로 처리한다. 최신 시스템 정보의 변경은 과거 system_asset_revision 원문이나 프로젝트가 채택한 승인 개정을 바꾸지 않는다.
 
@@ -1371,7 +1374,7 @@ APPROVE 이벤트는 검토 단계별 이벤트가 아닌 최종 승인 완료 �
 |---|---|
 | 설명 | URS, FRA, IQ, OQ, PQ 재사용 가능 표준 라이브러리 항목 마스터 |
 | Primary Key | `library_id` |
-| 주요 참조(FK) | - |
+| 주요 참조(FK) | `urs_category_id` |
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
@@ -1385,23 +1388,22 @@ APPROVE 이벤트는 검토 단계별 이벤트가 아닌 최종 승인 완료 �
 | 287 | 라이브러리 ID | `library_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 라이브러리 항목 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
 | 288 | 모듈 구분 | `module_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | URS/FRA/IQ/OQ/PQ 5개 라이브러리 탭 구분 | `URS` |
 | 289 | 코드 | `code` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 라이브러리 종류 내 항목 코드. (module_type, code) 복합 UNIQUE 적용 | `URS-AT-L01` |
-| 290 | 분류/대분류 | `category` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | URS에서는 대분류, FRA/IQ/OQ/PQ에서는 분류를 저장한다. | `감사추적` |
+| 290 | 분류 | `category` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | FRA/IQ/OQ/PQ의 분류. URS는 urs_category_id로 분류하며 이 값은 NULL이다(ck_library_item_category) | `감사추적` |
 | 291 | 항목명/기능명 | `title` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | URS에서는 기능명, FRA에서는 위험 항목명, IQ/OQ/PQ에서는 시험 항목명 | `데이터 변경 감사추적 자동 생성` |
 | 292 | 요구사항 / 절차 | `requirement_text` | `text` | N | N | - | N | - | N | N | N | Y | URS 요구사항 본문. URS 종류에서 필수이며 다른 종류는 NULL 허용 | `모든 데이터 생성·수정·삭제 시...` |
-| 293 | 기대 결과 | `expected_result` | `text` | N | N | - | N | - | N | N | N | Y | IQ/OQ/PQ 예상 결과. 시험 라이브러리에서 필수 | - |
+| 293 | 기대 결과 | `expected_result` | `text` | N | N | - | N | - | N | N | N | Y | IQ/OQ/PQ 예상 결과. 이전 기록 보존용이며 새로 입력받지 않는다 | - |
 | 294 | 수용 기준/적용범위 | `acceptance_criteria` | `text` | N | N | - | N | - | N | N | N | Y | URS에서는 적용범위, IQ/OQ/PQ에서는 수용 기준. FRA는 NULL 허용 | `데이터 변경 시 Audit Trail 자동 생성...` |
 | 295 | 근거 규정 | `regulation` | `text` | N | N | - | N | - | N | N | N | Y | 화면의 규정 근거 표시·수기 입력. 구조화한 조항은 library_item_regulation에 연결하며 같은 근거를 함께 편집하지 않는다. | `21 CFR 11.10(e)` |
 | 296 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 활성 여부 (TRUE/FALSE) | `TRUE` |
 | 297 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00Z` |
 | 298 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-25T00:00:00Z` |
 | 299 | 제공 유형 | `provision_type` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | URS 전용. BUILTIN=기본 제공, CUSTOM=사용자 지정 | `CUSTOM` |
-| 300 | 중분류 | `middle_category` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | URS 전용 중분류 | - |
-| 301 | 대상 | `target_type` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | URS 전용 적용 대상 | - |
-| 302 | 시험 내용 | `test_content` | `text` | N | N | - | N | - | N | N | N | Y | IQ/OQ/PQ 전용 시험 절차·내용 | - |
-| 303 | 위험 시나리오 | `risk_scenario` | `text` | N | N | - | N | - | N | N | N | Y | FRA 전용 위험 시나리오 | - |
-| 304 | 심각도(SEV) | `severity` | `smallint` | N | N | - | N | - | N | N | N | Y | FRA 전용. 1~5 | - |
-| 305 | 발생도(OCC) | `occurrence` | `smallint` | N | N | - | N | - | N | N | N | Y | FRA 전용. 1~5 | - |
-| 306 | 검출도(DET) | `detectability` | `char(1)` | N | N | - | N | - | N | N | N | Y | FRA 전용. H/M/L | - |
+| 300 | URS 분류 ID | `urs_category_id` | `uuid` | N | Y | `urs_category.category_id` | N | - | N | Y | N | Y | URS 전용. urs_category의 소분류(category_level=3)이며 대·중분류는 상위 분류로 조회한다 | `00000000-0000-0000-0000-000000000001` |
+| 301 | 시험 내용 | `test_content` | `text` | N | N | - | N | - | N | N | N | Y | IQ/OQ/PQ 전용 시험 절차·내용 | - |
+| 302 | 위험 시나리오 | `risk_scenario` | `text` | N | N | - | N | - | N | N | N | Y | FRA 전용 위험 시나리오 | - |
+| 303 | 심각도(SEV) | `severity` | `smallint` | N | N | - | N | - | N | N | N | Y | FRA 전용. 1~5 | - |
+| 304 | 발생도(OCC) | `occurrence` | `smallint` | N | N | - | N | - | N | N | N | Y | FRA 전용. 1~5 | - |
+| 305 | 검출도(DET) | `detectability` | `char(1)` | N | N | - | N | - | N | N | N | Y | FRA 전용. H/M/L | - |
 
 #### 제약조건
 
@@ -1409,15 +1411,70 @@ APPROVE 이벤트는 검토 단계별 이벤트가 아닌 최종 승인 완료 �
 |---|---|---|---|
 | `uq_library_item_1` | UNIQUE | `module_type, code` | UNIQUE (module_type, code) |
 | `ck_library_item_2` | CHECK | `module_type` | CHECK (module_type IN ('URS','FRA','IQ','OQ','PQ')) |
-| `rule_library_item_3` | 업무 검증 | - | URS: 제공 유형·대분류·중분류·대상·기능명·요구사항·적용범위 필수. FRA: 분류·위험 항목명·시나리오·SEV·OCC·DET 필수. IQ/OQ/PQ: 분류·항목명·시험 내용·예상 결과·수용 기준 필수. |
+| `rule_library_item_3` | 업무 검증 | - | URS: 제공 유형·URS 분류(소분류)·기능명·요구사항·적용범위 필수. FRA: 분류·위험 항목명·시나리오·SEV·OCC·DET 필수. IQ/OQ/PQ: 분류·항목명·시험 내용·수용 기준 필수. |
 | `rule_library_item_4` | 업무 검증 | `severity` | FRA의 severity/occurrence는 1~5, detectability는 H/M/L 중 하나이다. |
 | `ck_library_item_provision_type` | CHECK | `provision_type` | CHECK (provision_type IS NULL OR provision_type IN ('BUILTIN','CUSTOM')) |
+| `ck_library_item_category` | CHECK | `module_type, category, urs_category_id` | CHECK ((module_type = 'URS' AND category IS NULL AND urs_category_id IS NOT NULL) OR (module_type <> 'URS' AND category IS NOT NULL AND urs_category_id IS NULL)) |
+| `rule_library_item_5` | 업무 검증 | `urs_category_id` | 소분류(category_level=3)만 지정할 수 있으며, 새로 지정하거나 바꿀 때는 자신과 상위 분류가 모두 사용 중(is_active=TRUE)인 분류만 허용한다. |
 
 #### 업무 규칙
 
-URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_criteria에서 관리한다.
+URS의 분류는 urs_category_id(소분류), 기능명은 title, 적용범위는 acceptance_criteria에서 관리한다. category는 FRA/IQ/OQ/PQ의 분류에만 쓴다.
 
 템플릿을 요구사항·위험·시험에 적용할 때 본문과 입력값을 복사한다. 이후 라이브러리 수정이 이미 작성·승인한 항목을 자동 변경하지 않는다.
+
+[↑ 맨 위로](#top)
+
+---
+
+<a id="table-urs_category"></a>
+### 22. URS 분류 (`urs_category`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | URS 대분류·중분류·소분류 목록. 한 행이 분류 하나이며 상위 분류를 가리켜 3단계 트리를 이룬다 |
+| Primary Key | `category_id` |
+| 주요 참조(FK) | `parent_category_id, created_by, updated_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 306 | 분류 ID | `category_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 분류 고유 식별자. requirement·library_item의 urs_category_id가 참조한다 | `00000000-0000-0000-0000-000000000001` |
+| 307 | 분류 코드 | `category_code` | `varchar(20)` | N | N | - | Y | - | Y | Y | N | Y | 대분류 C{n}, 중분류 C{n}-{n}, 소분류 C{n}-{n}-{n} 형식. 등록 후 변경하지 않으며 화면·AI와 분류를 주고받을 때 사용한다 | `C1-1-1` |
+| 308 | 분류 단계 | `category_level` | `smallint` | N | N | - | Y | - | N | N | N | Y | 1=대분류, 2=중분류, 3=소분류. 등록 후 변경하지 않는다 | `3` |
+| 309 | 상위 분류 ID | `parent_category_id` | `uuid` | N | Y | `urs_category.category_id` | N | - | N | Y | N | Y | 바로 위 단계의 분류. 대분류는 NULL이며 등록 후 변경하지 않는다 | `00000000-0000-0000-0000-000000000001` |
+| 310 | 분류명 | `category_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 화면 표시 이름. 상위 분류가 다르면 같은 이름을 허용한다(예: QMS·EDMS의 문서관리) | `접근통제·인증` |
+| 311 | 분류 설명 | `description` | `text` | N | N | - | N | - | N | N | N | Y | 분류에 속하는 요구사항 범위. 화면·AI의 분류 선택 안내에 사용한다 | `로그인·사용자 인증, 비밀번호 정책, 계정 잠금` |
+| 312 | 표시 순서 | `display_order` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 상위 분류 안의 표시 순서 | `1` |
+| 313 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | FALSE이면 새로 선택하는 목록에서 숨긴다. 이미 지정된 URS·라이브러리의 값은 유지한다 | `TRUE` |
+| 314 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 분류 생성 시각(UTC) | `2026-11-23T00:00:00Z` |
+| 315 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 분류를 등록한 사용자. 기본 분류는 SYSTEM 계정 | `00000000-0000-0000-0000-000000000001` |
+| 316 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 분류 최종 수정 시각(UTC) | `2026-11-23T00:00:00Z` |
+| 317 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 분류를 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
+
+#### 제약조건
+
+| 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
+|---|---|---|---|
+| `ck_urs_category_level` | CHECK | `category_level` | CHECK (category_level IN (1,2,3)) |
+| `ck_urs_category_parent` | CHECK | `category_level, parent_category_id` | CHECK ((category_level = 1 AND parent_category_id IS NULL) OR (category_level IN (2,3) AND parent_category_id IS NOT NULL)) |
+| `uq_urs_category_name` | UNIQUE | `parent_category_id, category_name, is_active` | UNIQUE (parent_category_id, category_name) WHERE is_active = TRUE AND parent_category_id IS NOT NULL |
+| `uq_urs_category_root_name` | UNIQUE | `category_name, is_active, parent_category_id` | UNIQUE (category_name) WHERE is_active = TRUE AND parent_category_id IS NULL |
+| `rule_urs_category_1` | 업무 검증 | `parent_category_id, category_code` | 상위 분류는 바로 한 단계 위(category_level - 1)의 분류여야 한다. 코드는 상위 분류 코드에 '-'와 순번을 붙인 형식이다(예: C1 → C1-1 → C1-1-1). |
+| `rule_urs_category_2` | 업무 검증 | `category_code, category_level, parent_category_id` | 코드·단계·상위 분류는 등록 후 변경하지 않는다. 분류명·설명을 고치면 변경 전후 값을 Audit Trail(menu_code=LIBRARY)에 기록하고, 의미가 바뀌는 변경은 기존 분류를 사용 중지하고 새 분류를 만든다. URS·라이브러리가 지정한 분류는 삭제하지 않는다. |
+| `rule_urs_category_3` | 업무 검증 | `is_active` | 새로 선택하는 목록에는 자신과 상위 분류가 모두 사용 중(is_active=TRUE)인 소분류만 표시한다. |
+
+#### 업무 규칙
+
+고객사 DB마다 기본 분류 체계(C안: 대분류 13·중분류 44·소분류 112개)를 초기 데이터로 등록한다. 대분류는 공통(C1)과 시스템 종류(C2 ERP ~ C13 실험장비)이며, 모든 시스템에 해당하는 요구사항(로그인·전자서명·감사추적·백업·연계 등)은 공통에 둔다.
+
+requirement와 library_item(URS)은 소분류 하나를 urs_category_id로 가리키고, 대·중분류는 상위 분류를 따라 조회한다. 분류명이 아닌 식별자를 저장하므로 분류명을 고쳐도 기존 항목과 목록이 어긋나지 않는다. 화면·AI는 코드·이름·설명·순서·사용 여부를 대→중→소 트리로 조회하며, 분류를 주고받을 때는 category_code를 쓸 수 있다.
 
 [↑ 맨 위로](#top)
 
@@ -1426,7 +1483,7 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 ## Validation
 
 <a id="table-validation_project"></a>
-### 22. Validation 프로젝트 (`validation_project`)
+### 23. Validation 프로젝트 (`validation_project`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1443,31 +1500,31 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 307 | 프로젝트 ID | `project_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 308 | 프로젝트 코드 | `project_code` | `varchar(100)` | N | N | - | Y | - | Y | Y | N | Y | 프로젝트 식별 코드. 프로젝트 생성 시 서버가 자동 생성한다(rule_validation_project_code) | `VP-SYS-008-20260422` |
-| 309 | 프로젝트명 | `project_name` | `varchar(200)` | N | N | - | Y | - | N | Y | N | Y | 프로젝트명 | `테스트 장비3 CSV 프로젝트` |
-| 310 | 시스템 ID | `system_id` | `uuid` | N | Y | `system_asset.system_id` | Y | - | N | Y | N | Y | system_asset.system_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 311 | 상태 | `status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS=진행중, CLOSED_NORMAL=정상종료, CLOSED_FORCED=강제종료 | `IN_PROGRESS` |
-| 312 | 검증 방식 | `validation_type` | `varchar(50)` | N | N | - | Y | `'NEW'` | N | N | N | Y | NEW=신규, CHANGE=변경, REVALIDATION=재검증 | `NEW` |
-| 313 | 밸리데이션 레벨 | `validation_level` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | LEVEL_1/LEVEL_2/LEVEL_3/CUSTOM. CUSTOM=사용자 지정이며 수행 활동은 project_activity로 저장 | `LEVEL_2` |
-| 314 | 프로젝트 설명 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 프로젝트 설명. 생성 화면 1단계(기본 정보)에서 입력하는 선택 항목 | - |
-| 315 | 배경 | `background` | `text` | N | N | - | Y | - | N | N | N | Y | 프로젝트 추진 배경. 생성 화면 필수 입력이며 VP 등 산출물 서두에 사용한다 | `수동으로 운영하던 백업을 자동 수행하도록 개선하기 위해 추진` |
-| 316 | 목적 | `purpose` | `text` | N | N | - | Y | - | N | N | N | Y | 프로젝트 목적. 생성 화면 필수 입력이며 VP 등 산출물 서두에 사용한다 | `시험 데이터 관리의 효율성과 무결성 확보` |
-| 317 | 변경 내역 | `change_description` | `text` | N | N | - | N | - | N | N | N | Y | 이번 변경의 내용. 여러 줄로 입력하며 최대 4,000자. 검증 방식(validation_type)이 CHANGE이면 필수, NEW·REVALIDATION이면 NULL(ck_validation_project_change). VP 범위 표의 '프로젝트 변경사항'에 사용하고 그 밖의 산출물은 AI 작성 시 참고한다 | `백업 자동 수행 기능 추가, 보고서 양식 변경` |
-| 318 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00Z` |
-| 319 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 생성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 320 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 321 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 322 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
-| 323 | 종료 유형 | `closure_type` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 유형 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `FORCED` |
-| 324 | 강제종료 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | 현재/최종 project_closure_request의 강제종료 사유 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `사업 우선순위 변경으로 Validation 중단` |
-| 325 | 종료 요청자 ID | `closure_requested_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 요청자 ID 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 326 | 종료 요청 시각 | `closure_requested_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 요청 시각 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `2026-09-14T09:00:00Z` |
-| 327 | 종료 완료 시각 | `closed_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 완료 시각 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `2026-09-14T09:05:00Z` |
-| 328 | 현재 종료 요청 ID | `current_closure_request_id` | `uuid` | N | Y | `project_closure_request.closure_request_id` | N | - | N | Y | N | Y | 종료 진행 상태 및 사유를 표시할 종료 요청 | `00000000-0000-0000-0000-000000000001` |
-| 329 | 현재 검증 대상 기준 | `current_system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 현재 is_current=TRUE인 동일 프로젝트의 기준. 최초 업무 상신 또는 시험 수행 전에 필수 | - |
-| 330 | 적용 선후행 조건 버전 | `dependency_set_version` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 생성 시 채택한 선후행 규칙 묶음 버전(activity_dependency.dependency_set_version) | `DEPENDENCY-1` |
-| 331 | 적용 선후행 조건 원문 | `dependency_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 생성 당시 활성 조건 전체와 판정 의미를 보존. {schema_version,version,definitions,conditions:[{activity_dependency_id,successor_activity_id,predecessor_activity_id,dependency_type,required_status,condition_type,condition_value,evaluation_order}]} | - |
+| 318 | 프로젝트 ID | `project_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 319 | 프로젝트 코드 | `project_code` | `varchar(100)` | N | N | - | Y | - | Y | Y | N | Y | 프로젝트 식별 코드. 프로젝트 생성 시 서버가 자동 생성한다(rule_validation_project_code) | `VP-SYS-008-20260422` |
+| 320 | 프로젝트명 | `project_name` | `varchar(200)` | N | N | - | Y | - | N | Y | N | Y | 프로젝트명 | `테스트 장비3 CSV 프로젝트` |
+| 321 | 시스템 ID | `system_id` | `uuid` | N | Y | `system_asset.system_id` | Y | - | N | Y | N | Y | system_asset.system_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 322 | 상태 | `status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS=진행중, CLOSED_NORMAL=정상종료, CLOSED_FORCED=강제종료 | `IN_PROGRESS` |
+| 323 | 검증 방식 | `validation_type` | `varchar(50)` | N | N | - | Y | `'NEW'` | N | N | N | Y | NEW=신규, CHANGE=변경, REVALIDATION=재검증 | `NEW` |
+| 324 | 밸리데이션 레벨 | `validation_level` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | LEVEL_1/LEVEL_2/LEVEL_3/CUSTOM. CUSTOM=사용자 지정이며 수행 활동은 project_activity로 저장 | `LEVEL_2` |
+| 325 | 프로젝트 설명 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 프로젝트 설명. 생성 화면 1단계(기본 정보)에서 입력하는 선택 항목 | - |
+| 326 | 배경 | `background` | `text` | N | N | - | Y | - | N | N | N | Y | 프로젝트 추진 배경. 생성 화면 필수 입력이며 VP 등 산출물 서두에 사용한다 | `수동으로 운영하던 백업을 자동 수행하도록 개선하기 위해 추진` |
+| 327 | 목적 | `purpose` | `text` | N | N | - | Y | - | N | N | N | Y | 프로젝트 목적. 생성 화면 필수 입력이며 VP 등 산출물 서두에 사용한다 | `시험 데이터 관리의 효율성과 무결성 확보` |
+| 328 | 변경 내역 | `change_description` | `text` | N | N | - | N | - | N | N | N | Y | 이번 변경의 내용. 여러 줄로 입력하며 최대 4,000자. 검증 방식(validation_type)이 CHANGE이면 필수, NEW·REVALIDATION이면 NULL(ck_validation_project_change). VP 범위 표의 '프로젝트 변경사항'에 사용하고 그 밖의 산출물은 AI 작성 시 참고한다 | `백업 자동 수행 기능 추가, 보고서 양식 변경` |
+| 329 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-25T00:00:00Z` |
+| 330 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 생성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 331 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 332 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 333 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 334 | 종료 유형 | `closure_type` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 유형 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `FORCED` |
+| 335 | 강제종료 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | 현재/최종 project_closure_request의 강제종료 사유 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `사업 우선순위 변경으로 Validation 중단` |
+| 336 | 종료 요청자 ID | `closure_requested_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 요청자 ID 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 337 | 종료 요청 시각 | `closure_requested_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 요청 시각 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `2026-09-14T09:00:00Z` |
+| 338 | 종료 완료 시각 | `closed_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 현재/최종 project_closure_request의 종료 완료 시각 요약. 요청 원본에서 동기화하며 독립 편집하지 않는다. | `2026-09-14T09:05:00Z` |
+| 339 | 현재 종료 요청 ID | `current_closure_request_id` | `uuid` | N | Y | `project_closure_request.closure_request_id` | N | - | N | Y | N | Y | 종료 진행 상태 및 사유를 표시할 종료 요청 | `00000000-0000-0000-0000-000000000001` |
+| 340 | 현재 검증 대상 기준 | `current_system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 현재 is_current=TRUE인 동일 프로젝트의 기준. 최초 업무 상신 또는 시험 수행 전에 필수 | - |
+| 341 | 적용 선후행 조건 버전 | `dependency_set_version` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 생성 시 채택한 선후행 규칙 묶음 버전(activity_dependency.dependency_set_version) | `DEPENDENCY-1` |
+| 342 | 적용 선후행 조건 원문 | `dependency_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 생성 당시 활성 조건 전체와 판정 의미를 보존. {schema_version,version,definitions,conditions:[{activity_dependency_id,successor_activity_id,predecessor_activity_id,dependency_type,required_status,condition_type,condition_value,evaluation_order}]} | - |
 
 #### 제약조건
 
@@ -1489,14 +1546,14 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 
 종료 요청의 검토/승인 진행은 project_closure_request 및 workflow_instance에 저장한다. 최종 승인 후에만 프로젝트를 정상종료 또는 강제종료로 변경한다.
 
-프로젝트 생성 시 dependency_set_version과 dependency_snapshot을 함께 고정하며, 전역 activity_dependency 변경을 진행 중·종료 프로젝트에 자동 전파하지 않는다. 조건의 정의에는 상태별 완료 판정, AND/OR 결합, 미선택 활동 처리 및 위험 커버리지 판정 기준을 포함한다. 프로젝트 평가에는 이 사본을 사용하고 생성 후 직접 교체하지 않는다. 업무 승인·시험 수행 전에 유효한 current_system_baseline_id를 지정하며, 최초 기준 등록과 현재 참조 설정은 한 트랜잭션으로 처리한다.
+프로젝트 생성 시 dependency_set_version과 dependency_snapshot을 함께 고정하며, 전역 activity_dependency 변경을 진행 중·종료 프로젝트에 자동 전파하지 않는다. 조건의 정의에는 상태별 완료 판정, AND/OR 결합, 미선택 활동 처리 및 위험 커버리지 판정 기준을 포함한다. 프로젝트 평가에는 이 사본을 사용하고 생성 후 직접 교체하지 않는다. 최초 업무 상신·시험 수행 전에 유효한 current_system_baseline_id를 지정하며, 최초 기준 등록과 현재 참조 설정은 한 트랜잭션으로 처리한다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-project_system_baseline"></a>
-### 23. 프로젝트 검증 대상 개정 (`project_system_baseline`)
+### 24. 프로젝트 검증 대상 개정 (`project_system_baseline`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1513,14 +1570,14 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 332 | 검증 대상 기준 ID | `baseline_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트가 채택한 한 번의 검증 대상 기준 식별자 | - |
-| 333 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 검증 대상 기준이 속하는 프로젝트 | - |
-| 334 | 인벤토리 승인 이력 ID | `system_revision_id` | `uuid` | N | Y | `system_asset_revision.system_revision_id` | Y | - | N | Y | N | Y | action_type=APPROVE인 변경 불가능한 원문 이벤트 | - |
-| 335 | 기준 순번 | `baseline_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 프로젝트별 1부터 증가하며 변경 시 새 행을 생성한다. | `1` |
-| 336 | 채택·변경 사유 | `change_reason` | `text` | N | N | - | Y | - | N | N | N | Y | 최초 대상 선정 또는 승인 개정 변경의 사유. 공백 불가 | - |
-| 337 | 현재 적용 여부 | `is_current` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 현재 프로젝트 기준 여부. 과거 행은 FALSE로 변경하고 원문 연결은 유지한다. | - |
-| 338 | 채택 시각 | `adopted_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 서버에서 기록한 적용 시각 | - |
-| 339 | 채택자 | `adopted_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 대상 설정 권한이 있는 처리자 | - |
+| 343 | 검증 대상 기준 ID | `baseline_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트가 채택한 한 번의 검증 대상 기준 식별자 | - |
+| 344 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 검증 대상 기준이 속하는 프로젝트 | - |
+| 345 | 인벤토리 승인 이력 ID | `system_revision_id` | `uuid` | N | Y | `system_asset_revision.system_revision_id` | Y | - | N | Y | N | Y | action_type=APPROVE인 변경 불가능한 원문 이벤트 | - |
+| 346 | 기준 순번 | `baseline_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 프로젝트별 1부터 증가하며 변경 시 새 행을 생성한다. | `1` |
+| 347 | 채택·변경 사유 | `change_reason` | `text` | N | N | - | Y | - | N | N | N | Y | 최초 대상 선정 또는 승인 개정 변경의 사유. 공백 불가 | - |
+| 348 | 현재 적용 여부 | `is_current` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 현재 프로젝트 기준 여부. 과거 행은 FALSE로 변경하고 원문 연결은 유지한다. | - |
+| 349 | 채택 시각 | `adopted_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 서버에서 기록한 적용 시각 | - |
+| 350 | 채택자 | `adopted_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 대상 설정 권한이 있는 처리자 | - |
 
 #### 제약조건
 
@@ -1543,7 +1600,7 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 ---
 
 <a id="table-project_member"></a>
-### 24. 프로젝트 참여자 (`project_member`)
+### 25. 프로젝트 참여자 (`project_member`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1560,18 +1617,18 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 340 | 프로젝트 참여자 ID | `project_member_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 참여자 역할 매핑 고유 식별자. deleted_at IS NULL이고 member_status가 ACTIVE인 행에 (project_id, user_id, role_id) 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 341 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 참여자가 소속된 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 342 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트에 참여하는 사용자 ID | `00000000-0000-0000-0000-000000000001` |
-| 343 | 역할 ID | `role_id` | `uuid` | N | Y | `role.role_id` | Y | - | N | Y | N | Y | 프로젝트 내에서 사용자가 수행하는 역할 ID | `00000000-0000-0000-0000-000000000001` |
-| 344 | 참여 상태 | `member_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | Y | N | Y | 프로젝트 참여 상태. ACTIVE, INACTIVE, WITHDRAWN | `ACTIVE` |
-| 345 | 참여 시작 시각 | `joined_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여가 시작된 시각 | `2026-09-01T10:00:00Z` |
-| 346 | 참여 종료 시각 | `left_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 참여가 종료된 시각. 현재 참여 중이면 NULL | `2026-09-02T10:00:00Z` |
-| 347 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여 정보 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 348 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 참여 정보를 등록한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
-| 349 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여 정보 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 350 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 참여 정보를 최종 수정한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
-| 351 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 참여 정보 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 351 | 프로젝트 참여자 ID | `project_member_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 참여자 역할 매핑 고유 식별자. deleted_at IS NULL이고 member_status가 ACTIVE인 행에 (project_id, user_id, role_id) 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 352 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 참여자가 소속된 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 353 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트에 참여하는 사용자 ID | `00000000-0000-0000-0000-000000000001` |
+| 354 | 역할 ID | `role_id` | `uuid` | N | Y | `role.role_id` | Y | - | N | Y | N | Y | 프로젝트 내에서 사용자가 수행하는 역할 ID | `00000000-0000-0000-0000-000000000001` |
+| 355 | 참여 상태 | `member_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | Y | N | Y | 프로젝트 참여 상태. ACTIVE, INACTIVE, WITHDRAWN | `ACTIVE` |
+| 356 | 참여 시작 시각 | `joined_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여가 시작된 시각 | `2026-09-01T10:00:00Z` |
+| 357 | 참여 종료 시각 | `left_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 참여가 종료된 시각. 현재 참여 중이면 NULL | `2026-09-02T10:00:00Z` |
+| 358 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여 정보 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 359 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 참여 정보를 등록한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
+| 360 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 참여 정보 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 361 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 참여 정보를 최종 수정한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
+| 362 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 참여 정보 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
 
 #### 제약조건
 
@@ -1589,7 +1646,7 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 ---
 
 <a id="table-validation_activity"></a>
-### 25. 밸리데이션 활동 마스터 (`validation_activity`)
+### 26. 밸리데이션 활동 마스터 (`validation_activity`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1606,16 +1663,16 @@ URS의 대분류는 category, 기능명은 title, 적용범위는 acceptance_cri
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 352 | 활동 ID | `activity_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 밸리데이션 활동 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 353 | 활동 코드 | `activity_code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | VP, VA, QIA, URS, FDS_GROUP, FRA, DQ, IQ, OQ, PQ, VSR. FDS_GROUP은 화면의 F&DS 표시명에 대응 | `FDS_GROUP` |
-| 354 | 활동명 | `activity_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 화면 표시용 활동명 | `기능 및 상세 설계 명세` |
-| 355 | 활동 순서 | `display_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 기본 표시 순서: VP→VA→QIA→URS→F&DS→FRA→DQ→IQ→OQ→PQ→VSR. F&DS 내부 문서는 FDS 다음 DDS | `5` |
-| 356 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 활동 마스터 사용 여부 | `TRUE` |
-| 357 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 활동 마스터 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 358 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 활동 마스터를 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 359 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 활동 마스터 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 360 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 활동 마스터를 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 361 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 마스터 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 363 | 활동 ID | `activity_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 밸리데이션 활동 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 364 | 활동 코드 | `activity_code` | `varchar(50)` | N | N | - | Y | - | Y | Y | N | Y | VP, VA, QIA, URS, FDS_GROUP, FRA, DQ, IQ, OQ, PQ, VSR. FDS_GROUP은 화면의 F&DS 표시명에 대응 | `FDS_GROUP` |
+| 365 | 활동명 | `activity_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 화면 표시용 활동명 | `기능 및 상세 설계 명세` |
+| 366 | 활동 순서 | `display_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 기본 표시 순서: VP→VA→QIA→URS→F&DS→FRA→DQ→IQ→OQ→PQ→VSR. F&DS 내부 문서는 FDS 다음 DDS | `5` |
+| 367 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 활동 마스터 사용 여부 | `TRUE` |
+| 368 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 활동 마스터 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 369 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 활동 마스터를 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 370 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 활동 마스터 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 371 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 활동 마스터를 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 372 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 마스터 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
 
 #### 제약조건
 
@@ -1634,7 +1691,7 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 ---
 
 <a id="table-project_activity"></a>
-### 26. 프로젝트 수행 활동 (`project_activity`)
+### 27. 프로젝트 수행 활동 (`project_activity`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1651,21 +1708,21 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 362 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 수행 활동 고유 식별자. deleted_at IS NULL인 행에 (project_id, activity_id) 중복을 허용하지 않는다. 수행 대상 선택 여부와 무관하게 적용한다. | `00000000-0000-0000-0000-000000000001` |
-| 363 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 활동이 속한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
-| 364 | 활동 ID | `activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | Y | - | N | Y | N | Y | 프로젝트에서 수행할 활동 | `00000000-0000-0000-0000-000000000001` |
-| 365 | 수행 대상 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 프로젝트 설정에서 선택한 실제 수행 활동인지 여부. RTM 선택행을 만들지 않는다. | `TRUE` |
-| 366 | 필수 활동 여부 | `is_required` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 해당 프로젝트에서 생략할 수 없는 활동인지 여부 | `TRUE` |
-| 367 | 활동 상태 | `activity_status` | `varchar(20)` | N | N | - | Y | `'LOCKED'` | N | Y | N | Y | 활동 상태. LOCKED, READY, IN_PROGRESS, COMPLETED, APPROVED, SKIPPED. 현재 Revision 기준으로 집계하며 산출물 변경·개정 시 재평가한다. COMPLETED/APPROVED는 단순 화면 입력값으로 변경하지 않는다 | `READY` |
-| 368 | 활성화 시각 | `activated_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 선행 조건 충족으로 활동이 READY가 된 시각 | `2026-09-01T10:00:00Z` |
-| 369 | 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 수행 시작 시각 | `2026-09-01T11:00:00Z` |
-| 370 | 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 수행 완료 시각 | `2026-09-02T15:00:00Z` |
-| 371 | 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동의 최종 승인 완료 시각 | `2026-09-02T17:00:00Z` |
-| 372 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 활동 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 373 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 활동 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 374 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 활동 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 375 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 활동 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 376 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 활동 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 373 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 프로젝트 수행 활동 고유 식별자. deleted_at IS NULL인 행에 (project_id, activity_id) 중복을 허용하지 않는다. 수행 대상 선택 여부와 무관하게 적용한다. | `00000000-0000-0000-0000-000000000001` |
+| 374 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 활동이 속한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
+| 375 | 활동 ID | `activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | Y | - | N | Y | N | Y | 프로젝트에서 수행할 활동 | `00000000-0000-0000-0000-000000000001` |
+| 376 | 수행 대상 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 프로젝트 설정에서 선택한 실제 수행 활동인지 여부. RTM 선택행을 만들지 않는다. | `TRUE` |
+| 377 | 필수 활동 여부 | `is_required` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 해당 프로젝트에서 생략할 수 없는 활동인지 여부 | `TRUE` |
+| 378 | 활동 상태 | `activity_status` | `varchar(20)` | N | N | - | Y | `'LOCKED'` | N | Y | N | Y | 활동 상태. LOCKED, READY, IN_PROGRESS, COMPLETED, APPROVED, SKIPPED. 현재 Revision 기준으로 집계하며 산출물 변경·개정 시 재평가한다. COMPLETED/APPROVED는 단순 화면 입력값으로 변경하지 않는다 | `READY` |
+| 379 | 활성화 시각 | `activated_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 선행 조건 충족으로 활동이 READY가 된 시각 | `2026-09-01T10:00:00Z` |
+| 380 | 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 수행 시작 시각 | `2026-09-01T11:00:00Z` |
+| 381 | 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동 수행 완료 시각 | `2026-09-02T15:00:00Z` |
+| 382 | 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 활동의 최종 승인 완료 시각 | `2026-09-02T17:00:00Z` |
+| 383 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 활동 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 384 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 활동 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 385 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 프로젝트 활동 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 386 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 프로젝트 활동 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 387 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 프로젝트 활동 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
 
 #### 제약조건
 
@@ -1683,7 +1740,7 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 ---
 
 <a id="table-project_party"></a>
-### 27. 프로젝트 수행 조직 (`project_party`)
+### 28. 프로젝트 수행 조직 (`project_party`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1700,17 +1757,17 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 377 | 수행 조직 ID | `party_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 378 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 수행 조직이 속한 프로젝트 | `00000000-0000-0000-0000-000000000001` |
-| 379 | 조직 구분 | `party_type` | `varchar(30)` | N | N | - | Y | - | N | Y | N | Y | USER_ORG=사용자 조직, SUPPLIER=공급자 조직, CSV_CONSULTANT=CSV 컨설턴트 | `SUPPLIER` |
-| 380 | 조직명 | `organization_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 사업장·부서를 포함한 조직명. 문서 표시용 자유 입력이며 organization 테이블과 연결하지 않는다 | `BioSync` |
-| 381 | 맡는 책임 | `responsibility` | `text` | N | N | - | N | - | N | N | N | Y | 이 조직이 프로젝트에서 맡는 책임 | `시스템 구성·설치, 교육, 기술 지원` |
-| 382 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 같은 조직 구분 안의 표시 순서 | `1` |
-| 383 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-10-29T00:00:00Z` |
-| 384 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수행 조직을 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 385 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-10-29T00:00:00Z` |
-| 386 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수행 조직을 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 387 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 삭제 처리 시각. 삭제 전 NULL | `2026-10-30T00:00:00Z` |
+| 388 | 수행 조직 ID | `party_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 389 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 수행 조직이 속한 프로젝트 | `00000000-0000-0000-0000-000000000001` |
+| 390 | 조직 구분 | `party_type` | `varchar(30)` | N | N | - | Y | - | N | Y | N | Y | USER_ORG=사용자 조직, SUPPLIER=공급자 조직, CSV_CONSULTANT=CSV 컨설턴트 | `SUPPLIER` |
+| 391 | 조직명 | `organization_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 사업장·부서를 포함한 조직명. 문서 표시용 자유 입력이며 organization 테이블과 연결하지 않는다 | `BioSync` |
+| 392 | 맡는 책임 | `responsibility` | `text` | N | N | - | N | - | N | N | N | Y | 이 조직이 프로젝트에서 맡는 책임 | `시스템 구성·설치, 교육, 기술 지원` |
+| 393 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 같은 조직 구분 안의 표시 순서 | `1` |
+| 394 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-10-29T00:00:00Z` |
+| 395 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수행 조직을 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 396 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-10-29T00:00:00Z` |
+| 397 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수행 조직을 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 398 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 삭제 처리 시각. 삭제 전 NULL | `2026-10-30T00:00:00Z` |
 
 #### 제약조건
 
@@ -1731,7 +1788,7 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 ---
 
 <a id="table-project_activity_assignment"></a>
-### 28. 단계별 역할 배분 (`project_activity_assignment`)
+### 29. 단계별 역할 배분 (`project_activity_assignment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1748,15 +1805,15 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 388 | 배분 ID | `activity_assignment_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 389 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | 배분 대상 단계 | `00000000-0000-0000-0000-000000000001` |
-| 390 | 역할 구분 | `responsibility_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | AUTHOR=작성, EXECUTE=수행, SUPPORT=지원, REVIEW=검토, APPROVE=승인 | `REVIEW` |
-| 391 | 수행 조직 ID | `party_id` | `uuid` | N | Y | `project_party.party_id` | Y | - | N | Y | N | Y | 이 역할을 맡는 수행 조직. 한 단계·역할에 여러 조직을 지정할 수 있다 | `00000000-0000-0000-0000-000000000001` |
-| 392 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-10-29T00:00:00Z` |
-| 393 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 배분을 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 394 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-10-29T00:00:00Z` |
-| 395 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 배분을 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 396 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 삭제 처리 시각. 삭제 전 NULL | `2026-10-30T00:00:00Z` |
+| 399 | 배분 ID | `activity_assignment_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 400 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | 배분 대상 단계 | `00000000-0000-0000-0000-000000000001` |
+| 401 | 역할 구분 | `responsibility_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | AUTHOR=작성, EXECUTE=수행, SUPPORT=지원, REVIEW=검토, APPROVE=승인 | `REVIEW` |
+| 402 | 수행 조직 ID | `party_id` | `uuid` | N | Y | `project_party.party_id` | Y | - | N | Y | N | Y | 이 역할을 맡는 수행 조직. 한 단계·역할에 여러 조직을 지정할 수 있다 | `00000000-0000-0000-0000-000000000001` |
+| 403 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-10-29T00:00:00Z` |
+| 404 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 배분을 등록한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 405 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-10-29T00:00:00Z` |
+| 406 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 배분을 최종 수정한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 407 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 삭제 처리 시각. 삭제 전 NULL | `2026-10-30T00:00:00Z` |
 
 #### 제약조건
 
@@ -1777,7 +1834,7 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 ---
 
 <a id="table-activity_dependency"></a>
-### 29. 활동 선후행 조건 (`activity_dependency`)
+### 30. 활동 선후행 조건 (`activity_dependency`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1794,22 +1851,22 @@ FDS와 DDS는 F&DS 한 활동에 속하는 문서 종류다. 두 종류를 각�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 397 | 활동 선후행 조건 ID | `activity_dependency_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 활동 선후행 조건 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 398 | 조건 묶음 버전 | `dependency_set_version` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 이 조건이 속한 선후행 조건 묶음의 버전. 같은 버전의 행 전체가 하나의 묶음이며, 프로젝트가 채택한 버전의 행은 수정·비활성화·삭제하지 않는다. 변경은 새 버전으로 전체 조건 행을 생성한다. validation_project.dependency_set_version이 이 값을 가리킨다 | `DEPENDENCY-1` |
-| 399 | 후행 활동 ID | `successor_activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | Y | - | N | Y | N | Y | 조건 충족 후 활성화되는 활동 | `00000000-0000-0000-0000-000000000001` |
-| 400 | 선행 활동 ID | `predecessor_activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | N | - | N | Y | N | Y | 후행 활동 활성화 전에 확인할 활동. 전체 활동 조건이면 NULL 허용. STATUS 조건이면 필수이다 | `00000000-0000-0000-0000-000000000001` |
-| 401 | 관계 구분 | `dependency_type` | `varchar(20)` | N | N | - | Y | `'REQUIRED'` | N | Y | N | Y | 선후행 관계 구분. REQUIRED, RECOMMENDED | `REQUIRED` |
-| 402 | 요구 상태 | `required_status` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | STATUS 조건의 판정 기준. CREATED는 유효한 현재 산출물 존재, COMPLETED는 수행 완료, APPROVED는 현재 산출물 최종 승인을 뜻한다. project_activity.activity_status에 CREATED를 저장하지 않는다. STATUS 조건에서만 필수이며 상세 판정은 아래 업무 규칙을 따른다. | `APPROVED` |
-| 403 | 조건 유형 | `condition_type` | `varchar(50)` | N | N | - | Y | `'STATUS'` | N | Y | N | Y | STATUS, ACTIVITY_SELECTED, TRACEABILITY_EXISTS, HIGH_RISK_COVERED, OPEN_DEVIATION_ZERO, ALL_SELECTED_APPROVED. 화면의 선행 단계 및 완료 조건을 판정하는 구분 | `STATUS` |
-| 404 | 조건 값 | `condition_value` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 조건 판정 인자. STATUS + CREATED에서는 허용된 대상 산출물 테이블명(예: requirement)을 저장한다. 다른 조건의 인자는 해당 조건 구현에서 검증하며 불필요하면 NULL로 둔다. | - |
-| 405 | 조건 설명 | `condition_description` | `text` | N | N | - | Y | - | N | N | N | Y | 활동 활성화에 필요한 선행 활동과 승인 상태의 설명 | `URS 승인완료` |
-| 406 | 평가 순서 | `evaluation_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 동일 후행 활동의 조건 평가 순서. 평가 순서는 조건 간 AND/OR 관계를 바꾸지 않는다 | `1` |
-| 407 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 활성화 조건 사용 여부 | `TRUE` |
-| 408 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 조건 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 409 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조건 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 410 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 조건 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 411 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조건 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 412 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 조건 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 408 | 활동 선후행 조건 ID | `activity_dependency_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 활동 선후행 조건 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 409 | 조건 묶음 버전 | `dependency_set_version` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 이 조건이 속한 선후행 조건 묶음의 버전. 같은 버전의 행 전체가 하나의 묶음이며, 프로젝트가 채택한 버전의 행은 수정·비활성화·삭제하지 않는다. 변경은 새 버전으로 전체 조건 행을 생성한다. validation_project.dependency_set_version이 이 값을 가리킨다 | `DEPENDENCY-1` |
+| 410 | 후행 활동 ID | `successor_activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | Y | - | N | Y | N | Y | 조건 충족 후 활성화되는 활동 | `00000000-0000-0000-0000-000000000001` |
+| 411 | 선행 활동 ID | `predecessor_activity_id` | `uuid` | N | Y | `validation_activity.activity_id` | N | - | N | Y | N | Y | 후행 활동 활성화 전에 확인할 활동. 전체 활동 조건이면 NULL 허용. STATUS 조건이면 필수이다 | `00000000-0000-0000-0000-000000000001` |
+| 412 | 관계 구분 | `dependency_type` | `varchar(20)` | N | N | - | Y | `'REQUIRED'` | N | Y | N | Y | 선후행 관계 구분. REQUIRED, RECOMMENDED | `REQUIRED` |
+| 413 | 요구 상태 | `required_status` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | STATUS 조건의 판정 기준. CREATED는 유효한 현재 산출물 존재, COMPLETED는 수행 완료, APPROVED는 현재 산출물 최종 승인을 뜻한다. project_activity.activity_status에 CREATED를 저장하지 않는다. STATUS 조건에서만 필수이며 상세 판정은 아래 업무 규칙을 따른다. | `APPROVED` |
+| 414 | 조건 유형 | `condition_type` | `varchar(50)` | N | N | - | Y | `'STATUS'` | N | Y | N | Y | STATUS, ACTIVITY_SELECTED, TRACEABILITY_EXISTS, HIGH_RISK_COVERED, OPEN_DEVIATION_ZERO, ALL_SELECTED_APPROVED. 화면의 선행 단계 및 완료 조건을 판정하는 구분 | `STATUS` |
+| 415 | 조건 값 | `condition_value` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 조건 판정 인자. STATUS + CREATED에서는 허용된 대상 산출물 테이블명(예: requirement)을 저장한다. 다른 조건의 인자는 해당 조건 구현에서 검증하며 불필요하면 NULL로 둔다. | - |
+| 416 | 조건 설명 | `condition_description` | `text` | N | N | - | Y | - | N | N | N | Y | 활동 활성화에 필요한 선행 활동과 승인 상태의 설명 | `URS 승인완료` |
+| 417 | 평가 순서 | `evaluation_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 동일 후행 활동의 조건 평가 순서. 평가 순서는 조건 간 AND/OR 관계를 바꾸지 않는다 | `1` |
+| 418 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 활성화 조건 사용 여부 | `TRUE` |
+| 419 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 조건 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 420 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조건 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 421 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 조건 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 422 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조건 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 423 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 조건 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
 
 #### 제약조건
 
@@ -1837,7 +1894,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 ---
 
 <a id="table-project_closure_request"></a>
-### 30. 프로젝트 종료 요청 (`project_closure_request`)
+### 31. 프로젝트 종료 요청 (`project_closure_request`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1854,21 +1911,21 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 413 | 종료 요청 ID | `closure_request_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 414 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 415 | 요청 순번 | `request_version` | `integer` | N | N | - | Y | - | N | N | N | Y | 같은 프로젝트의 종료 재요청 구분 | `1` |
-| 416 | 종료 유형 | `closure_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | NORMAL=정상종료, FORCED=강제종료 | `NORMAL` |
-| 417 | 요청 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT=작성중, REVIEW=검토중, APPROVAL=승인중, APPROVED=완료, REJECTED=반려, CANCELLED=취소 | `REVIEW` |
-| 418 | 종료 사유 | `reason` | `text` | N | N | - | N | - | N | N | N | Y | 강제종료일 때 필수 | - |
-| 419 | 요청 시 진행률 | `progress_snapshot` | `numeric(5,2)` | N | N | - | Y | - | N | N | N | Y | 종료 확인 화면에 표시한 요청 당시 진행률. RTM 제외 | `100.00` |
-| 420 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 421 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 요청 시각 값 | `2026-09-01T00:00:00Z` |
-| 422 | 종료 결재 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 423 | 종료 처리 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 종료 처리 시각 값 | `2026-09-01T00:00:00Z` |
-| 424 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
-| 425 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 426 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
-| 427 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 424 | 종료 요청 ID | `closure_request_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 425 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 426 | 요청 순번 | `request_version` | `integer` | N | N | - | Y | - | N | N | N | Y | 같은 프로젝트의 종료 재요청 구분 | `1` |
+| 427 | 종료 유형 | `closure_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | NORMAL=정상종료, FORCED=강제종료 | `NORMAL` |
+| 428 | 요청 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT=작성중, REVIEW=검토중, APPROVAL=승인중, APPROVED=완료, REJECTED=반려, CANCELLED=취소 | `REVIEW` |
+| 429 | 종료 사유 | `reason` | `text` | N | N | - | N | - | N | N | N | Y | 강제종료일 때 필수 | - |
+| 430 | 요청 시 진행률 | `progress_snapshot` | `numeric(5,2)` | N | N | - | Y | - | N | N | N | Y | 종료 확인 화면에 표시한 요청 당시 진행률. RTM 제외 | `100.00` |
+| 431 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 432 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 요청 시각 값 | `2026-09-01T00:00:00Z` |
+| 433 | 종료 결재 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 434 | 종료 처리 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 종료 처리 시각 값 | `2026-09-01T00:00:00Z` |
+| 435 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
+| 436 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 437 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
+| 438 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -1896,7 +1953,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 ## VP
 
 <a id="table-vp_plan"></a>
-### 31. 검증 계획 (`vp_plan`)
+### 32. 검증 계획 (`vp_plan`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1913,24 +1970,24 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 428 | VP 개정 ID | `vp_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 429 | 개정 간 논리 ID | `vp_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 430 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 431 | 계획 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 검증 계획의 표시 제목 | `시스템 검증 계획` |
-| 432 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 433 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 434 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 435 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 436 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 437 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 438 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 439 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 440 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 441 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 442 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 443 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 444 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 445 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 439 | VP 개정 ID | `vp_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 440 | 개정 간 논리 ID | `vp_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 441 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 442 | 계획 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 검증 계획의 표시 제목 | `시스템 검증 계획` |
+| 443 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 444 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 445 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 446 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 447 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 448 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 449 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 450 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 451 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 452 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 453 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 454 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 455 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 456 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -1949,7 +2006,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 각 행은 특정 개정이다. 수정 전 승인행은 보존하고 새 PK를 발급하여 개정하며 논리키를 유지한다. is_current_version은 최신 개정 여부이고 최신 승인본 여부와 다르다. 참조 FK와 전자서명은 정확한 개정행 PK 및 version을 가리킨다.
 
-목차 추가·삭제·정렬·포함 여부·본문을 vp_section에 저장한다. 생성 산출물의 편집 내용과 문서 승인 상태는 deliverable_revision에서 관리하며 원본 VP와 구분한다.
+목차 추가·삭제·정렬·포함 여부·본문을 vp_section에 저장한다. VP는 vp_plan·vp_section 자체가 문서이며 별도 산출물 문서(deliverable_document)를 만들지 않는다. VP PDF는 report_generation.vp_id로 연결한다.
 
 같은 vp_key의 모든 개정은 동일 프로젝트에 속한다. 개정 생성과 최신 개정 전환은 프로젝트 및 논리 항목을 잠그고 같은 트랜잭션에서 처리한다.
 
@@ -1958,7 +2015,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 ---
 
 <a id="table-vp_section"></a>
-### 32. 검증 계획 목차 (`vp_section`)
+### 33. 검증 계획 목차 (`vp_section`)
 
 | 항목 | 정의 |
 |---|---|
@@ -1975,19 +2032,19 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 446 | 목차 ID | `vp_section_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 447 | VP 개정 ID | `vp_id` | `uuid` | N | Y | `vp_plan.vp_id` | Y | - | N | Y | N | Y | vp_plan.vp_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 448 | 목차 논리 키 | `section_key` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 개정 간 유지하는 목차 식별 키 | `purpose` |
-| 449 | 목차 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 목차 제목 | `목적` |
-| 450 | 목차 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | 목차 내용 | `본 계획의 검증 목적` |
-| 451 | 번역 제목 | `translated_title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 목차 제목의 영문 번역. '영어 버전 보기'에서 원문 아래에 표시하며 번역 전 NULL | `Purpose` |
-| 452 | 번역 본문 | `translated_content` | `text` | N | N | - | N | - | N | N | N | Y | 목차 내용의 영문 번역. 직접 입력하거나 AI 번역을 적용해 채우며, 다시 적용하면 이전 번역을 덮어쓴다. 원문(title·content)은 바꾸지 않는다. 번역 칸(translated_title·translated_content)은 원문과 같은 VP 문서로 함께 전자서명하므로 서명 원문(signed_payload)에 포함하며, 승인 후 번역 수정은 원문과 같이 새 개정에서 다시 승인받는다 | `Validation purpose of this plan` |
-| 453 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 454 | 산출물 포함 여부 | `is_enabled` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 산출물 포함 여부 | `TRUE` |
-| 455 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 456 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 457 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 458 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 457 | 목차 ID | `vp_section_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 458 | VP 개정 ID | `vp_id` | `uuid` | N | Y | `vp_plan.vp_id` | Y | - | N | Y | N | Y | vp_plan.vp_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 459 | 목차 논리 키 | `section_key` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 개정 간 유지하는 목차 식별 키 | `purpose` |
+| 460 | 목차 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 목차 제목 | `목적` |
+| 461 | 목차 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | 목차 내용 | `본 계획의 검증 목적` |
+| 462 | 번역 제목 | `translated_title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 목차 제목의 영문 번역. '영어 버전 보기'에서 원문 아래에 표시하며 번역 전 NULL | `Purpose` |
+| 463 | 번역 본문 | `translated_content` | `text` | N | N | - | N | - | N | N | N | Y | 목차 내용의 영문 번역. 직접 입력하거나 AI 번역을 적용해 채우며, 다시 적용하면 이전 번역을 덮어쓴다. 원문(title·content)은 바꾸지 않는다. 번역 칸(translated_title·translated_content)은 원문과 같은 VP 문서로 함께 전자서명하므로 서명 원문(signed_payload)에 포함하며, 승인 후 번역 수정은 원문과 같이 새 개정에서 다시 승인받는다 | `Validation purpose of this plan` |
+| 464 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 465 | 산출물 포함 여부 | `is_enabled` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 산출물 포함 여부 | `TRUE` |
+| 466 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 467 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 468 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 469 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2010,7 +2067,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 ## QIA
 
 <a id="table-qia_assessment"></a>
-### 33. 품질 영향 평가 헤더 (`qia_assessment`)
+### 34. 품질 영향 평가 헤더 (`qia_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2027,23 +2084,23 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 459 | QIA ID | `qia_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 평가 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 460 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 461 | Part 11 Q1 전자기록의 종이기록 대체 여부 | `p11_q1` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 전자 기록이 종이 기록을 대체합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 462 | Part 11 Q2 전자서명 사용 여부 | `p11_q2` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 전자 서명을 사용합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 463 | Part 11 Q3 기록 이력의 규제 증빙 여부 | `p11_q3` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 기록 생성·변경 이력이 규제 증빙입니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 464 | Part 11 Q4 접근 통제·사용자 식별 필요 여부 | `p11_q4` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 접근 통제와 사용자 식별이 필요합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 465 | Part 11 Q5 장기 보관·검색 필요 여부 | `p11_q5` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 기록의 장기 보관과 검색이 필요합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 466 | Part 11 Q6 시스템 간 전자기록 전송 여부 | `p11_q6` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 시스템 간 전자 기록 전송이 있습니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
-| 467 | Part11 평가 결론 | `part11_result` | `text` | N | N | - | N | - | N | N | N | N | 6개 응답에서 자동 계산한 표시값. 미응답 문항이 있으면 NULL(미평가), 모두 응답한 경우 하나라도 Yes이면 적용, 모두 No이면 비적용. 직접 입력하지 않음 | `Part 11 비적용` |
-| 468 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 469 | 질문 세트 버전 | `question_set_version` | `varchar(50)` | N | N | - | Y | `'UI-P11-1'` | N | N | N | Y | 6개 질문 문구·순서를 고정하는 버전 | `UI-P11-1` |
-| 470 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-P11-1'` | N | N | N | Y | 응답 중 하나 이상이 Yes이면 적용으로 판정하는 규칙의 버전 | `UI-P11-1` |
-| 471 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 472 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 473 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 474 | 적용 질문 원문 | `question_set_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,questions:[{question_id,field_name,text,sort_order,answer_options}]}. 선택한 버전의 모든 질문·문구·순서·응답 선택값을 저장한다. | - |
-| 475 | 적용 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_fields,normalization,expression,result_mapping}. 논리식·응답 해석·판정값 매핑을 포함한 전체 정의 | - |
+| 470 | QIA ID | `qia_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 평가 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 471 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 472 | Part 11 Q1 전자기록의 종이기록 대체 여부 | `p11_q1` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 전자 기록이 종이 기록을 대체합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 473 | Part 11 Q2 전자서명 사용 여부 | `p11_q2` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 전자 서명을 사용합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 474 | Part 11 Q3 기록 이력의 규제 증빙 여부 | `p11_q3` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 기록 생성·변경 이력이 규제 증빙입니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 475 | Part 11 Q4 접근 통제·사용자 식별 필요 여부 | `p11_q4` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 접근 통제와 사용자 식별이 필요합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 476 | Part 11 Q5 장기 보관·검색 필요 여부 | `p11_q5` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 기록의 장기 보관과 검색이 필요합니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 477 | Part 11 Q6 시스템 간 전자기록 전송 여부 | `p11_q6` | `varchar(3)` | N | N | - | N | - | N | N | N | Y | 시스템 간 전자 기록 전송이 있습니까? 응답 Yes / No. 작성 중 미응답은 NULL이며 QIA 문서 상신 시 필수 | `No` |
+| 478 | Part11 평가 결론 | `part11_result` | `text` | N | N | - | N | - | N | N | N | N | 6개 응답에서 자동 계산한 표시값. 미응답 문항이 있으면 NULL(미평가), 모두 응답한 경우 하나라도 Yes이면 적용, 모두 No이면 비적용. 직접 입력하지 않음 | `Part 11 비적용` |
+| 479 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 480 | 질문 세트 버전 | `question_set_version` | `varchar(50)` | N | N | - | Y | `'UI-P11-1'` | N | N | N | Y | 6개 질문 문구·순서를 고정하는 버전 | `UI-P11-1` |
+| 481 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-P11-1'` | N | N | N | Y | 응답 중 하나 이상이 Yes이면 적용으로 판정하는 규칙의 버전 | `UI-P11-1` |
+| 482 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 483 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 484 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 485 | 적용 질문 원문 | `question_set_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,questions:[{question_id,field_name,text,sort_order,answer_options}]}. 선택한 버전의 모든 질문·문구·순서·응답 선택값을 저장한다. | - |
+| 486 | 적용 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_fields,normalization,expression,result_mapping}. 논리식·응답 해석·판정값 매핑을 포함한 전체 정의 | - |
 
 #### 제약조건
 
@@ -2056,7 +2113,7 @@ STATUS 조건에서는 predecessor_activity_id와 required_status가 필수이�
 
 #### 업무 규칙
 
-Part 11 질문은 모듈별이 아닌 QIA 공통 응답이다. QIA 문서 생성·승인 시 질문 버전·응답·규칙 버전·결과를 deliverable_revision의 원본/표 스냅샷에 고정한다. 현재 응답 변경으로 과거 승인 문서가 바뀌지 않는다.
+Part 11 질문은 모듈별이 아닌 QIA 공통 응답이다. QIA 문서 상신 시 질문 버전·응답·규칙 버전·결과를 deliverable_revision의 원본/표 스냅샷에 고정한다. 현재 응답 변경으로 과거 승인 문서가 바뀌지 않는다.
 
 문서의 승인 상태와 버전은 deliverable_document 및 deliverable_revision에서 관리한다. 모듈별 GxP 판정은 하위 프로세스에서 조회한다.
 
@@ -2069,7 +2126,7 @@ Part 11 공통 응답 또는 적용 정의를 변경해도 이미 상신·승인
 ---
 
 <a id="table-qia_module_item"></a>
-### 34. QIA 모듈 상세 평가 (`qia_module_item`)
+### 35. QIA 모듈 상세 평가 (`qia_module_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2086,29 +2143,29 @@ Part 11 공통 응답 또는 적용 정의를 변경해도 이미 상신·승인
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 476 | QIA 모듈 항목 ID | `qia_module_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 모듈 평가 항목 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 477 | 개정 간 논리 ID | `module_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 478 | QIA ID | `qia_id` | `uuid` | N | Y | `qia_assessment.qia_id` | Y | - | N | Y | N | Y | 상위 QIA 평가 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 479 | 모듈 코드 | `module_code` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | 선택 내부 모듈 코드. 화면 승인번호 item_number와 구분 | `MOD-001` |
-| 480 | 모듈명 | `module_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 상위 모듈명 | `품질관리` |
-| 481 | 모듈 설명 | `module_description` | `text` | N | N | - | N | - | N | N | N | Y | 모듈의 범위 및 목적 설명 | `품질관리 관련 종합 평가` |
-| 482 | 평가 결과 | `result_type` | `varchar(20)` | N | N | - | N | - | N | N | N | N | 프로세스 판정의 집계 캐시. 프로세스가 없거나 미응답 문항이 있는 프로세스가 있으면 NULL(미평가), 그 외 한 프로세스라도 GXP이면 GXP, 아니면 NON_GXP. 직접 편집하지 않음 | `GXP` |
-| 483 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-26T10:00:00Z` |
-| 484 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-26T10:00:00Z` |
-| 485 | 모듈 표시 순서 | `sort_order` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 모듈 표시 순서 | `1` |
-| 486 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 487 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 488 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 489 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 490 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 491 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 492 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `QIA-001` |
-| 493 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 494 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 495 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 496 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 497 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 498 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 487 | QIA 모듈 항목 ID | `qia_module_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | QIA 모듈 평가 항목 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 488 | 개정 간 논리 ID | `module_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 489 | QIA ID | `qia_id` | `uuid` | N | Y | `qia_assessment.qia_id` | Y | - | N | Y | N | Y | 상위 QIA 평가 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 490 | 모듈 코드 | `module_code` | `varchar(20)` | N | N | - | N | - | N | Y | N | Y | 선택 내부 모듈 코드. 화면 승인번호 item_number와 구분 | `MOD-001` |
+| 491 | 모듈명 | `module_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 상위 모듈명 | `품질관리` |
+| 492 | 모듈 설명 | `module_description` | `text` | N | N | - | N | - | N | N | N | Y | 모듈의 범위 및 목적 설명 | `품질관리 관련 종합 평가` |
+| 493 | 평가 결과 | `result_type` | `varchar(20)` | N | N | - | N | - | N | N | N | N | 프로세스 판정의 집계 캐시. 프로세스가 없거나 미응답 문항이 있는 프로세스가 있으면 NULL(미평가), 그 외 한 프로세스라도 GXP이면 GXP, 아니면 NON_GXP. 직접 편집하지 않음 | `GXP` |
+| 494 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-26T10:00:00Z` |
+| 495 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-26T10:00:00Z` |
+| 496 | 모듈 표시 순서 | `sort_order` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 모듈 표시 순서 | `1` |
+| 497 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 498 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 499 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 500 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 501 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 502 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 503 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `QIA-001` |
+| 504 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 505 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 506 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 507 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 508 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 509 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2122,7 +2179,7 @@ Part 11 공통 응답 또는 적용 정의를 변경해도 이미 상신·승인
 | `ck_qia_module_item_5` | CHECK | `lifecycle_status` | CHECK (lifecycle_status IN ('ACTIVE','DISPOSED')) |
 | `ck_qia_module_item_disposal` | CHECK | `lifecycle_status, disposed_at, disposal_reason, disposal_workflow_id` | CHECK (lifecycle_status <> 'DISPOSED' OR (disposed_at IS NOT NULL AND disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL)) |
 | `ck_qia_module_item_6` | CHECK | `sort_order` | CHECK (sort_order >= 1) |
-| `rule_qia_module_item_6` | 업무 검증 | `sort_order` | 모듈 먼저 등록 후 프로세스를 추가할 수 있으므로 하위 프로세스 0건 초안을 허용한다. 상신(REVIEW)에는 하위 프로세스가 1건 이상 있어야 한다 |
+| `rule_qia_module_item_6` | 업무 검증 | - | 모듈 먼저 등록 후 프로세스를 추가할 수 있으므로 하위 프로세스 0건 초안을 허용한다. 상신 조건은 rule_qia_module_item_7을 따른다. |
 | `rule_qia_module_item_7` | 업무 검증 | `status` | 모듈 개정 상신(REVIEW) 시 하위 프로세스가 1건 이상 있고 모든 프로세스의 q1_val~q10_val가 응답되어 있어야 한다. 미응답 문항이 있으면 상신을 거부한다. |
 | `ck_qia_module_item_result_type` | CHECK | `result_type` | CHECK (result_type IS NULL OR result_type IN ('GXP','NON_GXP')) |
 | `ck_qia_module_item_revision_reason` | CHECK | `revision_number, revision_reason` | CHECK (revision_number = 1 OR (revision_reason IS NOT NULL AND length(trim(revision_reason)) > 0)) |
@@ -2142,7 +2199,7 @@ Part 11 공통 응답 또는 적용 정의를 변경해도 이미 상신·승인
 ---
 
 <a id="table-qia_process"></a>
-### 35. QIA 프로세스 평가 (`qia_process`)
+### 36. QIA 프로세스 평가 (`qia_process`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2159,31 +2216,31 @@ Part 11 공통 응답 또는 적용 정의를 변경해도 이미 상신·승인
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 499 | 프로세스 ID | `qia_process_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 500 | 모듈 개정 ID | `qia_module_item_id` | `uuid` | N | Y | `qia_module_item.qia_module_item_id` | Y | - | N | Y | N | Y | qia_module_item.qia_module_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 501 | 프로세스 논리 ID | `process_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | N | N | Y | 모듈 개정 간 유지하는 프로세스 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 502 | 내부 프로세스 코드 | `process_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 내부 프로세스 코드 | - |
-| 503 | 프로세스명 | `process_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 프로세스명 | `시험 결과 입력` |
-| 504 | 프로세스 설명 | `process_description` | `text` | N | N | - | N | - | N | N | N | Y | 프로세스 설명 | - |
-| 505 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 표시 순서 | `1` |
-| 506 | 질문 세트 버전 | `question_set_version` | `varchar(50)` | N | N | - | Y | `'UI-GXP-1'` | N | N | N | Y | 질문 세트 버전 | `UI-GXP-1` |
-| 507 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-GXP-1'` | N | N | N | Y | 판정 규칙 버전 | `UI-GXP-1` |
-| 508 | GxP Q1 | `q1_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 제품 품질, 환자 안전 또는 데이터 무결성에 직접 영향을 주는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 509 | GxP Q2 | `q2_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | GxP 의사결정에 사용되는 데이터를 생성하거나 처리하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 510 | GxP Q3 | `q3_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 배치 출하 또는 품질 승인 절차를 지원하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 511 | GxP Q4 | `q4_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 규제기관 제출 또는 검사 증빙에 사용되는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 512 | GxP Q5 | `q5_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 전자 기록의 생성·수정·보관을 수행하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 513 | GxP Q6 | `q6_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 장비 또는 공정의 중요 파라미터를 제어하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 514 | GxP Q7 | `q7_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 일탈, CAPA, 변경 관리 프로세스를 지원하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 515 | GxP Q8 | `q8_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 사용자 권한이 품질 관련 기능 접근을 통제하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 516 | GxP Q9 | `q9_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 외부 GxP 시스템과 중요 데이터를 교환하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 517 | GxP Q10 | `q10_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 백업·복구 실패가 GxP 기록에 영향을 주는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
-| 518 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 519 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 520 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 521 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 522 | 적용 질문 원문 | `question_set_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,questions:[{question_id,field_name,text,sort_order,answer_options}]}. 선택한 버전의 모든 질문·문구·순서·응답 선택값을 저장한다. | - |
-| 523 | 적용 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_fields,normalization,expression,result_mapping}. 논리식·응답 해석·판정값 매핑을 포함한 전체 정의 | - |
+| 510 | 프로세스 ID | `qia_process_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 511 | 모듈 개정 ID | `qia_module_item_id` | `uuid` | N | Y | `qia_module_item.qia_module_item_id` | Y | - | N | Y | N | Y | qia_module_item.qia_module_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 512 | 프로세스 논리 ID | `process_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | N | N | Y | 모듈 개정 간 유지하는 프로세스 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 513 | 내부 프로세스 코드 | `process_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 내부 프로세스 코드 | - |
+| 514 | 프로세스명 | `process_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 프로세스명 | `시험 결과 입력` |
+| 515 | 프로세스 설명 | `process_description` | `text` | N | N | - | N | - | N | N | N | Y | 프로세스 설명 | - |
+| 516 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 표시 순서 | `1` |
+| 517 | 질문 세트 버전 | `question_set_version` | `varchar(50)` | N | N | - | Y | `'UI-GXP-1'` | N | N | N | Y | 질문 세트 버전 | `UI-GXP-1` |
+| 518 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-GXP-1'` | N | N | N | Y | 판정 규칙 버전 | `UI-GXP-1` |
+| 519 | GxP Q1 | `q1_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 제품 품질, 환자 안전 또는 데이터 무결성에 직접 영향을 주는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 520 | GxP Q2 | `q2_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | GxP 의사결정에 사용되는 데이터를 생성하거나 처리하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 521 | GxP Q3 | `q3_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 배치 출하 또는 품질 승인 절차를 지원하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 522 | GxP Q4 | `q4_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 규제기관 제출 또는 검사 증빙에 사용되는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 523 | GxP Q5 | `q5_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 전자 기록의 생성·수정·보관을 수행하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 524 | GxP Q6 | `q6_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 장비 또는 공정의 중요 파라미터를 제어하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 525 | GxP Q7 | `q7_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 일탈, CAPA, 변경 관리 프로세스를 지원하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 526 | GxP Q8 | `q8_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 사용자 권한이 품질 관련 기능 접근을 통제하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 527 | GxP Q9 | `q9_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 외부 GxP 시스템과 중요 데이터를 교환하는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 528 | GxP Q10 | `q10_val` | `varchar(5)` | N | N | - | N | - | N | N | N | Y | 백업·복구 실패가 GxP 기록에 영향을 주는가? 응답 O / X. 작성 중 미응답은 NULL이며 모듈 상신 시 필수 | `X` |
+| 529 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 530 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 531 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 532 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 533 | 적용 질문 원문 | `question_set_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,questions:[{question_id,field_name,text,sort_order,answer_options}]}. 선택한 버전의 모든 질문·문구·순서·응답 선택값을 저장한다. | - |
+| 534 | 적용 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_fields,normalization,expression,result_mapping}. 논리식·응답 해석·판정값 매핑을 포함한 전체 정의 | - |
 
 #### 제약조건
 
@@ -2212,7 +2269,7 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 ## VA
 
 <a id="table-vendor_audit"></a>
-### 36. 공급업체 감사 평가 (`vendor_audit`)
+### 37. 공급업체 감사 평가 (`vendor_audit`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2229,29 +2286,29 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 524 | 감사 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 공급업체 감사 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 525 | 개정 간 논리 ID | `audit_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 526 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 527 | 문서 번호 | `document_number` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `VA-001` |
-| 528 | 공급업체명 | `vendor_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 공급업체명 | `Sample Vendor` |
-| 529 | 감사 일자 | `audit_date` | `date` | N | N | - | Y | - | N | N | N | Y | 실제 감사 수행일. 작성자가 입력하며 개정 시 이전 개정 값을 복사한다 | `2026-09-16` |
-| 530 | 감사자 | `auditor_name` | `varchar(100)` | N | N | - | Y | - | N | N | Y | Y | 감사를 수행한 감사자의 입력 당시 표시명. 사용자 이름이 바뀌어도 이력을 보존하며 개정 시 이전 개정 값을 복사한다 | `홍길동 · reviewer@example.test` |
-| 531 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 532 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 533 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 534 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 535 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 536 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 537 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 538 | 감사자 계정 ID | `auditor_user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 감사를 수행한 감사자 계정. 작성자가 선택하며 개정 시 이전 개정 값을 복사한다 | `00000000-0000-0000-0000-000000000001` |
-| 539 | 평가 첨부파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 선택 업로드 첨부파일. 파일명·크기·경로는 파일 자산에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 540 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 541 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 542 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 543 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 544 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 545 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 546 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 535 | 감사 ID | `audit_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 공급업체 감사 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 536 | 개정 간 논리 ID | `audit_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 537 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 538 | 문서 번호 | `document_number` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `VA-001` |
+| 539 | 공급업체명 | `vendor_name` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | 감사 대상 공급업체명 | `Sample Vendor` |
+| 540 | 감사 일자 | `audit_date` | `date` | N | N | - | Y | - | N | N | N | Y | 실제 감사 수행일. 작성자가 입력하며 개정 시 이전 개정 값을 복사한다 | `2026-09-16` |
+| 541 | 감사자 | `auditor_name` | `varchar(100)` | N | N | - | Y | - | N | N | Y | Y | 감사를 수행한 감사자의 입력 당시 표시명. 사용자 이름이 바뀌어도 이력을 보존하며 개정 시 이전 개정 값을 복사한다 | `홍길동 · reviewer@example.test` |
+| 542 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 543 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 544 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 545 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 546 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 547 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 548 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 549 | 감사자 계정 ID | `auditor_user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 감사를 수행한 감사자 계정. 작성자가 선택하며 개정 시 이전 개정 값을 복사한다 | `00000000-0000-0000-0000-000000000001` |
+| 550 | 평가 첨부파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 선택 업로드 첨부파일. 파일명·크기·경로는 파일 자산에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 551 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 552 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 553 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 554 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 555 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 556 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 557 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2281,13 +2338,13 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 ## URS
 
 <a id="table-requirement"></a>
-### 37. 사용자 요구사항 명세 (`requirement`)
+### 38. 사용자 요구사항 명세 (`requirement`)
 
 | 항목 | 정의 |
 |---|---|
 | 설명 | 화면 요구사항의 카테고리·항목명·내용·수용 기준·규정 근거·등록 출처 및 승인 개정 관리. |
 | Primary Key | `requirement_id` |
-| 주요 참조(FK) | `project_id, created_by, workflow_instance_id, updated_by, disposal_workflow_id, source_library_id` |
+| 주요 참조(FK) | `project_id, created_by, workflow_instance_id, updated_by, disposal_workflow_id, source_library_id, urs_category_id` |
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 감사 가능 기간 보존 |
@@ -2298,34 +2355,32 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 547 | 요구사항 ID | `requirement_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 요구사항 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 548 | 개정 간 논리 ID | `requirement_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 549 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 550 | 항목 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `URS-001` |
-| 551 | 카테고리 | `category` | `varchar(100)` | N | N | - | Y | - | N | Y | N | Y | URS 대분류(library_item.category와 같은 기준). 시스템 관리, 감사추적, 전자서명 등 | `전자서명` |
-| 552 | 중분류 | `middle_category` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | URS 중분류(library_item.middle_category와 같은 기준). 라이브러리·시스템 패키지에서 등록하면 원본 값을 복사한다 | - |
-| 553 | 대상 | `target_type` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | URS 적용 대상(library_item.target_type과 같은 기준). 라이브러리·시스템 패키지에서 등록하면 원본 값을 복사한다 | - |
-| 554 | 항목 / 기능 | `title` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 요구사항 항목명 및 주요 기능 | `전자서명 서명자·일시·의미 기록` |
-| 555 | 요구사항 상세 | `requirement_text` | `text` | N | N | - | Y | - | N | N | N | Y | 요구사항 상세 명세 내용 | `전자서명 시 서명자 ID, 서명 일시...` |
-| 556 | 수용 기준 | `acceptance_criteria` | `text` | N | N | - | N | - | N | N | N | Y | 화면 수용 기준 입력 | `정의한 권한별 접근이 제한된다` |
-| 557 | 근거 규정 | `regulation` | `text` | N | N | - | N | - | N | N | N | Y | 수기 규정 근거 또는 마스터 미연결 원문. 정규 조항 연결은 requirement_regulation에서 관리 | `CSV 규정 근거 검토 메모` |
-| 558 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 559 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 560 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 561 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 562 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 563 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 요구사항 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 564 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 565 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 566 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 567 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 568 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 569 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 570 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 571 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 572 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL / LIBRARY / SYSTEM_PACKAGE / AI_DRAFT | `MANUAL` |
-| 573 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 574 | 기타 출처 식별값 | `source_reference` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지 또는 AI 초안의 식별값. 외부/다형 출처이므로 DB FK 아님 | - |
+| 558 | 요구사항 ID | `requirement_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 요구사항 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 559 | 개정 간 논리 ID | `requirement_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 560 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 561 | 항목 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `URS-001` |
+| 562 | URS 분류 ID | `urs_category_id` | `uuid` | N | Y | `urs_category.category_id` | N | - | N | Y | N | Y | URS 소분류(urs_category.category_level=3). 대·중분류는 상위 분류로 조회하며 library_item.urs_category_id와 같은 목록을 쓴다. 라이브러리·시스템 패키지에서 등록하면 원본 값을 복사한다 | `00000000-0000-0000-0000-000000000001` |
+| 563 | 항목 / 기능 | `title` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 요구사항 항목명 및 주요 기능 | `전자서명 서명자·일시·의미 기록` |
+| 564 | 요구사항 상세 | `requirement_text` | `text` | N | N | - | Y | - | N | N | N | Y | 요구사항 상세 명세 내용 | `전자서명 시 서명자 ID, 서명 일시...` |
+| 565 | 수용 기준 | `acceptance_criteria` | `text` | N | N | - | N | - | N | N | N | Y | 화면 수용 기준 입력 | `정의한 권한별 접근이 제한된다` |
+| 566 | 근거 규정 | `regulation` | `text` | N | N | - | N | - | N | N | N | Y | 수기 규정 근거 또는 마스터 미연결 원문. 정규 조항 연결은 requirement_regulation에서 관리 | `CSV 규정 근거 검토 메모` |
+| 567 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 568 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 569 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 570 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 571 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 572 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 요구사항 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 573 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 574 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 575 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 576 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 577 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 578 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 579 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 580 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 581 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL / LIBRARY / SYSTEM_PACKAGE / AI_DRAFT | `MANUAL` |
+| 582 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 583 | 기타 출처 식별값 | `source_reference` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지 또는 AI 초안의 식별값. 외부/다형 출처이므로 DB FK 아님 | - |
 
 #### 제약조건
 
@@ -2340,7 +2395,7 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 | `ck_requirement_disposal` | CHECK | `lifecycle_status, disposed_at, disposal_reason, disposal_workflow_id` | CHECK (lifecycle_status <> 'DISPOSED' OR (disposed_at IS NOT NULL AND disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL)) |
 | `ck_requirement_6` | CHECK | `source_type` | CHECK (source_type IN ('MANUAL','LIBRARY','SYSTEM_PACKAGE','AI_DRAFT')) |
 | `rule_requirement_6` | 업무 검증 | `source_type, source_library_id` | LIBRARY이면 source_library_id 필수 |
-| `rule_requirement_7` | 업무 검증 | `category, middle_category, target_type` | 작성 중(DRAFT)에는 middle_category·target_type의 NULL을 허용하고, 상신(REVIEW) 시 대분류(category)·중분류(middle_category)·대상(target_type)이 모두 입력되어 있어야 한다. |
+| `rule_requirement_7` | 업무 검증 | `urs_category_id` | 작성 중(DRAFT)에는 urs_category_id의 NULL을 허용하고, 상신(REVIEW) 시 입력되어 있어야 한다. 소분류(category_level=3)만 지정할 수 있으며, 새로 지정하거나 바꿀 때는 자신과 상위 분류가 모두 사용 중(is_active=TRUE)인 분류만 허용한다. 이미 지정된 값은 분류가 사용 중지된 뒤에도 유지한다. |
 | `ck_requirement_revision_reason` | CHECK | `revision_number, revision_reason` | CHECK (revision_number = 1 OR (revision_reason IS NOT NULL AND length(trim(revision_reason)) > 0)) |
 
 #### 업무 규칙
@@ -2349,7 +2404,7 @@ GxP 판정 규칙: Q1=O이면서 Q2~Q10 중 O가 하나 이상이면 GXP, 그 �
 
 라이브러리/시스템 패키지/AI에서 가져온 내용은 이 항목의 초안으로 복사하여 편집한다. 출처 변경이 승인된 업무 항목에 자동 반영되지 않는다.
 
-URS 분류는 대분류(category)·중분류(middle_category)·대상(target_type)이며 library_item과 같은 기준을 쓴다. 라이브러리 또는 시스템 패키지에서 등록하면 세 값을 함께 복사하고, 시스템 패키지 그룹핑도 이 세 값을 기준으로 한다.
+URS 분류는 urs_category의 소분류 하나(urs_category_id)로 지정하고 대·중분류는 상위 분류를 따라 조회하며, library_item과 같은 분류 목록을 쓴다. 라이브러리 또는 시스템 패키지에서 등록하면 urs_category_id를 함께 복사하고, 시스템 패키지 그룹핑은 대·중·소분류를 기준으로 한다.
 
 requirement_id는 특정 개정행 PK이다. DQ/FRA/시험/규정은 해당 개정행에 연결한다. requirement_key별 최신 초안과 최신 승인 개정을 구분한다.
 
@@ -2364,7 +2419,7 @@ requirement_id는 특정 개정행 PK이다. DQ/FRA/시험/규정은 해당 개�
 ## FDS
 
 <a id="table-fds_spec"></a>
-### 38. 기능 설계 명세서 (`fds_spec`)
+### 39. 기능 설계 명세서 (`fds_spec`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2381,29 +2436,29 @@ requirement_id는 특정 개정행 PK이다. DQ/FRA/시험/규정은 해당 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 575 | FDS ID | `fds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FDS 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 576 | 개정 간 논리 ID | `fds_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 577 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 578 | FDS 번호 | `fds_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `FDS-001` |
-| 579 | FDS 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 문서의 표시 제목으로 업로드 파일명을 사용 | `FDS_ver1.pdf` |
-| 580 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 581 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 582 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 583 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 584 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 585 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 586 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FDS 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 587 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 588 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FDS 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 589 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
-| 590 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 591 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 592 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 593 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 594 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 595 | 업로드 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 해당 설계 개정에 업로드한 파일. 교체하면 새 개정행과 새 파일 ID 생성. 파일 검사 전에 만든 초안(DRAFT)은 NULL일 수 있으며 검사 통과 시 file_link_request(PRIMARY_FILE)에 따라 채운다. DRAFT가 아니면 필수(ck_fds_spec_file_required) | `00000000-0000-0000-0000-000000000001` |
-| 596 | 업로드 시각 | `uploaded_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 이 파일 개정을 업로드한 시각 | `2026-09-01T00:00:00Z` |
-| 597 | 업로더 ID | `uploaded_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 584 | FDS ID | `fds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FDS 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 585 | 개정 간 논리 ID | `fds_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 586 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 587 | FDS 번호 | `fds_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `FDS-001` |
+| 588 | FDS 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 문서의 표시 제목으로 업로드 파일명을 사용 | `FDS_ver1.pdf` |
+| 589 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 590 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 591 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 592 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 593 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 594 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 595 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FDS 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 596 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 597 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FDS 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 598 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
+| 599 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 600 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 601 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 602 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 603 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 604 | 업로드 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 해당 설계 개정에 업로드한 파일. 교체하면 새 개정행과 새 파일 ID 생성. 파일 검사 전에 만든 초안(DRAFT)은 NULL일 수 있으며 검사 통과 시 file_link_request(PRIMARY_FILE)에 따라 채운다. DRAFT가 아니면 필수(ck_fds_spec_file_required) | `00000000-0000-0000-0000-000000000001` |
+| 605 | 업로드 시각 | `uploaded_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 이 파일 개정을 업로드한 시각 | `2026-09-01T00:00:00Z` |
+| 606 | 업로더 ID | `uploaded_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2438,7 +2493,7 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 ## DDS
 
 <a id="table-dds_spec"></a>
-### 39. 상세 설계 명세서 (`dds_spec`)
+### 40. 상세 설계 명세서 (`dds_spec`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2455,29 +2510,29 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 598 | DDS ID | `dds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DDS 문서 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 599 | 개정 간 논리 ID | `dds_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 600 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | DDS가 속한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
-| 601 | DDS 번호 | `dds_no` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `DDS-001` |
-| 602 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 문서의 표시 제목으로 업로드 파일명을 사용 | `DDS_ver1.pdf` |
-| 603 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 604 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 605 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 606 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 607 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 608 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | DDS 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 609 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 작성 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 610 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | DDS 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 611 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 612 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-02T10:00:00Z` |
-| 613 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 614 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 615 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-02T10:00:00Z` |
-| 616 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 617 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 618 | 업로드 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 해당 설계 개정에 업로드한 파일. 교체하면 새 개정행과 새 파일 ID 생성. 파일 검사 전에 만든 초안(DRAFT)은 NULL일 수 있으며 검사 통과 시 file_link_request(PRIMARY_FILE)에 따라 채운다. DRAFT가 아니면 필수(ck_dds_spec_file_required) | `00000000-0000-0000-0000-000000000001` |
-| 619 | 업로드 시각 | `uploaded_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 이 파일 개정을 업로드한 시각 | `2026-09-01T00:00:00Z` |
-| 620 | 업로더 ID | `uploaded_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 607 | DDS ID | `dds_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DDS 문서 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 608 | 개정 간 논리 ID | `dds_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 609 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | DDS가 속한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
+| 610 | DDS 번호 | `dds_no` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 최초 승인 시 부여. 초안은 NULL, 같은 논리키의 개정은 번호 유지 | `DDS-001` |
+| 611 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 문서의 표시 제목으로 업로드 파일명을 사용 | `DDS_ver1.pdf` |
+| 612 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 613 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 614 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 615 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 616 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 617 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | DDS 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 618 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 작성 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 619 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | DDS 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 620 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DDS 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 621 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-02T10:00:00Z` |
+| 622 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 623 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 624 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-02T10:00:00Z` |
+| 625 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 626 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 627 | 업로드 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 해당 설계 개정에 업로드한 파일. 교체하면 새 개정행과 새 파일 ID 생성. 파일 검사 전에 만든 초안(DRAFT)은 NULL일 수 있으며 검사 통과 시 file_link_request(PRIMARY_FILE)에 따라 채운다. DRAFT가 아니면 필수(ck_dds_spec_file_required) | `00000000-0000-0000-0000-000000000001` |
+| 628 | 업로드 시각 | `uploaded_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 이 파일 개정을 업로드한 시각 | `2026-09-01T00:00:00Z` |
+| 629 | 업로더 ID | `uploaded_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2512,7 +2567,7 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 ## DQ
 
 <a id="table-dq_assessment"></a>
-### 40. 설계 적격성 평가 (`dq_assessment`)
+### 41. 설계 적격성 평가 (`dq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2529,20 +2584,20 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 621 | DQ ID | `dq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 622 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 623 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 적격성 평가 문서 제목 | `설계 적격성 평가 (URS → FDS/DDS 매핑)` |
-| 624 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 625 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 626 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 627 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 628 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 630 | DQ ID | `dq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 631 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 632 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설계 적격성 평가 문서 제목 | `설계 적격성 평가 (URS → FDS/DDS 매핑)` |
+| 633 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 634 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 635 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 636 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | DQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 637 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
 | 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
 |---|---|---|---|
-| `uq_dq_assessment_1` | UNIQUE | `project_id` | UNIQUE (project_id) |
+| `uq_dq_assessment_1` | UNIQUE | `project_id, deleted_at` | UNIQUE (project_id) WHERE deleted_at IS NULL |
 
 #### 업무 규칙
 
@@ -2553,7 +2608,7 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 ---
 
 <a id="table-dq_item"></a>
-### 41. DQ 상세 평가 항목 (`dq_item`)
+### 42. DQ 상세 평가 항목 (`dq_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2570,37 +2625,37 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 629 | DQ 항목 ID | `dq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DQ 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 630 | 개정 간 논리 ID | `dq_item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 631 | DQ ID | `dq_id` | `uuid` | N | Y | `dq_assessment.dq_id` | Y | - | N | Y | N | Y | 상위 DQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 632 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | 매핑 대상 URS 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
-| 633 | URS 번호 | `urs_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | requirement_id가 가리키는 승인 개정의 번호 스냅샷. 직접 입력하지 않음 | `URS-001` |
-| 634 | URS 요구사항 | `urs_description` | `text` | N | N | - | Y | - | N | N | N | Y | requirement_id가 가리키는 승인 개정의 요구사항 내용 스냅샷. 직접 입력하지 않음 | `사용자 로그인 및 전자서명 기능` |
-| 635 | 판정 | `result_status` | `varchar(10)` | N | N | - | N | - | N | N | N | Y | PASS / FAIL / NA. NA=해당 없음, 미판정은 NULL | `PASS` |
-| 636 | 비고 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 검토 관련 특이사항 및 비고 | `FDS 및 DDS 설계 반영 완료 확인` |
-| 637 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 638 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 639 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 640 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 641 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
-| 642 | FDS 승인 개정 ID | `fds_revision_id` | `uuid` | N | Y | `fds_spec.fds_id` | N | - | N | Y | N | Y | fds_spec.fds_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 643 | FDS 검토 코멘트 | `fds_comment` | `text` | N | N | - | N | - | N | N | N | Y | FDS 검토 코멘트 | - |
-| 644 | DDS 승인 개정 ID | `dds_revision_id` | `uuid` | N | Y | `dds_spec.dds_id` | N | - | N | Y | N | Y | dds_spec.dds_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 645 | DDS 검토 코멘트 | `dds_comment` | `text` | N | N | - | N | - | N | N | N | Y | DDS 검토 코멘트 | - |
-| 646 | Fail 사유 | `fail_reason` | `text` | N | N | - | N | - | N | N | N | Y | Fail 사유 | - |
-| 647 | 판정 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 648 | 판정 수행 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 판정 수행 시각 | `2026-09-01T00:00:00Z` |
-| 649 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 650 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 651 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 652 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 653 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 654 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 655 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `DQ-001` |
-| 656 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 657 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 658 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 659 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 638 | DQ 항목 ID | `dq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | DQ 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 639 | 개정 간 논리 ID | `dq_item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 640 | DQ ID | `dq_id` | `uuid` | N | Y | `dq_assessment.dq_id` | Y | - | N | Y | N | Y | 상위 DQ 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 641 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | 매핑 대상 URS 식별자 (FK) | `00000000-0000-0000-0000-000000000001` |
+| 642 | URS 번호 | `urs_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | requirement_id가 가리키는 승인 개정의 번호 스냅샷. 직접 입력하지 않음 | `URS-001` |
+| 643 | URS 요구사항 | `urs_description` | `text` | N | N | - | Y | - | N | N | N | Y | requirement_id가 가리키는 승인 개정의 요구사항 내용 스냅샷. 직접 입력하지 않음 | `사용자 로그인 및 전자서명 기능` |
+| 644 | 판정 | `result_status` | `varchar(10)` | N | N | - | N | - | N | N | N | Y | PASS / FAIL / NA. NA=해당 없음, 미판정은 NULL | `PASS` |
+| 645 | 비고 | `remarks` | `text` | N | N | - | N | - | N | N | N | Y | 검토 관련 특이사항 및 비고 | `FDS 및 DDS 설계 반영 완료 확인` |
+| 646 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 647 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 648 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 649 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 650 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
+| 651 | FDS 승인 개정 ID | `fds_revision_id` | `uuid` | N | Y | `fds_spec.fds_id` | N | - | N | Y | N | Y | fds_spec.fds_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 652 | FDS 검토 코멘트 | `fds_comment` | `text` | N | N | - | N | - | N | N | N | Y | FDS 검토 코멘트 | - |
+| 653 | DDS 승인 개정 ID | `dds_revision_id` | `uuid` | N | Y | `dds_spec.dds_id` | N | - | N | Y | N | Y | dds_spec.dds_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 654 | DDS 검토 코멘트 | `dds_comment` | `text` | N | N | - | N | - | N | N | N | Y | DDS 검토 코멘트 | - |
+| 655 | Fail 사유 | `fail_reason` | `text` | N | N | - | N | - | N | N | N | Y | Fail 사유 | - |
+| 656 | 판정 수행자 ID | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 657 | 판정 수행 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 판정 수행 시각 | `2026-09-01T00:00:00Z` |
+| 658 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 659 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 660 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 661 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 662 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 663 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 664 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `DQ-001` |
+| 665 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 666 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 667 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 668 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2614,7 +2669,7 @@ F&DS는 하나의 수행 활동이며 문서 종류의 표시 순서는 FDS 다�
 | `ck_dq_item_5` | CHECK | `lifecycle_status` | CHECK (lifecycle_status IN ('ACTIVE','DISPOSED')) |
 | `ck_dq_item_disposal` | CHECK | `lifecycle_status, disposed_at, disposal_reason, disposal_workflow_id` | CHECK (lifecycle_status <> 'DISPOSED' OR (disposed_at IS NOT NULL AND disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL)) |
 | `ck_dq_item_6` | CHECK | `result_status` | CHECK (result_status IS NULL OR result_status IN ('PASS','FAIL','NA')) |
-| `rule_dq_item_6` | 업무 검증 | `result_status, fail_reason` | FAIL이면 공백이 아닌 fail_reason 필수 |
+| `ck_dq_item_fail_reason` | CHECK | `result_status, fail_reason` | CHECK (result_status <> 'FAIL' OR (fail_reason IS NOT NULL AND length(trim(fail_reason)) > 0)) |
 | `rule_dq_item_7` | 업무 검증 | `result_status, executed_by, executed_at` | 승인 요청 시 result_status·executed_by·executed_at 필수이며 FDS/DDS 중 하나 이상 같은 프로젝트의 유효 승인 개정이어야 한다. requirement_id도 같은 프로젝트의 승인 개정이어야 한다. |
 | `ck_dq_item_revision_reason` | CHECK | `revision_number, revision_reason` | CHECK (revision_number = 1 OR (revision_reason IS NOT NULL AND length(trim(revision_reason)) > 0)) |
 
@@ -2635,7 +2690,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 ## FRA
 
 <a id="table-fra_assessment"></a>
-### 42. 기능 위험평가 (`fra_assessment`)
+### 43. 기능 위험평가 (`fra_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2652,20 +2707,20 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 660 | FRA ID | `fra_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FRA 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 661 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 662 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | FMEA 기반 기능 위험평가 문서 제목 | `FMEA 기반 기능 위험평가` |
-| 663 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 664 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FRA 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 665 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 666 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FRA 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 667 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 669 | FRA ID | `fra_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FRA 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 670 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | Y | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 671 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | FMEA 기반 기능 위험평가 문서 제목 | `FMEA 기반 기능 위험평가` |
+| 672 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 673 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FRA 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 674 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 675 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | FRA 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 676 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
 | 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
 |---|---|---|---|
-| `uq_fra_assessment_1` | UNIQUE | `project_id` | UNIQUE (project_id) |
+| `uq_fra_assessment_1` | UNIQUE | `project_id, deleted_at` | UNIQUE (project_id) WHERE deleted_at IS NULL |
 
 #### 업무 규칙
 
@@ -2676,7 +2731,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 ---
 
 <a id="table-fra_item"></a>
-### 43. FRA 위험 상세 항목 (`fra_item`)
+### 44. FRA 위험 상세 항목 (`fra_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2693,40 +2748,40 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 668 | 위험 항목 ID | `fra_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FRA 위험 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 669 | 개정 간 논리 ID | `fra_item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
-| 670 | FRA ID | `fra_id` | `uuid` | N | Y | `fra_assessment.fra_id` | Y | - | N | Y | N | Y | 상위 FRA 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 671 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | N | - | N | Y | N | Y | 동일 프로젝트의 승인된 URS 개정. 초안 NULL 허용, 승인 요청 전 필수 | `00000000-0000-0000-0000-000000000001` |
-| 672 | URS 참조번호 | `urs_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 연결한 요구사항 개정의 승인번호 표시 스냅샷. requirement_id와 일치하며 독립 입력하지 않음 | `URS-001` |
-| 673 | 기능명 | `feature_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 위험 평가 대상 기능명 | `전자서명` |
-| 674 | 위험 시나리오 | `risk_scenario` | `text` | N | N | - | Y | - | N | N | N | Y | FMEA 위험 발생 시나리오 설명 | `전자서명 시 비밀번호 검증 미수행` |
-| 675 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
-| 676 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 677 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 678 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 679 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 680 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
-| 681 | 심각도 SEV | `severity` | `smallint` | N | N | - | N | - | N | N | N | Y | 화면 입력 1~5. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `5` |
-| 682 | 발생가능성 OCC | `occurrence` | `smallint` | N | N | - | N | - | N | N | N | Y | 화면 입력 1~5. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `2` |
-| 683 | 검출도 DET | `detectability` | `varchar(1)` | N | N | - | N | - | N | N | N | Y | H / M / L. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `M` |
-| 684 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-FRA-1'` | N | N | N | Y | 판정 규칙 버전 | `UI-FRA-1` |
-| 685 | 승인 시 계산 결과 | `risk_result_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | 승인 당시 RP·RC·RPG·NT·Action Plan 자동 결과. 직접 입력하지 않음 | `{"RP":10,"RC":1,"RPG":"H","NT":"N","actionPlan":"Test 수행"}` |
-| 686 | SOP 근거 조항 ID | `sop_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | N | - | N | Y | N | Y | RTM 화면의 SOP 연결을 원본 위험 항목에 저장 | `00000000-0000-0000-0000-000000000001` |
-| 687 | 수기 SOP 참조 | `sop_reference_note` | `text` | N | N | - | N | - | N | N | N | Y | 조항 마스터에 아직 없는 SOP 참조 원문 | - |
-| 688 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
-| 689 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
-| 690 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
-| 691 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
-| 692 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
-| 693 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `FRA-001` |
-| 694 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
-| 695 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
-| 696 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
-| 697 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 698 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL / LIBRARY / SYSTEM_PACKAGE / AI_DRAFT | `MANUAL` |
-| 699 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 700 | 기타 출처 식별값 | `source_reference` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지 또는 AI 초안의 식별값. 외부/다형 출처이므로 DB FK 아님 | - |
-| 701 | 적용 위험 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_ranges,formulas,thresholds,matrix,action_mapping}. SEV/OCC/DET 허용값, RP·RC 계산식, RPG·NT 판정표와 Action Plan 매핑 전체 | - |
+| 677 | 위험 항목 ID | `fra_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | FRA 위험 세부 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 678 | 개정 간 논리 ID | `fra_item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 개정 간 유지하는 식별자. 개정행 PK와 구분 | `00000000-0000-0000-0000-000000000001` |
+| 679 | FRA ID | `fra_id` | `uuid` | N | Y | `fra_assessment.fra_id` | Y | - | N | Y | N | Y | 상위 FRA 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 680 | URS 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | N | - | N | Y | N | Y | 동일 프로젝트의 승인된 URS 개정. 초안 NULL 허용, 승인 요청 전 필수 | `00000000-0000-0000-0000-000000000001` |
+| 681 | URS 참조번호 | `urs_no` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 연결한 요구사항 개정의 승인번호 표시 스냅샷. requirement_id와 일치하며 독립 입력하지 않음 | `URS-001` |
+| 682 | 기능명 | `feature_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 위험 평가 대상 기능명 | `전자서명` |
+| 683 | 위험 시나리오 | `risk_scenario` | `text` | N | N | - | Y | - | N | N | N | Y | FMEA 위험 발생 시나리오 설명 | `전자서명 시 비밀번호 검증 미수행` |
+| 684 | 승인 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중) / REVIEW(검토중) / APPROVAL(승인중) / APPROVED(승인완료) / REJECTED(반려) / CANCELLED(취소). REJECTED·CANCELLED는 이 개정의 종결 상태이며 이후 수정은 새 개정으로 처리 | `DRAFT` |
+| 685 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 686 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 687 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 688 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 689 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 승인 이력 있는 항목은 삭제 대신 폐기 승인 처리 | `2026-09-01T00:00:00Z` |
+| 690 | 심각도 SEV | `severity` | `smallint` | N | N | - | N | - | N | N | N | Y | 화면 입력 1~5. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `5` |
+| 691 | 발생가능성 OCC | `occurrence` | `smallint` | N | N | - | N | - | N | N | N | Y | 화면 입력 1~5. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `2` |
+| 692 | 검출도 DET | `detectability` | `varchar(1)` | N | N | - | N | - | N | N | N | Y | H / M / L. 미입력은 NULL이며 FRA 항목 상신 시 필수 | `M` |
+| 693 | 판정 규칙 버전 | `rule_version` | `varchar(50)` | N | N | - | Y | `'UI-FRA-1'` | N | N | N | Y | 판정 규칙 버전 | `UI-FRA-1` |
+| 694 | 승인 시 계산 결과 | `risk_result_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | 승인 당시 RP·RC·RPG·NT·Action Plan 자동 결과. 직접 입력하지 않음 | `{"RP":10,"RC":1,"RPG":"H","NT":"N","actionPlan":"Test 수행"}` |
+| 695 | SOP 근거 조항 ID | `sop_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | N | - | N | Y | N | Y | RTM 화면의 SOP 연결을 원본 위험 항목에 저장 | `00000000-0000-0000-0000-000000000001` |
+| 696 | 수기 SOP 참조 | `sop_reference_note` | `text` | N | N | - | N | - | N | N | N | Y | 조항 마스터에 아직 없는 SOP 참조 원문 | - |
+| 697 | 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 해당 개정의 화면 표시 버전 | `ver1` |
+| 698 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 논리키별 1부터 증가 | `1` |
+| 699 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 시 입력하는 변경 사유. revision_number ≥ 2이면 필수 | `요구사항 변경` |
+| 700 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 논리키의 최신 개정. 최신 승인본 여부와 구분 | `TRUE` |
+| 701 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정의 업무 승인 절차. 검토·승인자와 서명은 연결된 절차/처리 이력에서 조회 | `00000000-0000-0000-0000-000000000001` |
+| 702 | 항목 승인 번호 | `item_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 부여. 초안은 NULL, 개정 간 같은 번호 유지 | `FRA-001` |
+| 703 | 사용 상태 | `lifecycle_status` | `varchar(20)` | N | N | - | Y | `'ACTIVE'` | N | N | N | Y | ACTIVE / DISPOSED. 승인 상태와 별개 | `ACTIVE` |
+| 704 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 승인 완료 시각 | `2026-09-01T00:00:00Z` |
+| 705 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 폐기 사유 | - |
+| 706 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 707 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL / LIBRARY / SYSTEM_PACKAGE / AI_DRAFT | `MANUAL` |
+| 708 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 709 | 기타 출처 식별값 | `source_reference` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지 또는 AI 초안의 식별값. 외부/다형 출처이므로 DB FK 아님 | - |
+| 710 | 적용 위험 판정 규칙 원문 | `rule_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | {version,input_ranges,formulas,thresholds,matrix,action_mapping}. SEV/OCC/DET 허용값, RP·RC 계산식, RPG·NT 판정표와 Action Plan 매핑 전체 | - |
 
 #### 제약조건
 
@@ -2770,7 +2825,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 ## IQ
 
 <a id="table-iq_assessment"></a>
-### 44. 설치 적격성 평가 (`iq_assessment`)
+### 45. 설치 적격성 평가 (`iq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2787,22 +2842,22 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 702 | IQ ID | `iq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | IQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 703 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 704 | IQ 번호 | `iq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | IQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `IQ-VP-SYS-010-20260529` |
-| 705 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설치 적격성 평가 문서 제목 | `Installation Qualification` |
-| 706 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | IQ 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
-| 707 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | IQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
-| 708 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | IQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
-| 709 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 IQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
-| 710 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | IQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 711 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | IQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 712 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 713 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | IQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 714 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 715 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | IQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 716 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_iq_assessment_3) | `2026-09-01T00:00:00Z` |
-| 717 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"iq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
+| 711 | IQ ID | `iq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | IQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 712 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 713 | IQ 번호 | `iq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | IQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `IQ-VP-SYS-010-20260529` |
+| 714 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 설치 적격성 평가 문서 제목 | `Installation Qualification` |
+| 715 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | IQ 평가 문서 표시 버전. 평가 개정을 만들 때의 결과서(RECORD) 버전을 따르며 본문만 개정하면 바뀌지 않는다 (예: v1.0, v1.1) | `v1.0` |
+| 716 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | IQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
+| 717 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | IQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
+| 718 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 IQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
+| 719 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | IQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 720 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | IQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 721 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 722 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | IQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 723 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 724 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | IQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 725 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_iq_assessment_3) | `2026-09-01T00:00:00Z` |
+| 726 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"iq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
 
 #### 제약조건
 
@@ -2823,18 +2878,18 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 산출물 제목·본문·출력 형식만 변경할 때는 deliverable_revision만 새로 생성하고 평가 행과 시험 항목은 유지한다. 평가 범위·상위 업무 정보 또는 시험 구성이 변경되면 새 평가 개정 행을 만들고 item_revision_refs에 그 시점의 전체 구성을 고정한다. 변경 없는 시험 항목은 동일한 PK·버전을 다시 참조하며 복제하거나 상위 FK를 옮기지 않는다. 시험 프로토콜 내용이 바뀐 항목만 동일 item_key를 유지하는 새 개정행을 생성하여 새 구성에 포함한다.
 
-구성의 대상은 iq_item의 실제 개정이며 같은 프로젝트·IQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 iq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 폐기(is_disposed=TRUE)되지 않은 것이다. protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
+구성의 대상은 iq_item의 실제 개정이며 같은 프로젝트·IQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 iq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 그 item_key가 폐기되지 않은 것이다(같은 item_key의 개정 중 is_disposed=TRUE인 행이 있으면 폐기). protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-iq_item"></a>
-### 45. IQ 상세 테스트 항목 (`iq_item`)
+### 46. IQ 상세 테스트 항목 (`iq_item`)
 
 | 항목 | 정의 |
 |---|---|
-| 설명 | IQ 시험 항목의 프로토콜 개정, 내용, 기대 결과, 허용 기준 및 등록 출처 관리 |
+| 설명 | IQ 시험 항목의 프로토콜 개정, 내용, 허용 기준 및 등록 출처 관리 |
 | Primary Key | `iq_item_id` |
 | 주요 참조(FK) | `iq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` |
 | GxP 중요도 | High |
@@ -2847,37 +2902,37 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 718 | IQ 항목 ID | `iq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | IQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
-| 719 | IQ ID | `iq_id` | `uuid` | N | Y | `iq_assessment.iq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
-| 720 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
-| 721 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `IQ-NEW-01` |
-| 722 | 테스트 케이스 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. 별도 분류값이 아님. | `하드웨어 설치` |
-| 723 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 검증 수행 상세 절차 | `설치될 서버의 하드웨어 사양이 URS를 충족하는지 확인` |
-| 724 | 기대 결과 | `expected_result` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 성공 기준 및 기대 결과 | `하드웨어 사양이 URS에 명시된 요구사항과 일치해야 함` |
-| 725 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 이 시험 개정의 독립적인 승인 상태이며 상위 문서 상태로 덮어쓰지 않음. | `DRAFT` |
-| 726 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 727 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 728 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 729 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 730 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_iq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
-| 731 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
-| 732 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
-| 733 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. | - |
-| 734 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
-| 735 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
-| 736 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
-| 737 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
-| 738 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `IQ-CORE` |
-| 739 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
-| 740 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `IQ-PKG-001` |
-| 741 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `IQ-001` |
-| 742 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
-| 743 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
-| 744 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
-| 745 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
-| 746 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
-| 747 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
-| 748 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
+| 727 | IQ 항목 ID | `iq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | IQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
+| 728 | IQ ID | `iq_id` | `uuid` | N | Y | `iq_assessment.iq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
+| 729 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
+| 730 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 등록 때 IQ-T-{순번} 형식(예: IQ-T-001)으로 발급하는 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `IQ-T-001` |
+| 731 | 테스트 케이스 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. 별도 분류값이 아님. | `하드웨어 설치` |
+| 732 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 검증 수행 상세 절차 | `설치될 서버의 하드웨어 사양이 URS를 충족하는지 확인` |
+| 733 | 기대 결과 | `expected_result` | `text` | N | N | - | N | - | N | N | N | Y | 이전 기록 보존용. 기대 결과는 더 입력받지 않으며 새 시험은 NULL | `하드웨어 사양이 URS에 명시된 요구사항과 일치해야 함` |
+| 734 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 이 시험 개정의 독립적인 승인 상태이며 상위 문서 상태로 덮어쓰지 않음. | `DRAFT` |
+| 735 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 736 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 737 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 738 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 739 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_iq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
+| 740 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
+| 741 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
+| 742 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. 앞 단계 개정으로 시험 계획이 자동 개정되면 서버가 시스템 문구로 기록한다. | - |
+| 743 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
+| 744 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
+| 745 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
+| 746 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
+| 747 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `IQ-CORE` |
+| 748 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
+| 749 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `IQ-PKG-001` |
+| 750 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시험의 최종 결과 승인 때 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `IQ-001` |
+| 751 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
+| 752 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
+| 753 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
+| 754 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
+| 755 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
+| 756 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
+| 757 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -2886,13 +2941,13 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 | `uq_iq_item_1` | UNIQUE | `item_key, revision_number` | UNIQUE(item_key, revision_number) |
 | `rule_iq_item_1` | 업무 검증 | `item_key, revision_number, is_current_version` | 같은 item_key는 동일 프로젝트와 IQ 단계에 속한다. is_current_version = TRUE 행은 item_key별 최대 1개 |
 | `rule_iq_item_2` | 업무 검증 | - | protocol_status는 DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 상신(REVIEW) 이후의 프로토콜과 절차는 직접 수정하지 않으며, 반려·취소 후 수정과 승인 후 변경은 새 개정 행으로 처리한다. |
-| `rule_iq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최초 승인 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
+| `rule_iq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최종 결과 승인 때 발급하는 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
 | `rule_iq_item_4` | 업무 검증 | `source_library_id, source_package_code, source_package_version, source_template_code` | LIBRARY 등록이면 source_library_id 필수. SYSTEM_PACKAGE 등록이면 source_package_code / source_package_version / source_template_code 필수. |
 | `rule_iq_item_5` | 업무 검증 | - | 복수 URS 연결은 traceability_link의 REQUIREMENT → IQ_ITEM / VERIFIED_BY로 관리한다. |
-| `rule_iq_item_6` | 업무 검증 | - | 활성 시험 등록 및 프로토콜 승인에는 연결된 URS 개정이 최소 1개 필요하며 내용이 비어 있지 않은 세부 절차가 최소 1개 있어야 한다. |
+| `rule_iq_item_6` | 업무 검증 | - | 등록 출처가 LIBRARY·SYSTEM_PACKAGE인 시험은 연결된 URS 개정이 최소 1개 필요하고, 직접 등록(MANUAL)·AI 초안(AI_DRAFT) 시험은 URS 없이 등록·승인할 수 있다. URS 연결(필요한 경우)과 내용이 비어 있지 않은 세부 절차 최소 1개는 등록 때가 아니라 프로토콜(PROTOCOL) 상신 때 검사한다. |
 | `rule_iq_item_7` | 업무 검증 | `disposal_reason, disposal_workflow_id, disposal_signature_id, is_disposed, disposed_by, disposed_at` | 폐기는 폐기 권한자가 사유를 입력해 폐기 결재(approval_scope=DISPOSAL)를 상신하고 최종 승인으로 완료한다. is_disposed = TRUE이면 disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at 필수이며 disposal_signature_id·disposed_by·disposed_at은 그 결재의 최종 승인 서명·승인자·시각과 일치해야 한다. |
 | `ck_iq_item_disposal` | CHECK | `is_disposed, disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at` | CHECK (is_disposed = FALSE OR (disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL AND disposal_signature_id IS NOT NULL AND disposed_by IS NOT NULL AND disposed_at IS NOT NULL)) |
-| `rule_iq_item_8` | 업무 검증 | - | 폐기는 동일 item_key의 활성 여부에 적용하고 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
+| `rule_iq_item_8` | 업무 검증 | - | 폐기는 폐기 결재 대상 개정에 is_disposed=TRUE로 기록하고 동일 item_key 전체의 활성 여부에 적용하며, 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
 | `uq_iq_item_current` | UNIQUE | `item_key` | UNIQUE (item_key) WHERE is_current_version=TRUE |
 | `rule_iq_item_9` | 업무 검증 | `deleted_at` | deleted_at은 상신 이력이 없는 DRAFT 개정에만 설정할 수 있다. 같은 item_key에 APPROVED 개정이 있으면 삭제할 수 없으며 사용 중지는 폐기(is_disposed, rule_iq_item_7)로 처리한다. |
 | `ck_iq_item_source` | CHECK | `source_type` | CHECK (source_type IN ('MANUAL','LIBRARY','SYSTEM_PACKAGE','AI_DRAFT')) |
@@ -2901,7 +2956,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 #### 업무 규칙
 
-시험 내용은 test_description, 기대 결과는 expected_result, 허용 기준은 acceptance_criteria에 저장한다. 반복 절차는 iq_step, 실제 결과·서명·재수행 이력은 iq_execution에서 관리한다.
+시험 내용은 test_description, 허용 기준은 acceptance_criteria에 저장한다. expected_result는 이전 기록 보존용이다. 반복 절차는 iq_step, 실제 결과·서명·재수행 이력은 iq_execution에서 관리한다.
 
 같은 item_key의 모든 개정은 동일 프로젝트에 속한다. 항목 번호 approval_number·test_id는 최초 부여 후 후속 개정에서 유지한다. 승인 시 번호가 부여되는 항목의 미승인 초안은 NULL을 허용한다. 같은 프로젝트·같은 테이블의 다른 논리키에 해당 번호를 재사용하지 않으며 폐기 후에도 다른 항목에 재배정하지 않는다. 번호 발급과 개정 생성은 프로젝트 및 논리 항목에 대한 동시 처리 잠금으로 직렬화하고 같은 트랜잭션에서 중복·소속·번호 유지 조건을 검증한다.
 
@@ -2910,7 +2965,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 ---
 
 <a id="table-iq_step"></a>
-### 46. IQ 시험 절차 (`iq_step`)
+### 47. IQ 시험 절차 (`iq_step`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2927,14 +2982,14 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 749 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 750 | 시험 개정 ID | `iq_item_id` | `uuid` | N | Y | `iq_item.iq_item_id` | Y | - | N | Y | N | Y | iq_item.iq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 751 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
-| 752 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
-| 753 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 754 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 755 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 756 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 758 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 759 | 시험 개정 ID | `iq_item_id` | `uuid` | N | Y | `iq_item.iq_item_id` | Y | - | N | Y | N | Y | iq_item.iq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 760 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
+| 761 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
+| 762 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 763 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 764 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 765 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -2953,7 +3008,7 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 ---
 
 <a id="table-iq_execution"></a>
-### 47. IQ 시험 수행 (`iq_execution`)
+### 48. IQ 시험 수행 (`iq_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -2970,31 +3025,31 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 757 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 758 | 수행 프로토콜 개정 ID | `iq_item_id` | `uuid` | N | Y | `iq_item.iq_item_id` | Y | - | N | Y | N | Y | iq_item.iq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 759 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
-| 760 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
-| 761 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
-| 762 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
-| 763 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
-| 764 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 화면에서 선택한 수행일. 전자서명 일시와 구분. | `2026-09-16` |
-| 765 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 766 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
-| 767 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 768 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
-| 769 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
-| 770 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
-| 771 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 프로토콜 version과 구분. | `ver1` |
-| 772 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
-| 773 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
-| 774 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
-| 775 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
-| 776 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
-| 777 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 778 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 779 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 780 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 781 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
+| 766 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 767 | 수행 프로토콜 개정 ID | `iq_item_id` | `uuid` | N | Y | `iq_item.iq_item_id` | Y | - | N | Y | N | Y | iq_item.iq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 768 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
+| 769 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
+| 770 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
+| 771 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
+| 772 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
+| 773 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 결과에 전자서명한 날짜(한국 날짜). 서버가 executed_at으로 정하며 사용자가 입력하지 않는다. 절차별 완료 시각은 iq_step_execution.confirmed_at에 남는다. | `2026-09-16` |
+| 774 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 775 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
+| 776 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 777 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
+| 778 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
+| 779 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
+| 780 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 최종 승인될 때마다 ver1, ver2 순으로 올린다. 프로토콜 version과 구분. | `ver1` |
+| 781 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
+| 782 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
+| 783 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
+| 784 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
+| 785 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
+| 786 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 787 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 788 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 789 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 790 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
 
 #### 제약조건
 
@@ -3004,15 +3059,15 @@ fds_revision_id와 dds_revision_id는 승인된 설계 문서의 정확한 개�
 | `rule_iq_execution_1` | 업무 검증 | `iq_item_id, attempt_no, record_revision, is_current_revision` | attempt_no / record_revision >= 1. 같은 시험 개정·회차의 is_current_revision = TRUE 행은 최대 1개(uq_iq_execution_current로 강제) |
 | `rule_iq_execution_2` | 업무 검증 | `actual_result, qualification_result, performed_on, executed_by, executed_at, execution_signature_id` | 승인된 프로토콜에서만 수행 가능. RECORDED 전환 시 모든 절차 완료, actual_result / qualification_result / performed_on / executed_by / executed_at / execution_signature_id 필수. |
 | `rule_iq_execution_3` | 업무 검증 | `qualification_result, deviation_reason, immediate_action` | qualification_result = FAIL이면 deviation_reason, immediate_action 필수. 같은 논리 시험(item_key)에 종료되지 않은 deviation(deviation_status<>'CLOSED')이 없으면 새 deviation을 만들고 source_entity_id = 이 execution_id로 한다. 진행 중인 deviation이 있으면(승인된 조치에 따른 재수행의 FAIL) 새 deviation을 만들지 않고 그 일탈에 다음 round_number의 deviation_action_round를 만들며 failed_execution_id = 이 execution_id로 한다. 일탈 상태 전환은 rule_deviation_9를 따른다. |
-| `rule_iq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
-| `rule_iq_execution_5` | 업무 검증 | - | 결과 최종 승인은 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 가능하며 연결된 일탈의 상태와 무관하게 진행한다. FAIL 결과도 일탈 종결 전에 승인할 수 있다. 결과 승인은 판정이 올바르게 기록되었음을 확인하는 것이며 일탈 처리 완료를 뜻하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
+| `rule_iq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 미수행 종료(closure_kind=CLOSE) 개정이 상신(REVIEW·APPROVAL)된 동안에는 재수행을 시작하지 않으며, 재수행을 시작하면 상신 전(DRAFT) 미수행 종료 개정은 CANCELLED로 종결한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
+| `rule_iq_execution_5` | 업무 검증 | - | 결과 결재는 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 상신하며, 그 시험에 종료되지 않은 일탈이 있으면 상신할 수 없다. 일탈이 모두 종료된 뒤 그 시험의 마지막 유효 결과 하나만 결재·승인하고, 이전 회차의 FAIL 결과는 따로 승인하지 않는다. 결과 결재가 진행 중(REVIEW·APPROVAL)인 동안에는 그 시험의 결과 정정과 새 수행을 시작하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
 | `ck_iq_execution_baseline` | CHECK | `execution_status, system_baseline_id` | CHECK (execution_status <> 'RECORDED' OR system_baseline_id IS NOT NULL) |
 | `rule_iq_execution_6` | 업무 검증 | `qualification_result, record_revision` | 같은 attempt_no의 결과 정정(record_revision 증가): 정정 전 결과가 이미 일탈 또는 조치 회차에 연결된 FAIL이면 정정 결과가 FAIL이어도 새 일탈·새 회차를 만들지 않고 기존 연결을 유지하며 판정은 최신 유효 정정본으로 조회한다. 정정 전 PASS·NA였던 결과가 정정으로 FAIL이 되면 rule_iq_execution_3에 따라 처리한다. FAIL을 PASS로 정정해도 연결된 일탈과 이미 생성된 조치 회차는 그대로 두고, 그 회차 승인 후 재수행 없이 종료(rule_deviation_5)하는 등 일탈 절차로 종결한다. 완료보고 결재가 진행 중이면 재수행 결과를 정정하지 않는다. |
 | `ck_iq_execution_result` | CHECK | `qualification_result` | CHECK (qualification_result IS NULL OR qualification_result IN ('PASS','FAIL','NA')) |
 | `ck_iq_execution_record_status` | CHECK | `record_status` | CHECK (record_status IN ('DRAFT','REVIEW','APPROVAL','APPROVED','REJECTED','CANCELLED')) |
 | `rule_iq_execution_7` | 업무 검증 | `qualification_result` | 종료되지 않은 일탈의 재수행 결과는 PASS 또는 FAIL만 등록한다(NA 불가). 재수행 중 시험이 해당 없다고 판단되면 재수행을 중단(rule_iq_execution_8)한 뒤 재수행 없이 종료(rule_deviation_5)하고 종료 사유에 근거를 기록한다. |
 | `rule_iq_execution_8` | 업무 검증 | `execution_status, abort_reason` | 최초 수행 행(record_revision=1)이 IN_PROGRESS이면 결과를 등록하지 않고 중단(ABORTED)할 수 있다. 결과 정정 행(record_revision≥2)의 취소는 rule_iq_execution_9를 따른다. abort_reason과 중단 전자서명(abort_signature_id, signature_action=ABORT)이 필수이며 중단 처리자·시각은 그 서명의 signer_id·signed_at이다. 중단 후 이 행과 절차 수행·증적은 수정하지 않는다. ABORTED 수행은 결과 승인 대상이 아니며 다음 수행은 새 attempt_no로 시작한다. 중단한 수행이 일탈의 재수행이면 현재 조치 회차와 deviation의 rerun_execution_id 연결을 같은 트랜잭션에서 해제하고 deviation_status는 RERUN_ALLOWED를 유지한다. |
-| `rule_iq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_iq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
+| `rule_iq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_iq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 단, 연결된 일탈이 이미 종료(CLOSED)되었으면 rerun_execution_id를 바꾸지 않고 종료 당시 결과 참조를 보존하며, 정정 결과가 FAIL이면 rule_iq_execution_3에 따라 새 일탈로 처리한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
 | `ck_iq_execution_status` | CHECK | `execution_status` | CHECK (execution_status IN ('IN_PROGRESS','RECORDED','ABORTED')) |
 | `ck_iq_execution_abort` | CHECK | `execution_status, abort_reason, abort_signature_id, execution_signature_id` | CHECK (execution_status <> 'ABORTED' OR (abort_reason IS NOT NULL AND abort_signature_id IS NOT NULL AND execution_signature_id IS NULL)) |
 | `uq_iq_execution_current` | UNIQUE | `iq_item_id, attempt_no, is_current_revision` | UNIQUE (iq_item_id, attempt_no) WHERE is_current_revision=TRUE |
@@ -3029,7 +3084,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-iq_step_execution"></a>
-### 48. IQ 절차 수행 (`iq_step_execution`)
+### 49. IQ 절차 수행 (`iq_step_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3046,16 +3101,16 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 782 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 783 | 수행 ID | `execution_id` | `uuid` | N | Y | `iq_execution.execution_id` | Y | - | N | Y | N | Y | iq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 784 | 절차 ID | `step_id` | `uuid` | N | Y | `iq_step.step_id` | Y | - | N | Y | N | Y | iq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 785 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
-| 786 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 787 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
-| 788 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 789 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 790 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 791 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 791 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 792 | 수행 ID | `execution_id` | `uuid` | N | Y | `iq_execution.execution_id` | Y | - | N | Y | N | Y | iq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 793 | 절차 ID | `step_id` | `uuid` | N | Y | `iq_step.step_id` | Y | - | N | Y | N | Y | iq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 794 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
+| 795 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 796 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
+| 797 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 798 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 799 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 800 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3067,7 +3122,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 #### 업무 규칙
 
-절차 첨부 파일은 evidence_link의 IQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다.
+절차 첨부 파일은 evidence_link의 IQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다. 결과 정정 행을 만들 때는 이전 유효 결과의 절차 완료 값을 정정 행의 새 절차 수행 행으로 복사하고 증적은 기존 file_id로 다시 연결하며, 원래 행의 절차 기록은 바꾸지 않는다.
 
 [↑ 맨 위로](#top)
 
@@ -3076,7 +3131,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ## OQ
 
 <a id="table-oq_assessment"></a>
-### 49. 운전 적격성 평가 (`oq_assessment`)
+### 50. 운전 적격성 평가 (`oq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3093,22 +3148,22 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 792 | OQ ID | `oq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | OQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 793 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 794 | OQ 번호 | `oq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | OQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `OQ-VP-SYS-010-20260529` |
-| 795 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 운전 적격성 평가 문서 제목 | `Operational Qualification` |
-| 796 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | OQ 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
-| 797 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | OQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
-| 798 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | OQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
-| 799 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 OQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
-| 800 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | OQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 801 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | OQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 802 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 803 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | OQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 804 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 805 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | OQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 806 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_oq_assessment_3) | `2026-09-01T00:00:00Z` |
-| 807 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"oq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
+| 801 | OQ ID | `oq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | OQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 802 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 803 | OQ 번호 | `oq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | OQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `OQ-VP-SYS-010-20260529` |
+| 804 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 운전 적격성 평가 문서 제목 | `Operational Qualification` |
+| 805 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | OQ 평가 문서 표시 버전. 평가 개정을 만들 때의 결과서(RECORD) 버전을 따르며 본문만 개정하면 바뀌지 않는다 (예: v1.0, v1.1) | `v1.0` |
+| 806 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | OQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
+| 807 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | OQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
+| 808 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 OQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
+| 809 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | OQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 810 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | OQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 811 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 812 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | OQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 813 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 814 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | OQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 815 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_oq_assessment_3) | `2026-09-01T00:00:00Z` |
+| 816 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"oq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
 
 #### 제약조건
 
@@ -3129,18 +3184,18 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 산출물 제목·본문·출력 형식만 변경할 때는 deliverable_revision만 새로 생성하고 평가 행과 시험 항목은 유지한다. 평가 범위·상위 업무 정보 또는 시험 구성이 변경되면 새 평가 개정 행을 만들고 item_revision_refs에 그 시점의 전체 구성을 고정한다. 변경 없는 시험 항목은 동일한 PK·버전을 다시 참조하며 복제하거나 상위 FK를 옮기지 않는다. 시험 프로토콜 내용이 바뀐 항목만 동일 item_key를 유지하는 새 개정행을 생성하여 새 구성에 포함한다.
 
-구성의 대상은 oq_item의 실제 개정이며 같은 프로젝트·OQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 oq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 폐기(is_disposed=TRUE)되지 않은 것이다. protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
+구성의 대상은 oq_item의 실제 개정이며 같은 프로젝트·OQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 oq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 그 item_key가 폐기되지 않은 것이다(같은 item_key의 개정 중 is_disposed=TRUE인 행이 있으면 폐기). protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-oq_item"></a>
-### 50. OQ 상세 테스트 항목 (`oq_item`)
+### 51. OQ 상세 테스트 항목 (`oq_item`)
 
 | 항목 | 정의 |
 |---|---|
-| 설명 | OQ 시험 항목의 프로토콜 개정, 내용, 기대 결과, 허용 기준 및 등록 출처 관리 |
+| 설명 | OQ 시험 항목의 프로토콜 개정, 내용, 허용 기준 및 등록 출처 관리 |
 | Primary Key | `oq_item_id` |
 | 주요 참조(FK) | `oq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` |
 | GxP 중요도 | High |
@@ -3153,37 +3208,37 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 808 | OQ 항목 ID | `oq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | OQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
-| 809 | OQ ID | `oq_id` | `uuid` | N | Y | `oq_assessment.oq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
-| 810 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
-| 811 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `OQ-AT-L01` |
-| 812 | 테스트 케이스 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. 별도 분류값이 아님. | `Audit Trail` |
-| 813 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 검증 수행 상세 절차 | `사용자 데이터 변경 시 감사추적 자동 생성` |
-| 814 | 기대 결과 | `expected_result` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 성공 기준 및 기대 결과 | `변경 전/후 값, 사용자, 날짜/시간, IP 기록` |
-| 815 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 이 시험 개정의 독립적인 승인 상태이며 상위 문서 상태로 덮어쓰지 않음. | `DRAFT` |
-| 816 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 817 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 818 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 819 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 820 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_oq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
-| 821 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
-| 822 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
-| 823 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. | - |
-| 824 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
-| 825 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
-| 826 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
-| 827 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
-| 828 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `OQ-CORE` |
-| 829 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
-| 830 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `OQ-PKG-001` |
-| 831 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `OQ-001` |
-| 832 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
-| 833 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
-| 834 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
-| 835 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
-| 836 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
-| 837 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
-| 838 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
+| 817 | OQ 항목 ID | `oq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | OQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
+| 818 | OQ ID | `oq_id` | `uuid` | N | Y | `oq_assessment.oq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
+| 819 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
+| 820 | 테스트 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 등록 때 OQ-T-{순번} 형식(예: OQ-T-001)으로 발급하는 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `OQ-T-001` |
+| 821 | 테스트 케이스 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. 별도 분류값이 아님. | `Audit Trail` |
+| 822 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 검증 수행 상세 절차 | `사용자 데이터 변경 시 감사추적 자동 생성` |
+| 823 | 기대 결과 | `expected_result` | `text` | N | N | - | N | - | N | N | N | Y | 이전 기록 보존용. 기대 결과는 더 입력받지 않으며 새 시험은 NULL | `변경 전/후 값, 사용자, 날짜/시간, IP 기록` |
+| 824 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 이 시험 개정의 독립적인 승인 상태이며 상위 문서 상태로 덮어쓰지 않음. | `DRAFT` |
+| 825 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 826 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 827 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 828 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 829 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_oq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
+| 830 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
+| 831 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
+| 832 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. 앞 단계 개정으로 시험 계획이 자동 개정되면 서버가 시스템 문구로 기록한다. | - |
+| 833 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
+| 834 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
+| 835 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
+| 836 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
+| 837 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `OQ-CORE` |
+| 838 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
+| 839 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `OQ-PKG-001` |
+| 840 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시험의 최종 결과 승인 때 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `OQ-001` |
+| 841 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
+| 842 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
+| 843 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
+| 844 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
+| 845 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
+| 846 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
+| 847 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -3192,13 +3247,13 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 | `uq_oq_item_1` | UNIQUE | `item_key, revision_number` | UNIQUE(item_key, revision_number) |
 | `rule_oq_item_1` | 업무 검증 | `item_key, revision_number, is_current_version` | 같은 item_key는 동일 프로젝트와 OQ 단계에 속한다. is_current_version = TRUE 행은 item_key별 최대 1개 |
 | `rule_oq_item_2` | 업무 검증 | - | protocol_status는 DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 상신(REVIEW) 이후의 프로토콜과 절차는 직접 수정하지 않으며, 반려·취소 후 수정과 승인 후 변경은 새 개정 행으로 처리한다. |
-| `rule_oq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최초 승인 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
+| `rule_oq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최종 결과 승인 때 발급하는 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
 | `rule_oq_item_4` | 업무 검증 | `source_library_id, source_package_code, source_package_version, source_template_code` | LIBRARY 등록이면 source_library_id 필수. SYSTEM_PACKAGE 등록이면 source_package_code / source_package_version / source_template_code 필수. |
 | `rule_oq_item_5` | 업무 검증 | - | 복수 URS 연결은 traceability_link의 REQUIREMENT → OQ_ITEM / VERIFIED_BY로 관리한다. |
-| `rule_oq_item_6` | 업무 검증 | - | 활성 시험 등록 및 프로토콜 승인에는 연결된 URS 개정이 최소 1개 필요하며 내용이 비어 있지 않은 세부 절차가 최소 1개 있어야 한다. |
+| `rule_oq_item_6` | 업무 검증 | - | 등록 출처가 LIBRARY·SYSTEM_PACKAGE인 시험은 연결된 URS 개정이 최소 1개 필요하고, 직접 등록(MANUAL)·AI 초안(AI_DRAFT) 시험은 URS 없이 등록·승인할 수 있다. URS 연결(필요한 경우)과 내용이 비어 있지 않은 세부 절차 최소 1개는 등록 때가 아니라 프로토콜(PROTOCOL) 상신 때 검사한다. |
 | `rule_oq_item_7` | 업무 검증 | `disposal_reason, disposal_workflow_id, disposal_signature_id, is_disposed, disposed_by, disposed_at` | 폐기는 폐기 권한자가 사유를 입력해 폐기 결재(approval_scope=DISPOSAL)를 상신하고 최종 승인으로 완료한다. is_disposed = TRUE이면 disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at 필수이며 disposal_signature_id·disposed_by·disposed_at은 그 결재의 최종 승인 서명·승인자·시각과 일치해야 한다. |
 | `ck_oq_item_disposal` | CHECK | `is_disposed, disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at` | CHECK (is_disposed = FALSE OR (disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL AND disposal_signature_id IS NOT NULL AND disposed_by IS NOT NULL AND disposed_at IS NOT NULL)) |
-| `rule_oq_item_8` | 업무 검증 | - | 폐기는 동일 item_key의 활성 여부에 적용하고 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
+| `rule_oq_item_8` | 업무 검증 | - | 폐기는 폐기 결재 대상 개정에 is_disposed=TRUE로 기록하고 동일 item_key 전체의 활성 여부에 적용하며, 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
 | `uq_oq_item_current` | UNIQUE | `item_key` | UNIQUE (item_key) WHERE is_current_version=TRUE |
 | `rule_oq_item_9` | 업무 검증 | `deleted_at` | deleted_at은 상신 이력이 없는 DRAFT 개정에만 설정할 수 있다. 같은 item_key에 APPROVED 개정이 있으면 삭제할 수 없으며 사용 중지는 폐기(is_disposed, rule_oq_item_7)로 처리한다. |
 | `ck_oq_item_source` | CHECK | `source_type` | CHECK (source_type IN ('MANUAL','LIBRARY','SYSTEM_PACKAGE','AI_DRAFT')) |
@@ -3207,7 +3262,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 #### 업무 규칙
 
-시험 내용은 test_description, 기대 결과는 expected_result, 허용 기준은 acceptance_criteria에 저장한다. 반복 절차는 oq_step, 실제 결과·서명·재수행 이력은 oq_execution에서 관리한다.
+시험 내용은 test_description, 허용 기준은 acceptance_criteria에 저장한다. expected_result는 이전 기록 보존용이다. 반복 절차는 oq_step, 실제 결과·서명·재수행 이력은 oq_execution에서 관리한다.
 
 같은 item_key의 모든 개정은 동일 프로젝트에 속한다. 항목 번호 approval_number·test_id는 최초 부여 후 후속 개정에서 유지한다. 승인 시 번호가 부여되는 항목의 미승인 초안은 NULL을 허용한다. 같은 프로젝트·같은 테이블의 다른 논리키에 해당 번호를 재사용하지 않으며 폐기 후에도 다른 항목에 재배정하지 않는다. 번호 발급과 개정 생성은 프로젝트 및 논리 항목에 대한 동시 처리 잠금으로 직렬화하고 같은 트랜잭션에서 중복·소속·번호 유지 조건을 검증한다.
 
@@ -3216,7 +3271,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-oq_step"></a>
-### 51. OQ 시험 절차 (`oq_step`)
+### 52. OQ 시험 절차 (`oq_step`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3233,14 +3288,14 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 839 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 840 | 시험 개정 ID | `oq_item_id` | `uuid` | N | Y | `oq_item.oq_item_id` | Y | - | N | Y | N | Y | oq_item.oq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 841 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
-| 842 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
-| 843 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 844 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 845 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 846 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 848 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 849 | 시험 개정 ID | `oq_item_id` | `uuid` | N | Y | `oq_item.oq_item_id` | Y | - | N | Y | N | Y | oq_item.oq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 850 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
+| 851 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
+| 852 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 853 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 854 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 855 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3259,7 +3314,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-oq_execution"></a>
-### 52. OQ 시험 수행 (`oq_execution`)
+### 53. OQ 시험 수행 (`oq_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3276,31 +3331,31 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 847 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 848 | 수행 프로토콜 개정 ID | `oq_item_id` | `uuid` | N | Y | `oq_item.oq_item_id` | Y | - | N | Y | N | Y | oq_item.oq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 849 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
-| 850 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
-| 851 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
-| 852 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
-| 853 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
-| 854 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 화면에서 선택한 수행일. 전자서명 일시와 구분. | `2026-09-16` |
-| 855 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 856 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
-| 857 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 858 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
-| 859 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
-| 860 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
-| 861 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 프로토콜 version과 구분. | `ver1` |
-| 862 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
-| 863 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
-| 864 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
-| 865 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
-| 866 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
-| 867 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 868 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 869 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 870 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 871 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
+| 856 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 857 | 수행 프로토콜 개정 ID | `oq_item_id` | `uuid` | N | Y | `oq_item.oq_item_id` | Y | - | N | Y | N | Y | oq_item.oq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 858 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
+| 859 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
+| 860 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
+| 861 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
+| 862 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
+| 863 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 결과에 전자서명한 날짜(한국 날짜). 서버가 executed_at으로 정하며 사용자가 입력하지 않는다. 절차별 완료 시각은 oq_step_execution.confirmed_at에 남는다. | `2026-09-16` |
+| 864 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 865 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
+| 866 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 867 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
+| 868 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
+| 869 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
+| 870 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 최종 승인될 때마다 ver1, ver2 순으로 올린다. 프로토콜 version과 구분. | `ver1` |
+| 871 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
+| 872 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
+| 873 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
+| 874 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
+| 875 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
+| 876 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 877 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 878 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 879 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 880 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
 
 #### 제약조건
 
@@ -3310,15 +3365,15 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 | `rule_oq_execution_1` | 업무 검증 | `oq_item_id, attempt_no, record_revision, is_current_revision` | attempt_no / record_revision >= 1. 같은 시험 개정·회차의 is_current_revision = TRUE 행은 최대 1개(uq_oq_execution_current로 강제) |
 | `rule_oq_execution_2` | 업무 검증 | `actual_result, qualification_result, performed_on, executed_by, executed_at, execution_signature_id` | 승인된 프로토콜에서만 수행 가능. RECORDED 전환 시 모든 절차 완료, actual_result / qualification_result / performed_on / executed_by / executed_at / execution_signature_id 필수. |
 | `rule_oq_execution_3` | 업무 검증 | `qualification_result, deviation_reason, immediate_action` | qualification_result = FAIL이면 deviation_reason, immediate_action 필수. 같은 논리 시험(item_key)에 종료되지 않은 deviation(deviation_status<>'CLOSED')이 없으면 새 deviation을 만들고 source_entity_id = 이 execution_id로 한다. 진행 중인 deviation이 있으면(승인된 조치에 따른 재수행의 FAIL) 새 deviation을 만들지 않고 그 일탈에 다음 round_number의 deviation_action_round를 만들며 failed_execution_id = 이 execution_id로 한다. 일탈 상태 전환은 rule_deviation_9를 따른다. |
-| `rule_oq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
-| `rule_oq_execution_5` | 업무 검증 | - | 결과 최종 승인은 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 가능하며 연결된 일탈의 상태와 무관하게 진행한다. FAIL 결과도 일탈 종결 전에 승인할 수 있다. 결과 승인은 판정이 올바르게 기록되었음을 확인하는 것이며 일탈 처리 완료를 뜻하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
+| `rule_oq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 미수행 종료(closure_kind=CLOSE) 개정이 상신(REVIEW·APPROVAL)된 동안에는 재수행을 시작하지 않으며, 재수행을 시작하면 상신 전(DRAFT) 미수행 종료 개정은 CANCELLED로 종결한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
+| `rule_oq_execution_5` | 업무 검증 | - | 결과 결재는 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 상신하며, 그 시험에 종료되지 않은 일탈이 있으면 상신할 수 없다. 일탈이 모두 종료된 뒤 그 시험의 마지막 유효 결과 하나만 결재·승인하고, 이전 회차의 FAIL 결과는 따로 승인하지 않는다. 결과 결재가 진행 중(REVIEW·APPROVAL)인 동안에는 그 시험의 결과 정정과 새 수행을 시작하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
 | `ck_oq_execution_baseline` | CHECK | `execution_status, system_baseline_id` | CHECK (execution_status <> 'RECORDED' OR system_baseline_id IS NOT NULL) |
 | `rule_oq_execution_6` | 업무 검증 | `qualification_result, record_revision` | 같은 attempt_no의 결과 정정(record_revision 증가): 정정 전 결과가 이미 일탈 또는 조치 회차에 연결된 FAIL이면 정정 결과가 FAIL이어도 새 일탈·새 회차를 만들지 않고 기존 연결을 유지하며 판정은 최신 유효 정정본으로 조회한다. 정정 전 PASS·NA였던 결과가 정정으로 FAIL이 되면 rule_oq_execution_3에 따라 처리한다. FAIL을 PASS로 정정해도 연결된 일탈과 이미 생성된 조치 회차는 그대로 두고, 그 회차 승인 후 재수행 없이 종료(rule_deviation_5)하는 등 일탈 절차로 종결한다. 완료보고 결재가 진행 중이면 재수행 결과를 정정하지 않는다. |
 | `ck_oq_execution_result` | CHECK | `qualification_result` | CHECK (qualification_result IS NULL OR qualification_result IN ('PASS','FAIL','NA')) |
 | `ck_oq_execution_record_status` | CHECK | `record_status` | CHECK (record_status IN ('DRAFT','REVIEW','APPROVAL','APPROVED','REJECTED','CANCELLED')) |
 | `rule_oq_execution_7` | 업무 검증 | `qualification_result` | 종료되지 않은 일탈의 재수행 결과는 PASS 또는 FAIL만 등록한다(NA 불가). 재수행 중 시험이 해당 없다고 판단되면 재수행을 중단(rule_oq_execution_8)한 뒤 재수행 없이 종료(rule_deviation_5)하고 종료 사유에 근거를 기록한다. |
 | `rule_oq_execution_8` | 업무 검증 | `execution_status, abort_reason` | 최초 수행 행(record_revision=1)이 IN_PROGRESS이면 결과를 등록하지 않고 중단(ABORTED)할 수 있다. 결과 정정 행(record_revision≥2)의 취소는 rule_oq_execution_9를 따른다. abort_reason과 중단 전자서명(abort_signature_id, signature_action=ABORT)이 필수이며 중단 처리자·시각은 그 서명의 signer_id·signed_at이다. 중단 후 이 행과 절차 수행·증적은 수정하지 않는다. ABORTED 수행은 결과 승인 대상이 아니며 다음 수행은 새 attempt_no로 시작한다. 중단한 수행이 일탈의 재수행이면 현재 조치 회차와 deviation의 rerun_execution_id 연결을 같은 트랜잭션에서 해제하고 deviation_status는 RERUN_ALLOWED를 유지한다. |
-| `rule_oq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_oq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
+| `rule_oq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_oq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 단, 연결된 일탈이 이미 종료(CLOSED)되었으면 rerun_execution_id를 바꾸지 않고 종료 당시 결과 참조를 보존하며, 정정 결과가 FAIL이면 rule_oq_execution_3에 따라 새 일탈로 처리한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
 | `ck_oq_execution_status` | CHECK | `execution_status` | CHECK (execution_status IN ('IN_PROGRESS','RECORDED','ABORTED')) |
 | `ck_oq_execution_abort` | CHECK | `execution_status, abort_reason, abort_signature_id, execution_signature_id` | CHECK (execution_status <> 'ABORTED' OR (abort_reason IS NOT NULL AND abort_signature_id IS NOT NULL AND execution_signature_id IS NULL)) |
 | `uq_oq_execution_current` | UNIQUE | `oq_item_id, attempt_no, is_current_revision` | UNIQUE (oq_item_id, attempt_no) WHERE is_current_revision=TRUE |
@@ -3335,7 +3390,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-oq_step_execution"></a>
-### 53. OQ 절차 수행 (`oq_step_execution`)
+### 54. OQ 절차 수행 (`oq_step_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3352,16 +3407,16 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 872 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 873 | 수행 ID | `execution_id` | `uuid` | N | Y | `oq_execution.execution_id` | Y | - | N | Y | N | Y | oq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 874 | 절차 ID | `step_id` | `uuid` | N | Y | `oq_step.step_id` | Y | - | N | Y | N | Y | oq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 875 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
-| 876 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 877 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
-| 878 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 879 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 880 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 881 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 881 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 882 | 수행 ID | `execution_id` | `uuid` | N | Y | `oq_execution.execution_id` | Y | - | N | Y | N | Y | oq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 883 | 절차 ID | `step_id` | `uuid` | N | Y | `oq_step.step_id` | Y | - | N | Y | N | Y | oq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 884 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
+| 885 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 886 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
+| 887 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 888 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 889 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 890 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3373,7 +3428,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 #### 업무 규칙
 
-절차 첨부 파일은 evidence_link의 OQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다.
+절차 첨부 파일은 evidence_link의 OQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다. 결과 정정 행을 만들 때는 이전 유효 결과의 절차 완료 값을 정정 행의 새 절차 수행 행으로 복사하고 증적은 기존 file_id로 다시 연결하며, 원래 행의 절차 기록은 바꾸지 않는다.
 
 [↑ 맨 위로](#top)
 
@@ -3382,7 +3437,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ## PQ
 
 <a id="table-pq_assessment"></a>
-### 54. 성능 적격성 평가 (`pq_assessment`)
+### 55. 성능 적격성 평가 (`pq_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3399,22 +3454,22 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 882 | PQ ID | `pq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | PQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 883 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 884 | PQ 번호 | `pq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | PQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `PQ-VP-SYS-008-20260422` |
-| 885 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 성능 적격성 평가 문서 제목 | `Performance Qualification` |
-| 886 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | PQ 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
-| 887 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | PQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
-| 888 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | PQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
-| 889 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 PQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
-| 890 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | PQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 891 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | PQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
-| 892 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 893 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 894 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 895 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 896 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_pq_assessment_3) | `2026-09-01T00:00:00Z` |
-| 897 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"pq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
+| 891 | PQ ID | `pq_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | PQ 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 892 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 893 | PQ 번호 | `pq_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | PQ 문서 번호. 같은 문서의 개정 행에서는 동일 번호를 유지한다. | `PQ-VP-SYS-008-20260422` |
+| 894 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 성능 적격성 평가 문서 제목 | `Performance Qualification` |
+| 895 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | PQ 평가 문서 표시 버전. 평가 개정을 만들 때의 결과서(RECORD) 버전을 따르며 본문만 개정하면 바뀌지 않는다 (예: v1.0, v1.1) | `v1.0` |
+| 896 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | PQ 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
+| 897 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | PQ 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
+| 898 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 PQ 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
+| 899 | 프로토콜 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | PQ 프로토콜 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 900 | 레코드 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | PQ 수행 결과 승인 요약. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려). 구성에 속한 하위 상태를 업무 규칙의 집계 규칙으로 산출한 표시값이며 하위 행에 일괄 덮어쓰지 않음. 헤더는 결재 대상이 아니므로 CANCELLED를 두지 않는다. | `DRAFT` |
+| 901 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 902 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PQ 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 903 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 904 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PQ 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 905 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각. 구성(item_revision_refs)에 상신 이력이 있는 시험 개정이 있거나 상신된 문서·전자서명이 참조하는 평가 개정은 삭제할 수 없다(rule_pq_assessment_3) | `2026-09-01T00:00:00Z` |
+| 906 | 평가 개정별 시험 구성 | `item_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | [{table_name:"pq_item",record_id,version,sort_order}] 배열. 이 평가 개정의 전체 시험 구성과 순서를 식별하며 이전 평가 개정의 변경 없는 시험 PK를 재사용할 수 있다. | - |
 
 #### 제약조건
 
@@ -3435,18 +3490,18 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 산출물 제목·본문·출력 형식만 변경할 때는 deliverable_revision만 새로 생성하고 평가 행과 시험 항목은 유지한다. 평가 범위·상위 업무 정보 또는 시험 구성이 변경되면 새 평가 개정 행을 만들고 item_revision_refs에 그 시점의 전체 구성을 고정한다. 변경 없는 시험 항목은 동일한 PK·버전을 다시 참조하며 복제하거나 상위 FK를 옮기지 않는다. 시험 프로토콜 내용이 바뀐 항목만 동일 item_key를 유지하는 새 개정행을 생성하여 새 구성에 포함한다.
 
-구성의 대상은 pq_item의 실제 개정이며 같은 프로젝트·PQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 pq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 폐기(is_disposed=TRUE)되지 않은 것이다. protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
+구성의 대상은 pq_item의 실제 개정이며 같은 프로젝트·PQ 단계에 속해야 한다. 항목의 원본 상위 평가와 이 평가의 pq_no가 같아야 한다. 한 구성에 같은 item_key의 서로 다른 개정을 중복 포함하지 않고 record_id·sort_order도 중복을 금지한다. 구성은 정렬 순서를 포함한 전체 목록이며 특정 문서가 처음 상신될 때 잠근다. 상신된 문서 또는 과거 서명이 참조하는 평가 구성은 수정·삭제하지 않는다. 구성에 없는 행을 원본 상위 FK만으로 자동 포함하지 않는다. 프로토콜·결과 승인 요약은 해당 구성에 속한 항목과 수행에서 산출한다. 집계 대상은 구성(item_revision_refs)이 가리키는 시험 개정 중 그 item_key가 폐기되지 않은 것이다(같은 item_key의 개정 중 is_disposed=TRUE인 행이 있으면 폐기). protocol_status는 각 시험 개정의 protocol_status를, record_status는 각 시험 개정에서 최초 수행 행(record_revision=1)이 중단(ABORTED)되지 않은 마지막 attempt_no의 유효 결과(is_current_revision=TRUE) record_status를 사용하며 수행이 없으면 DRAFT로 본다. 하나라도 REJECTED이면 REJECTED를 표시하고, 그렇지 않으면 CANCELLED를 DRAFT로 간주하여 DRAFT < REVIEW < APPROVAL < APPROVED 중 가장 덜 진행된 상태를 표시한다. 집계 대상이 없으면 DRAFT이다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-pq_item"></a>
-### 55. PQ 상세 테스트 항목 (`pq_item`)
+### 56. PQ 상세 테스트 항목 (`pq_item`)
 
 | 항목 | 정의 |
 |---|---|
-| 설명 | PQ 시험 항목의 프로토콜 개정, 내용, 기대 결과, 허용 기준 및 등록 출처 관리 |
+| 설명 | PQ 시험 항목의 프로토콜 개정, 내용, 허용 기준 및 등록 출처 관리 |
 | Primary Key | `pq_item_id` |
 | 주요 참조(FK) | `pq_id, created_by, updated_by, source_library_id, protocol_workflow_id, disposal_workflow_id, disposal_signature_id, disposed_by` |
 | GxP 중요도 | High |
@@ -3459,37 +3514,37 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 898 | PQ 항목 ID | `pq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | PQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
-| 899 | PQ ID | `pq_id` | `uuid` | N | Y | `pq_assessment.pq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
-| 900 | 시험 표시 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `PQ-NEW-01` |
-| 901 | 시험 항목명 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. | `업무 시나리오 검증` |
-| 902 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
-| 903 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | PQ 테스트 검증 수행 상세 절차 | `연속 3배치 이상 생산 공정 정상 완료 검증` |
-| 904 | 기대 결과 | `expected_result` | `text` | N | N | - | Y | - | N | N | N | Y | 테스트 성공 기준 및 기대 결과 | `모든 배치가 사양에 맞게 정상 생산 완료되어야 함` |
-| 905 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 906 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 907 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 908 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 909 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_pq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
-| 910 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
-| 911 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
-| 912 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. | - |
-| 913 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
-| 914 | 프로토콜 승인 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소) | `DRAFT` |
-| 915 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
-| 916 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
-| 917 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
-| 918 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `PQ-CORE` |
-| 919 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
-| 920 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `PQ-PKG-001` |
-| 921 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 최초 승인 시 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `PQ-001` |
-| 922 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
-| 923 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
-| 924 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
-| 925 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
-| 926 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
-| 927 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
-| 928 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
+| 907 | PQ 항목 ID | `pq_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | PQ 시험 항목의 특정 프로토콜 개정 행 PK. item_key는 개정 간 동일하게 유지한다. | `00000000-0000-0000-0000-000000000001` |
+| 908 | PQ ID | `pq_id` | `uuid` | N | Y | `pq_assessment.pq_id` | Y | - | N | Y | N | Y | 이 논리 시험을 최초 등록한 상위 평가 개정. 후속 항목 개정에서도 동일한 원본 상위를 유지한다. 평가 개정별 실제 구성은 item_revision_refs에서 조회한다. | `00000000-0000-0000-0000-000000000001` |
+| 909 | 시험 표시 ID | `test_id` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | 등록 때 PQ-T-{순번} 형식(예: PQ-T-001)으로 발급하는 화면 시험 표시 ID. 동일 항목의 개정에서 같은 값을 유지하며, 다른 item_key 간 프로젝트 내 중복 금지. | `PQ-T-001` |
+| 910 | 시험 항목명 | `test_case` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 화면의 테스트 항목 제목. 별도 분류값이 아님. | `업무 시나리오 검증` |
+| 911 | 시험 항목 논리 ID | `item_key` | `uuid` | N | N | - | Y | `gen_random_uuid()` | N | Y | N | Y | 동일 시험 항목의 여러 개정을 묶는 식별자. 신규 항목에 한 번 발급하고 개정 시 유지. | `00000000-0000-0000-0000-000000000001` |
+| 912 | 테스트 내용 | `test_description` | `text` | N | N | - | Y | - | N | N | N | Y | PQ 테스트 검증 수행 상세 절차 | `연속 3배치 이상 생산 공정 정상 완료 검증` |
+| 913 | 기대 결과 | `expected_result` | `text` | N | N | - | N | - | N | N | N | Y | 이전 기록 보존용. 기대 결과는 더 입력받지 않으며 새 시험은 NULL | `모든 배치가 사양에 맞게 정상 생산 완료되어야 함` |
+| 914 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 915 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 916 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 917 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 918 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 미승인 초안 삭제 시각. 상신 이력이 없는 DRAFT 개정만 삭제할 수 있으며, 승인 이력이 있는 항목(같은 item_key에 APPROVED 개정 존재)은 삭제 대신 폐기(is_disposed, rule_pq_item_7)로 처리한다 | `2026-09-01T00:00:00Z` |
+| 919 | 프로토콜 버전 | `version` | `varchar(20)` | N | N | - | Y | `'ver1'` | N | N | N | Y | 화면에 표시하는 프로토콜 개정 버전. | `ver1` |
+| 920 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | item_key 내 개정 순번. 1 이상. | `1` |
+| 921 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 프로토콜을 개정할 때 입력하는 변경 사유. 앞 단계 개정으로 시험 계획이 자동 개정되면 서버가 시스템 문구로 기록한다. | - |
+| 922 | 최신 개정 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 동일 item_key의 최신 작업 개정 여부. 승인본 여부와 별개. | `TRUE` |
+| 923 | 프로토콜 승인 상태 | `protocol_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 이 시험 개정의 독립적인 승인 상태이며 상위 문서 상태로 덮어쓰지 않음. | `DRAFT` |
+| 924 | 허용 기준 | `acceptance_criteria` | `text` | N | N | - | Y | - | N | N | N | Y | 화면의 허용 기준. expected_result(기대 결과)와 구분. | `승인된 사양과 일치` |
+| 925 | 등록 출처 | `source_type` | `varchar(30)` | N | N | - | Y | `'MANUAL'` | N | N | N | Y | MANUAL(직접 등록), LIBRARY(라이브러리), SYSTEM_PACKAGE(시스템 패키지), AI_DRAFT(AI 초안). requirement·fra_item.source_type과 같은 코드 | `MANUAL` |
+| 926 | 원본 라이브러리 ID | `source_library_id` | `uuid` | N | Y | `library_item.library_id` | N | - | N | Y | N | Y | 라이브러리에서 등록한 경우의 원본. 시험 내용은 등록 시 복사되어 이후 독립적으로 관리. | `00000000-0000-0000-0000-000000000001` |
+| 927 | 원본 패키지 코드 | `source_package_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시스템 패키지에서 등록한 경우의 패키지 코드. | `PQ-CORE` |
+| 928 | 원본 패키지 버전 | `source_package_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 등록 시 선택한 패키지 버전. | `ver2` |
+| 929 | 원본 템플릿 코드 | `source_template_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 패키지 내부에서 선택한 시험 템플릿 코드. | `PQ-PKG-001` |
+| 930 | 항목 승인번호 | `approval_number` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | 시험의 최종 결과 승인 때 발급해 화면 항목 번호로 표시. 개정 시 같은 논리 항목 번호를 유지. | `PQ-001` |
+| 931 | 프로토콜 승인 워크플로우 | `protocol_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 프로토콜 개정에 대한 작성·검토·승인 경로 및 이력. | `00000000-0000-0000-0000-000000000001` |
+| 932 | 폐기 사유 | `disposal_reason` | `text` | N | N | - | N | - | N | N | N | Y | 화면 폐기 승인에서 입력하는 사유. 폐기 완료 시 필수. | - |
+| 933 | 폐기 승인 절차 ID | `disposal_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 폐기 결재(approval_scope=DISPOSAL). 폐기는 이 결재의 최종 승인으로 완료한다 | `00000000-0000-0000-0000-000000000001` |
+| 934 | 폐기 승인 서명 | `disposal_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 폐기 결재(disposal_workflow_id)의 최종 승인 전자서명. | `00000000-0000-0000-0000-000000000001` |
+| 935 | 폐기 여부 | `is_disposed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면의 폐기 상태. 폐기 항목은 신규 수행·집계 대상에서 제외하며 기존 기록은 보존. | `FALSE` |
+| 936 | 폐기 처리자 | `disposed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 폐기 결재의 최종 승인자 | `00000000-0000-0000-0000-000000000001` |
+| 937 | 폐기 시각 | `disposed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 폐기 결재의 최종 승인 시각. | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -3498,13 +3553,13 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 | `uq_pq_item_1` | UNIQUE | `item_key, revision_number` | UNIQUE(item_key, revision_number) |
 | `rule_pq_item_1` | 업무 검증 | `item_key, revision_number, is_current_version` | 같은 item_key는 동일 프로젝트와 PQ 단계에 속한다. is_current_version = TRUE 행은 item_key별 최대 1개 |
 | `rule_pq_item_2` | 업무 검증 | - | protocol_status는 DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 상신(REVIEW) 이후의 프로토콜과 절차는 직접 수정하지 않으며, 반려·취소 후 수정과 승인 후 변경은 새 개정 행으로 처리한다. |
-| `rule_pq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최초 승인 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
+| `rule_pq_item_3` | 업무 검증 | - | approval_number는 논리 항목의 최종 결과 승인 때 발급하는 번호이며, 개정이 바뀌어도 유지한다. 승인·폐기 서명은 해당 항목 개정을 대상으로 한 workflow_instance / approval_action / electronic_signature에서 보존한다. 같은 프로젝트 안의 서로 다른 논리 항목에 동일 승인 번호를 배정하지 않는다. |
 | `rule_pq_item_4` | 업무 검증 | `source_library_id, source_package_code, source_package_version, source_template_code` | LIBRARY 등록이면 source_library_id 필수. SYSTEM_PACKAGE 등록이면 source_package_code / source_package_version / source_template_code 필수. |
 | `rule_pq_item_5` | 업무 검증 | - | 복수 URS 연결은 traceability_link의 REQUIREMENT → PQ_ITEM / VERIFIED_BY로 관리한다. |
-| `rule_pq_item_6` | 업무 검증 | - | 활성 시험 등록 및 프로토콜 승인에는 연결된 URS 개정이 최소 1개 필요하며 내용이 비어 있지 않은 세부 절차가 최소 1개 있어야 한다. |
+| `rule_pq_item_6` | 업무 검증 | - | 등록 출처가 LIBRARY·SYSTEM_PACKAGE인 시험은 연결된 URS 개정이 최소 1개 필요하고, 직접 등록(MANUAL)·AI 초안(AI_DRAFT) 시험은 URS 없이 등록·승인할 수 있다. URS 연결(필요한 경우)과 내용이 비어 있지 않은 세부 절차 최소 1개는 등록 때가 아니라 프로토콜(PROTOCOL) 상신 때 검사한다. |
 | `rule_pq_item_7` | 업무 검증 | `disposal_reason, disposal_workflow_id, disposal_signature_id, is_disposed, disposed_by, disposed_at` | 폐기는 폐기 권한자가 사유를 입력해 폐기 결재(approval_scope=DISPOSAL)를 상신하고 최종 승인으로 완료한다. is_disposed = TRUE이면 disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at 필수이며 disposal_signature_id·disposed_by·disposed_at은 그 결재의 최종 승인 서명·승인자·시각과 일치해야 한다. |
 | `ck_pq_item_disposal` | CHECK | `is_disposed, disposal_reason, disposal_workflow_id, disposal_signature_id, disposed_by, disposed_at` | CHECK (is_disposed = FALSE OR (disposal_reason IS NOT NULL AND length(trim(disposal_reason)) > 0 AND disposal_workflow_id IS NOT NULL AND disposal_signature_id IS NOT NULL AND disposed_by IS NOT NULL AND disposed_at IS NOT NULL)) |
-| `rule_pq_item_8` | 업무 검증 | - | 폐기는 동일 item_key의 활성 여부에 적용하고 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
+| `rule_pq_item_8` | 업무 검증 | - | 폐기는 폐기 결재 대상 개정에 is_disposed=TRUE로 기록하고 동일 item_key 전체의 활성 여부에 적용하며, 과거 승인 기록은 보존한다. 폐기 상태·사유·서명 메타데이터의 추가는 승인된 시험 본문·절차를 수정하는 개정과 구분하며, 원래 승인 내용은 변경하지 않는다. |
 | `uq_pq_item_current` | UNIQUE | `item_key` | UNIQUE (item_key) WHERE is_current_version=TRUE |
 | `rule_pq_item_9` | 업무 검증 | `deleted_at` | deleted_at은 상신 이력이 없는 DRAFT 개정에만 설정할 수 있다. 같은 item_key에 APPROVED 개정이 있으면 삭제할 수 없으며 사용 중지는 폐기(is_disposed, rule_pq_item_7)로 처리한다. |
 | `ck_pq_item_source` | CHECK | `source_type` | CHECK (source_type IN ('MANUAL','LIBRARY','SYSTEM_PACKAGE','AI_DRAFT')) |
@@ -3513,7 +3568,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 #### 업무 규칙
 
-시험 내용은 test_description, 기대 결과는 expected_result, 허용 기준은 acceptance_criteria에 저장한다. 반복 절차는 pq_step, 실제 결과·서명·재수행 이력은 pq_execution에서 관리한다.
+시험 내용은 test_description, 허용 기준은 acceptance_criteria에 저장한다. expected_result는 이전 기록 보존용이다. 반복 절차는 pq_step, 실제 결과·서명·재수행 이력은 pq_execution에서 관리한다.
 
 같은 item_key의 모든 개정은 동일 프로젝트에 속한다. 항목 번호 approval_number·test_id는 최초 부여 후 후속 개정에서 유지한다. 승인 시 번호가 부여되는 항목의 미승인 초안은 NULL을 허용한다. 같은 프로젝트·같은 테이블의 다른 논리키에 해당 번호를 재사용하지 않으며 폐기 후에도 다른 항목에 재배정하지 않는다. 번호 발급과 개정 생성은 프로젝트 및 논리 항목에 대한 동시 처리 잠금으로 직렬화하고 같은 트랜잭션에서 중복·소속·번호 유지 조건을 검증한다.
 
@@ -3522,7 +3577,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-pq_step"></a>
-### 56. PQ 시험 절차 (`pq_step`)
+### 57. PQ 시험 절차 (`pq_step`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3539,14 +3594,14 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 929 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 930 | 시험 개정 ID | `pq_item_id` | `uuid` | N | Y | `pq_item.pq_item_id` | Y | - | N | Y | N | Y | pq_item.pq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 931 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
-| 932 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
-| 933 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 934 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 935 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 936 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 938 | 절차 ID | `step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 939 | 시험 개정 ID | `pq_item_id` | `uuid` | N | Y | `pq_item.pq_item_id` | Y | - | N | Y | N | Y | pq_item.pq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 940 | 절차 순서 | `step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 화면의 세부 절차 표시 순서. 1 이상. | `1` |
+| 941 | 절차 내용 | `instruction` | `text` | N | N | - | Y | - | N | N | N | Y | 화면에서 추가·수정·삭제하는 절차 본문. | - |
+| 942 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 943 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 944 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 945 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3565,7 +3620,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-pq_execution"></a>
-### 57. PQ 시험 수행 (`pq_execution`)
+### 58. PQ 시험 수행 (`pq_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3582,31 +3637,31 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 937 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 938 | 수행 프로토콜 개정 ID | `pq_item_id` | `uuid` | N | Y | `pq_item.pq_item_id` | Y | - | N | Y | N | Y | pq_item.pq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 939 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
-| 940 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
-| 941 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
-| 942 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
-| 943 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
-| 944 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 화면에서 선택한 수행일. 전자서명 일시와 구분. | `2026-09-16` |
-| 945 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 946 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
-| 947 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 948 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
-| 949 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
-| 950 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
-| 951 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 프로토콜 version과 구분. | `ver1` |
-| 952 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
-| 953 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
-| 954 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
-| 955 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
-| 956 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
-| 957 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 958 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 959 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 960 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 961 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
+| 946 | 수행 ID | `execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 947 | 수행 프로토콜 개정 ID | `pq_item_id` | `uuid` | N | Y | `pq_item.pq_item_id` | Y | - | N | Y | N | Y | pq_item.pq_item_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 948 | 수행 회차 | `attempt_no` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 최초 수행 1, 재수행 2 이상. 화면 재수행 횟수는 attempt_no - 1. | `1` |
+| 949 | 결과 정정 순번 | `record_revision` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 회차 결과를 정정한 이력의 순번. 재수행과 구분. | `1` |
+| 950 | 최신 결과 정정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 시험 개정·회차에서 현재 유효한 결과 기록 여부. 작성 중이거나 취소된 결과 정정 행은 FALSE이며 정정을 RECORDED로 확정할 때 전환한다. | `TRUE` |
+| 951 | 실제 결과 | `actual_result` | `text` | N | N | - | N | - | N | N | N | Y | 화면 실제 결과 입력. 판정 결과 등록 시 필수. | - |
+| 952 | 수행 판정 | `qualification_result` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | PASS, FAIL, NA(해당 없음). 미실행은 NULL로 표시하며 승인 상태와 구분. | `PASS` |
+| 953 | 수행일 | `performed_on` | `date` | N | N | - | N | - | N | N | N | Y | 결과에 전자서명한 날짜(한국 날짜). 서버가 executed_at으로 정하며 사용자가 입력하지 않는다. 절차별 완료 시각은 pq_step_execution.confirmed_at에 남는다. | `2026-09-16` |
+| 954 | 수행자 | `executed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 955 | 결과 등록 시각 | `executed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 전자서명을 통해 판정 결과를 등록한 시각. | `2026-09-01T00:00:00Z` |
+| 956 | 수행 서명 ID | `execution_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 결과 등록 시 입력한 전자서명. 비밀번호는 저장하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 957 | 수행 진행 상태 | `execution_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | IN_PROGRESS(절차 수행·결과 입력 중), RECORDED(판정 결과 등록), ABORTED(결과 미등록 중단. 결과 정정 행에서는 작성 중 정정 취소). 일탈과 최종 승인은 별도 관리. | `IN_PROGRESS` |
+| 958 | 결과 승인 상태 | `record_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 프로토콜 승인 상태와 독립적으로 관리. 반려·취소 후 정정은 같은 attempt_no의 새 record_revision으로 처리. | `DRAFT` |
+| 959 | 결과 승인 워크플로우 | `result_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 해당 회차·결과 정정의 최종 결과 검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
+| 960 | 결과 승인 버전 | `approval_version` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 최종 승인한 시험 결과의 표시 버전. 최종 승인될 때마다 ver1, ver2 순으로 올린다. 프로토콜 version과 구분. | `ver1` |
+| 961 | 일탈 사유 | `deviation_reason` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 일탈 사유의 당시 값. | - |
+| 962 | 즉시 조치 | `immediate_action` | `text` | N | N | - | N | - | N | N | N | Y | FAIL 결과를 등록할 때 입력한 즉시 조치의 당시 값. | - |
+| 963 | 결과 정정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | record_revision이 증가할 때 결과를 정정한 이유. | - |
+| 964 | 중단 사유 | `abort_reason` | `text` | N | N | - | N | - | N | N | N | Y | 결과를 등록하지 않고 수행을 중단하거나 작성 중인 결과 정정을 취소(ABORTED)한 사유. ABORTED에서 필수 | - |
+| 965 | 중단 서명 ID | `abort_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 수행 중단 또는 결과 정정 취소 시 담당자가 중단 사유를 확인하고 입력한 전자서명(signature_action=ABORT, 서명 대상은 이 execution_id). 결과 등록 서명(execution_signature_id)과 구분하며 ABORTED에서 필수 | `00000000-0000-0000-0000-000000000001` |
+| 966 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 967 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 968 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 969 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 970 | 수행 당시 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 수행 시작 시 프로젝트의 현재 기준을 고정한다. 결과 등록·서명 전 필수이며 이후 프로젝트 기준 변경으로 덮어쓰지 않는다. | - |
 
 #### 제약조건
 
@@ -3616,15 +3671,15 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 | `rule_pq_execution_1` | 업무 검증 | `pq_item_id, attempt_no, record_revision, is_current_revision` | attempt_no / record_revision >= 1. 같은 시험 개정·회차의 is_current_revision = TRUE 행은 최대 1개(uq_pq_execution_current로 강제) |
 | `rule_pq_execution_2` | 업무 검증 | `actual_result, qualification_result, performed_on, executed_by, executed_at, execution_signature_id` | 승인된 프로토콜에서만 수행 가능. RECORDED 전환 시 모든 절차 완료, actual_result / qualification_result / performed_on / executed_by / executed_at / execution_signature_id 필수. |
 | `rule_pq_execution_3` | 업무 검증 | `qualification_result, deviation_reason, immediate_action` | qualification_result = FAIL이면 deviation_reason, immediate_action 필수. 같은 논리 시험(item_key)에 종료되지 않은 deviation(deviation_status<>'CLOSED')이 없으면 새 deviation을 만들고 source_entity_id = 이 execution_id로 한다. 진행 중인 deviation이 있으면(승인된 조치에 따른 재수행의 FAIL) 새 deviation을 만들지 않고 그 일탈에 다음 round_number의 deviation_action_round를 만들며 failed_execution_id = 이 execution_id로 한다. 일탈 상태 전환은 rule_deviation_9를 따른다. |
-| `rule_pq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
-| `rule_pq_execution_5` | 업무 검증 | - | 결과 최종 승인은 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 가능하며 연결된 일탈의 상태와 무관하게 진행한다. FAIL 결과도 일탈 종결 전에 승인할 수 있다. 결과 승인은 판정이 올바르게 기록되었음을 확인하는 것이며 일탈 처리 완료를 뜻하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
+| `rule_pq_execution_4` | 업무 검증 | - | 재수행은 기존 결과·절차 완료·증적을 보존하고 새 attempt_no로 시작한다. 같은 논리 시험에 종료되지 않은 deviation이 있으면 새 attempt_no는 그 일탈의 재수행으로만 시작할 수 있으며, deviation_status=RERUN_ALLOWED이고 현재 조치 회차(current_action_round_id)의 rerun_execution_id가 비어 있어야 한다. 미수행 종료(closure_kind=CLOSE) 개정이 상신(REVIEW·APPROVAL)된 동안에는 재수행을 시작하지 않으며, 재수행을 시작하면 상신 전(DRAFT) 미수행 종료 개정은 CANCELLED로 종결한다. 동일 회차 결과 정정은 record_revision을 증가시키며 이전 승인 기록을 덮어쓰지 않는다. |
+| `rule_pq_execution_5` | 업무 검증 | - | 결과 결재는 프로토콜 승인과 수행 결과 등록(RECORDED) 후에 상신하며, 그 시험에 종료되지 않은 일탈이 있으면 상신할 수 없다. 일탈이 모두 종료된 뒤 그 시험의 마지막 유효 결과 하나만 결재·승인하고, 이전 회차의 FAIL 결과는 따로 승인하지 않는다. 결과 결재가 진행 중(REVIEW·APPROVAL)인 동안에는 그 시험의 결과 정정과 새 수행을 시작하지 않는다. 일탈 쪽의 선행 조건은 rule_deviation_4를 따른다. |
 | `ck_pq_execution_baseline` | CHECK | `execution_status, system_baseline_id` | CHECK (execution_status <> 'RECORDED' OR system_baseline_id IS NOT NULL) |
 | `rule_pq_execution_6` | 업무 검증 | `qualification_result, record_revision` | 같은 attempt_no의 결과 정정(record_revision 증가): 정정 전 결과가 이미 일탈 또는 조치 회차에 연결된 FAIL이면 정정 결과가 FAIL이어도 새 일탈·새 회차를 만들지 않고 기존 연결을 유지하며 판정은 최신 유효 정정본으로 조회한다. 정정 전 PASS·NA였던 결과가 정정으로 FAIL이 되면 rule_pq_execution_3에 따라 처리한다. FAIL을 PASS로 정정해도 연결된 일탈과 이미 생성된 조치 회차는 그대로 두고, 그 회차 승인 후 재수행 없이 종료(rule_deviation_5)하는 등 일탈 절차로 종결한다. 완료보고 결재가 진행 중이면 재수행 결과를 정정하지 않는다. |
 | `ck_pq_execution_result` | CHECK | `qualification_result` | CHECK (qualification_result IS NULL OR qualification_result IN ('PASS','FAIL','NA')) |
 | `ck_pq_execution_record_status` | CHECK | `record_status` | CHECK (record_status IN ('DRAFT','REVIEW','APPROVAL','APPROVED','REJECTED','CANCELLED')) |
 | `rule_pq_execution_7` | 업무 검증 | `qualification_result` | 종료되지 않은 일탈의 재수행 결과는 PASS 또는 FAIL만 등록한다(NA 불가). 재수행 중 시험이 해당 없다고 판단되면 재수행을 중단(rule_pq_execution_8)한 뒤 재수행 없이 종료(rule_deviation_5)하고 종료 사유에 근거를 기록한다. |
 | `rule_pq_execution_8` | 업무 검증 | `execution_status, abort_reason` | 최초 수행 행(record_revision=1)이 IN_PROGRESS이면 결과를 등록하지 않고 중단(ABORTED)할 수 있다. 결과 정정 행(record_revision≥2)의 취소는 rule_pq_execution_9를 따른다. abort_reason과 중단 전자서명(abort_signature_id, signature_action=ABORT)이 필수이며 중단 처리자·시각은 그 서명의 signer_id·signed_at이다. 중단 후 이 행과 절차 수행·증적은 수정하지 않는다. ABORTED 수행은 결과 승인 대상이 아니며 다음 수행은 새 attempt_no로 시작한다. 중단한 수행이 일탈의 재수행이면 현재 조치 회차와 deviation의 rerun_execution_id 연결을 같은 트랜잭션에서 해제하고 deviation_status는 RERUN_ALLOWED를 유지한다. |
-| `rule_pq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_pq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
+| `rule_pq_execution_9` | 업무 검증 | `record_revision, is_current_revision, execution_status` | 결과 정정 행(record_revision≥2)은 같은 attempt_no의 현재 유효 결과가 RECORDED일 때만 만들 수 있고, 같은 attempt_no에 작성 중인 정정 행은 최대 1개다. 정정 행은 IN_PROGRESS·is_current_revision=FALSE로 생성하며 그동안 이전 행이 현재 유효 결과로 남는다. 정정 행을 RECORDED로 확정(정정 서명)하는 트랜잭션에서 정정 행을 TRUE, 이전 행을 FALSE로 바꾸고 rule_pq_execution_6의 일탈 처리와 deviation.rerun_execution_id 갱신을 함께 수행한다. 단, 연결된 일탈이 이미 종료(CLOSED)되었으면 rerun_execution_id를 바꾸지 않고 종료 당시 결과 참조를 보존하며, 정정 결과가 FAIL이면 rule_pq_execution_3에 따라 새 일탈로 처리한다. 작성 중인 정정을 취소하면 정정 행을 ABORTED(abort_reason과 중단 전자서명 abort_signature_id 필수)로 종결하고 is_current_revision=FALSE를 유지하며, 이전 행·재수행 연결·deviation 상태는 바꾸지 않는다. 다시 정정하려면 다음 record_revision으로 만든다. |
 | `ck_pq_execution_status` | CHECK | `execution_status` | CHECK (execution_status IN ('IN_PROGRESS','RECORDED','ABORTED')) |
 | `ck_pq_execution_abort` | CHECK | `execution_status, abort_reason, abort_signature_id, execution_signature_id` | CHECK (execution_status <> 'ABORTED' OR (abort_reason IS NOT NULL AND abort_signature_id IS NOT NULL AND execution_signature_id IS NULL)) |
 | `uq_pq_execution_current` | UNIQUE | `pq_item_id, attempt_no, is_current_revision` | UNIQUE (pq_item_id, attempt_no) WHERE is_current_revision=TRUE |
@@ -3641,7 +3696,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-pq_step_execution"></a>
-### 58. PQ 절차 수행 (`pq_step_execution`)
+### 59. PQ 절차 수행 (`pq_step_execution`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3658,16 +3713,16 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 962 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 963 | 수행 ID | `execution_id` | `uuid` | N | Y | `pq_execution.execution_id` | Y | - | N | Y | N | Y | pq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 964 | 절차 ID | `step_id` | `uuid` | N | Y | `pq_step.step_id` | Y | - | N | Y | N | Y | pq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 965 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
-| 966 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 967 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
-| 968 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 969 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 970 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 971 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 971 | 절차 수행 ID | `step_execution_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 972 | 수행 ID | `execution_id` | `uuid` | N | Y | `pq_execution.execution_id` | Y | - | N | Y | N | Y | pq_execution.execution_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 973 | 절차 ID | `step_id` | `uuid` | N | Y | `pq_step.step_id` | Y | - | N | Y | N | Y | pq_step.step_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 974 | 절차 완료 여부 | `is_confirmed` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 화면 세부 절차의 완료/취소 값. | `FALSE` |
+| 975 | 완료 처리자 | `confirmed_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 976 | 완료 처리 시각 | `confirmed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 절차를 완료 처리한 시각. | `2026-09-01T00:00:00Z` |
+| 977 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 978 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 979 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 980 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3679,7 +3734,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 #### 업무 규칙
 
-절차 첨부 파일은 evidence_link의 PQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다.
+절차 첨부 파일은 evidence_link의 PQ_STEP_EXECUTION / step_execution_id로 연결한다. 재수행 시 새 절차 수행 행을 생성한다. 결과 정정 행을 만들 때는 이전 유효 결과의 절차 완료 값을 정정 행의 새 절차 수행 행으로 복사하고 증적은 기존 file_id로 다시 연결하며, 원래 행의 절차 기록은 바꾸지 않는다.
 
 [↑ 맨 위로](#top)
 
@@ -3688,7 +3743,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ## VSR
 
 <a id="table-vsr_assessment"></a>
-### 59. 밸리데이션 종합 보고서 (`vsr_assessment`)
+### 60. 밸리데이션 종합 보고서 (`vsr_assessment`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3705,26 +3760,26 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 972 | VSR ID | `vsr_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | VSR 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 973 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 974 | VSR 번호 | `vsr_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | VSR 문서 번호. 개정 간 동일 번호를 유지. | `VSR-VP-SYS-008-20260422` |
-| 975 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 밸리데이션 종합 보고서 제목 | `Validation Summary Report` |
-| 976 | 밸리데이션 결론 | `overall_conclusion` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 밸리데이션 종합 결론. 선택 항목이며 업무 승인 상태와 구분한다. | - |
-| 977 | 결론 상세 설명 | `conclusion_remarks` | `text` | N | N | - | N | - | N | N | N | Y | 밸리데이션 결론의 상세 설명과 조건사항. NULL을 허용한다. | `OQ-GMP-02 일탈 해결 완료 후 최종 승인 가능` |
-| 978 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | VSR 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
-| 979 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | VSR 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
-| 980 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | VSR 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
-| 981 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 VSR 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
-| 982 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | VSR 업무 확인 상태. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). REJECTED·CANCELLED 후 수정은 새 VSR 개정으로 처리. 별도 생성 산출물의 승인 상태와 구분. | `DRAFT` |
-| 983 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 984 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | VSR 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 985 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 986 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | VSR 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 987 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
-| 988 | 원본 기준값 | `source_fingerprint` | `varchar(64)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 선택 활동과 원본 개정 참조·요약값으로 계산한 SHA-256. 변경 시 재확인 대상 판별. | - |
-| 989 | 집계 시각 | `captured_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 현재 VSR 활동 요약을 생성한 시각. | `2026-09-01T00:00:00Z` |
-| 990 | VSR 확인 워크플로우 | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | VSR 업무 확인 요청·검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
-| 991 | VSR 확인 서명 | `approval_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | VSR 최종 확인 완료 시 전자서명. | `00000000-0000-0000-0000-000000000001` |
+| 981 | VSR ID | `vsr_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | VSR 평가 문서 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 982 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 연관 Validation 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 983 | VSR 번호 | `vsr_no` | `varchar(50)` | N | N | - | Y | - | N | N | N | Y | VSR 문서 번호. 개정 간 동일 번호를 유지. | `VSR-VP-SYS-008-20260422` |
+| 984 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 밸리데이션 종합 보고서 제목 | `Validation Summary Report` |
+| 985 | 밸리데이션 결론 | `overall_conclusion` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 밸리데이션 종합 결론. 선택 항목이며 업무 승인 상태와 구분한다. | - |
+| 986 | 결론 상세 설명 | `conclusion_remarks` | `text` | N | N | - | N | - | N | N | N | Y | 밸리데이션 결론의 상세 설명과 조건사항. NULL을 허용한다. | `OQ-GMP-02 일탈 해결 완료 후 최종 승인 가능` |
+| 987 | 문서 표시 버전 | `version` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | VSR 평가 문서 표시 버전 (예: v1.0, v1.1) | `v1.0` |
+| 988 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | VSR 평가 문서 개정 순번 (예: 1, 2, 3...) | `1` |
+| 989 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | VSR 평가 문서 신규 생성 및 개정 사유 | `최초 작성` |
+| 990 | 현재 최신 버전 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 현재 활성화된 최신 VSR 평가 문서 버전 여부 (TRUE/FALSE) | `TRUE` |
+| 991 | 문서 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | VSR 업무 확인 상태. DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). REJECTED·CANCELLED 후 수정은 새 VSR 개정으로 처리. 별도 생성 산출물의 승인 상태와 구분. | `DRAFT` |
+| 992 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 993 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | VSR 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 994 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 995 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | VSR 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 996 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 997 | 원본 기준값 | `source_fingerprint` | `varchar(64)` | N | N | - | Y | - | N | N | N | Y | 프로젝트 선택 활동과 원본 개정 참조·요약값으로 계산한 SHA-256. 변경 시 재확인 대상 판별. | - |
+| 998 | 집계 시각 | `captured_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 현재 VSR 활동 요약을 생성한 시각. | `2026-09-01T00:00:00Z` |
+| 999 | VSR 확인 워크플로우 | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | VSR 업무 확인 요청·검토·승인 경로. | `00000000-0000-0000-0000-000000000001` |
+| 1000 | VSR 확인 서명 | `approval_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | VSR 최종 확인 완료 시 전자서명. | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3747,7 +3802,7 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 ---
 
 <a id="table-vsr_item"></a>
-### 60. VSR 활동 요약 항목 (`vsr_item`)
+### 61. VSR 활동 요약 항목 (`vsr_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3764,26 +3819,26 @@ system_baseline_id는 해당 시험과 같은 프로젝트에 속해야 한다. 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 992 | VSR 항목 ID | `vsr_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | VSR 활동 요약 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
-| 993 | VSR ID | `vsr_id` | `uuid` | N | Y | `vsr_assessment.vsr_id` | Y | - | N | Y | N | Y | 상위 VSR 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 994 | 활동 구분 | `activity_code` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 집계 활동 코드: VP, VA, QIA, URS, FDS_GROUP(화면 F&DS), FRA, DQ, IQ, OQ, PQ. RTM 제외; VSR 자기 상태는 헤더에서 표시. | `IQ` |
-| 995 | 문서 번호 | `doc_no` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 집계 당시 표시한 해당 활동 문서 번호. 미승인·미생성 시 NULL. | `VP-SYS-008-20260422 · URS` |
-| 996 | 개정 차수 | `revision_no` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 집계 당시 표시한 원본 승인 버전. 미승인·미생성 시 NULL. 특정 개정 식별은 source_revision_refs에 보존. | `ver1` |
-| 997 | 일탈 건수 | `deviation_info` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 집계 당시 일탈 건수·미결 현황 표시 스냅샷. 독립적으로 수동 편집하지 않음. | - |
-| 998 | 결론/상태 | `item_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | 집계 당시 활동 승인 상태: DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 원본 업무 상태를 자동 조회한 스냅샷. | `APPROVED` |
-| 999 | 승인자명 | `approver_name` | `varchar(50)` | N | N | - | N | - | N | N | Y | Y | 원본 승인 당시 승인자 표시명 스냅샷. | `홍길동` |
-| 1000 | 승인일 | `approval_date` | `date` | N | N | - | N | - | N | N | N | Y | 원본 승인 당시 화면 표시용 승인일 스냅샷. 정확한 서명 시각은 원본 기록에서 조회. | `2024-02-20` |
-| 1001 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 1002 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1003 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
-| 1004 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1005 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
-| 1006 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | 해당 VSR과 같은 프로젝트의 선택된 수행 활동. | `00000000-0000-0000-0000-000000000001` |
-| 1007 | 산출물 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | N | - | N | Y | N | Y | 산출물 문서가 생성된 경우 참조하는 개정. IQ/OQ/PQ는 document_type=RECORD, 그 외 활동은 STAGE_DELIVERABLE 문서의 개정이며 문서의 project_activity_id가 이 행과 같아야 한다. 업무 항목 승인만 있는 단계에서는 NULL 가능. | `00000000-0000-0000-0000-000000000001` |
-| 1008 | 원본 개정 참조 목록 | `source_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | 집계 근거인 정확한 업무 개정 목록: [{table_name, record_id, version}]. table_name은 실제 테이블명이며 IQ/OQ/PQ 결과는 iq_execution / oq_execution / pq_execution의 execution_id, FDS/DDS는 fds_spec.fds_id / dds_spec.dds_id 개정 PK 사용. 미승인 단계는 빈 배열. | `[]` |
-| 1009 | 원본 요약 스냅샷 | `source_snapshot` | `jsonb` | N | N | - | Y | `'{}'::jsonb` | N | N | Y | Y | 집계 당시 승인 표의 columns / rows와 승인정보. 원본 개정 참조와 함께 표시값을 고정하며 미승인 단계는 빈 객체. | `{}` |
-| 1010 | 활동 원본 기준값 | `source_fingerprint` | `varchar(64)` | N | N | - | N | - | N | N | N | Y | 해당 단계의 원본 참조와 스냅샷을 해시한 값. 승인 원본이 없으면 NULL. | - |
-| 1011 | 활동 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 프로젝트의 선택 활동 순서. | `1` |
+| 1001 | VSR 항목 ID | `vsr_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | VSR 활동 요약 항목 식별자 (PK) | `00000000-0000-0000-0000-000000000001` |
+| 1002 | VSR ID | `vsr_id` | `uuid` | N | Y | `vsr_assessment.vsr_id` | Y | - | N | Y | N | Y | 상위 VSR 문서 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1003 | 활동 구분 | `activity_code` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 집계 활동 코드: VP, VA, QIA, URS, FDS_GROUP(화면 F&DS), FRA, DQ, IQ, OQ, PQ. RTM 제외; VSR 자기 상태는 헤더에서 표시. | `IQ` |
+| 1004 | 문서 번호 | `doc_no` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 집계 당시 표시한 해당 활동 문서 번호. 미승인·미생성 시 NULL. | `VP-SYS-008-20260422 · URS` |
+| 1005 | 개정 차수 | `revision_no` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 집계 당시 표시한 원본 승인 버전. 미승인·미생성 시 NULL. 특정 개정 식별은 source_revision_refs에 보존. | `ver1` |
+| 1006 | 일탈 건수 | `deviation_info` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 집계 당시 일탈 건수·미결 현황 표시 스냅샷. 독립적으로 수동 편집하지 않음. | - |
+| 1007 | 결론/상태 | `item_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | 집계 당시 활동 승인 상태: DRAFT(작성중), REVIEW(검토중), APPROVAL(승인중), APPROVED(승인완료), REJECTED(반려), CANCELLED(취소). 원본 업무 상태를 자동 조회한 스냅샷. | `APPROVED` |
+| 1008 | 승인자명 | `approver_name` | `varchar(50)` | N | N | - | N | - | N | N | Y | Y | 원본 승인 당시 승인자 표시명 스냅샷. | `홍길동` |
+| 1009 | 승인일 | `approval_date` | `date` | N | N | - | N | - | N | N | N | Y | 원본 승인 당시 화면 표시용 승인일 스냅샷. 정확한 서명 시각은 원본 기록에서 조회. | `2024-02-20` |
+| 1010 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 1011 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 작성자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1012 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각 (UTC) | `2026-08-26T00:00:00Z` |
+| 1013 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 항목 수정자 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1014 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 1015 | 프로젝트 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | 해당 VSR과 같은 프로젝트의 선택된 수행 활동. | `00000000-0000-0000-0000-000000000001` |
+| 1016 | 산출물 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | N | - | N | Y | N | Y | 산출물 문서가 생성된 경우 참조하는 개정. IQ/OQ/PQ는 document_type=RECORD, 그 외 활동은 STAGE_DELIVERABLE 문서의 개정이며 문서의 project_activity_id가 이 행과 같아야 한다. 업무 항목 승인만 있는 단계에서는 NULL 가능. | `00000000-0000-0000-0000-000000000001` |
+| 1017 | 원본 개정 참조 목록 | `source_revision_refs` | `jsonb` | N | N | - | Y | `'[]'::jsonb` | N | N | N | Y | 집계 근거인 정확한 업무 개정 목록: [{table_name, record_id, version}]. table_name은 실제 테이블명이며 IQ/OQ/PQ 결과는 iq_execution / oq_execution / pq_execution의 execution_id, FDS/DDS는 fds_spec.fds_id / dds_spec.dds_id 개정 PK 사용. 미승인 단계는 빈 배열. | `[]` |
+| 1018 | 원본 요약 스냅샷 | `source_snapshot` | `jsonb` | N | N | - | Y | `'{}'::jsonb` | N | N | Y | Y | 집계 당시 승인 표의 columns / rows와 승인정보. 원본 개정 참조와 함께 표시값을 고정하며 미승인 단계는 빈 객체. | `{}` |
+| 1019 | 활동 원본 기준값 | `source_fingerprint` | `varchar(64)` | N | N | - | N | - | N | N | N | Y | 해당 단계의 원본 참조와 스냅샷을 해시한 값. 승인 원본이 없으면 NULL. | - |
+| 1020 | 활동 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 프로젝트의 선택 활동 순서. | `1` |
 
 #### 제약조건
 
@@ -3809,7 +3864,7 @@ source_revision_refs는 실제 테이블명·개정 PK·버전의 다형 참조 
 ## Workflow
 
 <a id="table-workflow_instance"></a>
-### 61. Workflow 인스턴스 (`workflow_instance`)
+### 62. Workflow 인스턴스 (`workflow_instance`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3826,23 +3881,23 @@ source_revision_refs는 실제 테이블명·개정 PK·버전의 다형 참조 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1012 | Workflow 인스턴스 ID | `workflow_instance_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 문서별 검토·승인 Workflow 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1013 | 대상 테이블명 | `target_table_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 검토·승인 대상 테이블명. approval_scope별 허용 테이블(업무 규칙의 표)만 허용한다. | `fds_spec` |
-| 1014 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | N | N | Y | 대상 테이블 행 PK. 다형 참조이므로 실제 FK가 아니며 대상 존재·프로젝트·버전을 함께 검증한다. | `00000000-0000-0000-0000-000000000001` |
-| 1015 | 대상 문서 버전 | `target_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 승인 대상의 표시 버전 또는 개정번호. 인벤토리는 system_asset.revision_number, 종료 요청은 CLOSE-{request_version}에 대응 | `v1.0` |
-| 1016 | 상신자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 문서를 검토·승인 절차에 상신한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1017 | 상신 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 문서가 검토·승인 절차에 상신된 시각 | `2026-08-31T15:00:00Z` |
-| 1018 | Workflow 상태 | `workflow_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | 전체 Workflow 상태. IN_PROGRESS, APPROVED, REJECTED, CANCELLED. 인스턴스는 상신 시점에 IN_PROGRESS로 생성하며 작성중(DRAFT) 상태를 두지 않는다 | `IN_PROGRESS` |
-| 1019 | 현재 단계 순서 | `current_step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 현재 처리 중인 검토·승인 단계 순서. 상신 시 최초 비삭제 단계의 step_order를 저장하며 1로 고정하지 않는다 | `1` |
-| 1020 | 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 최종 승인·반려 또는 취소로 Workflow가 종료된 시각 | `2026-08-31T17:00:00Z` |
-| 1021 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-31T15:00:00Z` |
-| 1022 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 레코드 생성자 | `00000000-0000-0000-0000-000000000001` |
-| 1023 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-31T16:00:00Z` |
-| 1024 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 레코드 최종 수정자 | `00000000-0000-0000-0000-000000000001` |
-| 1025 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
-| 1026 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 업무에 대한 결재이면 필수. 인벤토리 등 프로젝트 외 결재는 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1027 | 승인 구분 | `approval_scope` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | ITEM/PROTOCOL/RESULT/DOCUMENT/INVENTORY/CLOSURE/DISPOSAL/DEVIATION_ACTION/DEVIATION_COMPLETION/DEVIATION_CLOSE | `DOCUMENT` |
-| 1028 | 적용 결재선 설정 ID | `workflow_config_id` | `uuid` | N | Y | `project_workflow_config.config_id` | N | - | N | Y | N | Y | 상신 때 사용한 프로젝트 결재선 설정. 인벤토리 자체 경로 등은 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1021 | Workflow 인스턴스 ID | `workflow_instance_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 문서별 검토·승인 Workflow 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1022 | 대상 테이블명 | `target_table_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 검토·승인 대상 테이블명. approval_scope별 허용 테이블(업무 규칙의 표)만 허용한다. | `fds_spec` |
+| 1023 | 대상 레코드 ID | `target_record_id` | `uuid` | N | N | - | Y | - | N | N | N | Y | 대상 테이블 행 PK. 다형 참조이므로 실제 FK가 아니며 대상 존재·프로젝트·버전을 함께 검증한다. | `00000000-0000-0000-0000-000000000001` |
+| 1024 | 대상 문서 버전 | `target_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 승인 대상의 표시 버전 또는 개정번호. 인벤토리는 system_asset.revision_number, 종료 요청은 CLOSE-{request_version}에 대응 | `v1.0` |
+| 1025 | 상신자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 문서를 검토·승인 절차에 상신한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1026 | 상신 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 문서가 검토·승인 절차에 상신된 시각 | `2026-08-31T15:00:00Z` |
+| 1027 | Workflow 상태 | `workflow_status` | `varchar(20)` | N | N | - | Y | `'IN_PROGRESS'` | N | N | N | Y | 전체 Workflow 상태. IN_PROGRESS, APPROVED, REJECTED, CANCELLED. 인스턴스는 상신 시점에 IN_PROGRESS로 생성하며 작성중(DRAFT) 상태를 두지 않는다 | `IN_PROGRESS` |
+| 1028 | 현재 단계 순서 | `current_step_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 현재 처리 중인 검토·승인 단계 순서. 상신 시 최초 비삭제 단계의 step_order를 저장하며 1로 고정하지 않는다 | `1` |
+| 1029 | 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 최종 승인·반려 또는 취소로 Workflow가 종료된 시각 | `2026-08-31T17:00:00Z` |
+| 1030 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-31T15:00:00Z` |
+| 1031 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 레코드 생성자 | `00000000-0000-0000-0000-000000000001` |
+| 1032 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-31T16:00:00Z` |
+| 1033 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 레코드 최종 수정자 | `00000000-0000-0000-0000-000000000001` |
+| 1034 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 1035 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 업무에 대한 결재이면 필수. 인벤토리 등 프로젝트 외 결재는 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1036 | 승인 구분 | `approval_scope` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | ITEM/PROTOCOL/RESULT/DOCUMENT/INVENTORY/CLOSURE/DISPOSAL/DEVIATION_ACTION/DEVIATION_COMPLETION/DEVIATION_CLOSE | `DOCUMENT` |
+| 1037 | 적용 결재선 설정 ID | `workflow_config_id` | `uuid` | N | Y | `project_workflow_config.config_id` | N | - | N | Y | N | Y | 상신 때 사용한 프로젝트 결재선 설정. 인벤토리 자체 경로 등은 NULL | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3874,7 +3929,7 @@ approval_scope별 대상:
 
 system_asset의 폐기와 결재선 적용(CONFIG_APPLY)은 Workflow 없이 해당 테이블의 전자서명으로 처리한다.
 
-Workflow가 REJECTED 또는 CANCELLED로 종료되면 같은 트랜잭션에서 대상 개정의 승인 상태를 같은 값(REJECTED/CANCELLED)으로 전환한다. 폐기 결재(DISPOSAL)가 반려·취소되면 대상의 승인 상태는 바꾸지 않고 lifecycle_status를 ACTIVE로(IQ/OQ/PQ 시험 항목은 is_disposed=FALSE로) 유지한다. 종료 요청(CLOSURE)은 project_closure_request.status를 같은 값으로 전환한다. 일탈 조치(DEVIATION_ACTION)는 deviation_action_round.approval_status에, 일탈 완료보고(DEVIATION_COMPLETION)·미수행 종료(DEVIATION_CLOSE)는 deviation_completion_revision.approval_status에 위 일반 규칙을 적용한다. 두 종결 결재가 반려·취소되어도 deviation_status는 직전 상태(COMPLETION_PENDING 또는 RERUN_ALLOWED)를 유지하고 deviation의 서명·승인자 컬럼은 채우지 않는다.
+Workflow가 REJECTED 또는 CANCELLED로 종료되면 같은 트랜잭션에서 대상 개정의 승인 상태를 같은 값(REJECTED/CANCELLED)으로 전환한다. 처리하지 않은 단계와 담당 배정(PENDING·IN_PROGRESS)은 같은 트랜잭션에서 SKIPPED로 종결한다. 폐기 결재(DISPOSAL)가 반려·취소되면 대상의 승인 상태는 바꾸지 않고 lifecycle_status를 ACTIVE로(IQ/OQ/PQ 시험 항목은 is_disposed=FALSE로) 유지한다. 종료 요청(CLOSURE)은 project_closure_request.status를 같은 값으로 전환한다. 일탈 조치(DEVIATION_ACTION)는 deviation_action_round.approval_status에, 일탈 완료보고(DEVIATION_COMPLETION)·미수행 종료(DEVIATION_CLOSE)는 deviation_completion_revision.approval_status에 위 일반 규칙을 적용한다. 두 종결 결재가 반려·취소되어도 deviation_status는 직전 상태(COMPLETION_PENDING 또는 RERUN_ALLOWED)를 유지하고 deviation의 서명·승인자 컬럼은 채우지 않는다.
 
 하나의 시험 항목이라도 PROTOCOL 승인과 수행 RESULT 승인을 분리한다. 승인 범위·대상 테이블·PK·버전을 함께 식별한다. 작성자는 requested_by 및 SUBMIT 처리 이력으로 기록한다.
 
@@ -3885,7 +3940,7 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 ---
 
 <a id="table-workflow_step"></a>
-### 62. Workflow 단계 (`workflow_step`)
+### 63. Workflow 단계 (`workflow_step`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3902,20 +3957,20 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1029 | Workflow 단계 ID | `workflow_step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | Workflow 검토·승인 단계 고유 식별자. deleted_at IS NULL인 행에 (workflow_instance_id, step_order) 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1030 | Workflow 인스턴스 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | Y | - | N | Y | N | Y | 단계가 소속된 Workflow 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1031 | 단계 순서 | `step_order` | `integer` | N | N | - | Y | - | N | Y | N | Y | 동일 Workflow 내 검토·승인 처리 순서 | `1` |
-| 1032 | 단계 유형 | `step_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 처리 단계 유형. REVIEW 또는 APPROVE. SUBMIT/CANCEL은 단계 유형이 아닌 처리 이력의 action_type으로 기록한다 | `REVIEW` |
-| 1033 | 단계명 | `step_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 화면에 표시할 검토·승인 단계명 | `품질 검토` |
-| 1034 | 처리 모드 | `execution_mode` | `varchar(20)` | N | N | - | Y | `'SERIAL'` | N | N | N | Y | SERIAL=직렬, PARALLEL=병렬. 동일 단계의 여러 담당자 처리 순서 | `SERIAL` |
-| 1035 | 단계 상태 | `step_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | 단계 상태. PENDING, IN_PROGRESS, APPROVED, REJECTED, SKIPPED | `PENDING` |
-| 1036 | 처리 기한 | `due_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 해당 단계의 검토·승인 처리 예정 기한 | `2026-09-02T18:00:00Z` |
-| 1037 | 처리 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 해당 단계가 승인·반려 등으로 완료된 시각 | `2026-09-01T10:00:00Z` |
-| 1038 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-31T15:00:00Z` |
-| 1039 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 단계 생성자 | `00000000-0000-0000-0000-000000000001` |
-| 1040 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-31T16:00:00Z` |
-| 1041 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 단계 최종 수정자 | `00000000-0000-0000-0000-000000000001` |
-| 1042 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
+| 1038 | Workflow 단계 ID | `workflow_step_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | Workflow 검토·승인 단계 고유 식별자. deleted_at IS NULL인 행에 (workflow_instance_id, step_order) 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1039 | Workflow 인스턴스 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | Y | - | N | Y | N | Y | 단계가 소속된 Workflow 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1040 | 단계 순서 | `step_order` | `integer` | N | N | - | Y | - | N | Y | N | Y | 동일 Workflow 내 검토·승인 처리 순서 | `1` |
+| 1041 | 단계 유형 | `step_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | 처리 단계 유형. REVIEW 또는 APPROVE. SUBMIT/CANCEL은 단계 유형이 아닌 처리 이력의 action_type으로 기록한다 | `REVIEW` |
+| 1042 | 단계명 | `step_name` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 화면에 표시할 검토·승인 단계명 | `품질 검토` |
+| 1043 | 처리 모드 | `execution_mode` | `varchar(20)` | N | N | - | Y | `'SERIAL'` | N | N | N | Y | SERIAL=직렬, PARALLEL=병렬. 동일 단계의 여러 담당자 처리 순서 | `SERIAL` |
+| 1044 | 단계 상태 | `step_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | 단계 상태. PENDING, IN_PROGRESS, APPROVED, REJECTED, SKIPPED | `PENDING` |
+| 1045 | 처리 기한 | `due_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 해당 단계의 검토·승인 처리 예정 기한 | `2026-09-02T18:00:00Z` |
+| 1046 | 처리 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 해당 단계가 승인·반려 등으로 완료된 시각 | `2026-09-01T10:00:00Z` |
+| 1047 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-08-31T15:00:00Z` |
+| 1048 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 단계 생성자 | `00000000-0000-0000-0000-000000000001` |
+| 1049 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 최종 수정 시각(UTC) | `2026-08-31T16:00:00Z` |
+| 1050 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | Workflow 단계 최종 수정자 | `00000000-0000-0000-0000-000000000001` |
+| 1051 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 소프트 삭제 시각 | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -3938,7 +3993,7 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 ---
 
 <a id="table-workflow_step_assignee"></a>
-### 63. 결재 단계 담당자 (`workflow_step_assignee`)
+### 64. 결재 단계 담당자 (`workflow_step_assignee`)
 
 | 항목 | 정의 |
 |---|---|
@@ -3955,17 +4010,17 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1043 | 담당 배정 ID | `assignment_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1044 | 결재 단계 ID | `workflow_step_id` | `uuid` | N | Y | `workflow_step.workflow_step_id` | Y | - | N | Y | N | Y | workflow_step.workflow_step_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1045 | 주 담당자 ID | `assignee_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1046 | 대체 담당자 ID | `substitute_user_id` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1047 | 담당자 순서 | `assignee_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 직렬 단계에서 처리할 순서 | `1` |
-| 1048 | 처리 상태 | `assignment_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | N | N | Y | PENDING/IN_PROGRESS/APPROVED/REJECTED/SKIPPED | `PENDING` |
-| 1049 | 처리 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 처리 완료 시각 값 | `2026-09-01T00:00:00Z` |
-| 1050 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
-| 1051 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1052 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
-| 1053 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1052 | 담당 배정 ID | `assignment_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1053 | 결재 단계 ID | `workflow_step_id` | `uuid` | N | Y | `workflow_step.workflow_step_id` | Y | - | N | Y | N | Y | workflow_step.workflow_step_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1054 | 주 담당자 ID | `assignee_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1055 | 대체 담당자 ID | `substitute_user_id` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1056 | 담당자 순서 | `assignee_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 직렬 단계에서 처리할 순서 | `1` |
+| 1057 | 처리 상태 | `assignment_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | N | N | Y | PENDING/IN_PROGRESS/APPROVED/REJECTED/SKIPPED | `PENDING` |
+| 1058 | 처리 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 처리 완료 시각 값 | `2026-09-01T00:00:00Z` |
+| 1059 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
+| 1060 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1061 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
+| 1062 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -3988,7 +4043,7 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 ---
 
 <a id="table-approval_action"></a>
-### 64. 승인 처리 이력 (`approval_action`)
+### 65. 승인 처리 이력 (`approval_action`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4005,16 +4060,16 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1054 | 승인 처리 이력 ID | `approval_action_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 검토·승인 처리 이력 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1055 | Workflow 단계 ID | `workflow_step_id` | `uuid` | N | Y | `workflow_step.workflow_step_id` | Y | - | N | Y | N | Y | 처리 이력이 귀속되는 Workflow 단계. SUBMIT은 최초 비삭제 단계, CANCEL은 진행 중인 현재 단계(시작 전이면 최초 단계), REVIEW/APPROVE/REJECT는 실제 처리 단계에 연결한다. 귀속 단계가 없으면 이력을 생성하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1056 | 처리 담당 배정 ID | `workflow_step_assignee_id` | `uuid` | N | Y | `workflow_step_assignee.assignment_id` | N | - | N | Y | N | Y | REVIEW/APPROVE/REJECT 처리 배정. SUBMIT/CANCEL은 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1057 | 처리 유형 | `action_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | 수행한 처리 유형. SUBMIT, REVIEW, APPROVE, REJECT, CANCEL | `APPROVE` |
-| 1058 | 처리자 ID | `actor_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 실제 검토·승인·반려 처리를 수행한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1059 | 처리 의견 | `action_comment` | `text` | N | N | - | N | - | N | N | N | Y | 검토·승인 처리 시 입력한 의견. CANCEL이면 취소 사유를 저장하며 필수 | `검토 결과 이상 없음` |
-| 1060 | 반려 사유 | `rejection_reason` | `text` | N | N | - | N | - | N | N | N | Y | REJECT 처리 시 입력하는 반려 사유. REJECT에서 필수 | `증적 파일 보완 필요` |
-| 1061 | 전자서명 ID | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 처리에 연결된 전자서명 기록. 서명이 있으면 signer_id는 actor_id와 같고 대상 테이블·레코드·버전은 Workflow 대상과 일치해야 한다. SUBMIT/REVIEW/APPROVE/REJECT의 서명 동작은 action_type과 같아야 한다. CANCEL은 서명 없이 취소 사유와 Audit Trail을 기록한다. | `00000000-0000-0000-0000-000000000001` |
-| 1062 | 처리 시각 | `acted_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 상신·검토·승인·반려가 실제 처리된 시각 | `2026-09-01T10:00:00Z` |
-| 1063 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 1063 | 승인 처리 이력 ID | `approval_action_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 검토·승인 처리 이력 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1064 | Workflow 단계 ID | `workflow_step_id` | `uuid` | N | Y | `workflow_step.workflow_step_id` | Y | - | N | Y | N | Y | 처리 이력이 귀속되는 Workflow 단계. SUBMIT은 최초 비삭제 단계, CANCEL은 진행 중인 현재 단계(시작 전이면 최초 단계), REVIEW/APPROVE/REJECT는 실제 처리 단계에 연결한다. 귀속 단계가 없으면 이력을 생성하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1065 | 처리 담당 배정 ID | `workflow_step_assignee_id` | `uuid` | N | Y | `workflow_step_assignee.assignment_id` | N | - | N | Y | N | Y | REVIEW/APPROVE/REJECT 처리 배정. SUBMIT/CANCEL은 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1066 | 처리 유형 | `action_type` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | 수행한 처리 유형. SUBMIT, REVIEW, APPROVE, REJECT, CANCEL | `APPROVE` |
+| 1067 | 처리자 ID | `actor_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 실제 검토·승인·반려 처리를 수행한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1068 | 처리 의견 | `action_comment` | `text` | N | N | - | N | - | N | N | N | Y | 검토·승인 처리 시 입력한 의견. CANCEL이면 취소 사유를 저장하며 필수 | `검토 결과 이상 없음` |
+| 1069 | 반려 사유 | `rejection_reason` | `text` | N | N | - | N | - | N | N | N | Y | REJECT 처리 시 입력하는 반려 사유. REJECT에서 필수 | `증적 파일 보완 필요` |
+| 1070 | 전자서명 ID | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | Y | - | N | Y | N | Y | 처리에 연결된 전자서명 기록. 모든 처리에 필수이며(rule_approval_action_3) signer_id는 actor_id와 같고 대상 테이블·레코드·버전은 Workflow 대상과 일치해야 한다. SUBMIT/REVIEW/APPROVE/REJECT/CANCEL의 서명 동작은 action_type과 같아야 한다. | `00000000-0000-0000-0000-000000000001` |
+| 1071 | 처리 시각 | `acted_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 상신·검토·승인·반려가 실제 처리된 시각 | `2026-09-01T10:00:00Z` |
+| 1072 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 레코드 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
 
 #### 제약조건
 
@@ -4022,7 +4077,7 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 |---|---|---|---|
 | `rule_approval_action_1` | 업무 검증 | - | REVIEW/APPROVE/REJECT일 때 workflow_step_assignee_id는 필수이다. SUBMIT/CANCEL에서는 NULL이다. |
 | `rule_approval_action_2` | 업무 검증 | - | 한 담당 배정에 유효한 REVIEW/APPROVE/REJECT 처리 이력은 한 건만 존재한다. |
-| `rule_approval_action_3` | 업무 검증 | - | SUBMIT/REVIEW/APPROVE/REJECT는 전자서명이 필수이다. CANCEL은 전자서명 없이 취소 사유(action_comment)와 감사기록을 남긴다. |
+| `rule_approval_action_3` | 업무 검증 | - | SUBMIT/REVIEW/APPROVE/REJECT/CANCEL은 전자서명이 필수이다. CANCEL(회수)은 해당 대상의 작성 권한자가 회수 사유(action_comment)와 본인 전자서명을 입력한다. |
 | `uq_approval_assignee_action` | UNIQUE | `workflow_step_assignee_id, action_type` | UNIQUE (workflow_step_assignee_id) WHERE action_type IN ('REVIEW','APPROVE','REJECT') |
 | `ck_approval_action_type` | CHECK | `action_type` | CHECK (action_type IN ('SUBMIT','REVIEW','APPROVE','REJECT','CANCEL')) |
 | `ck_approval_action_reject_reason` | CHECK | `action_type, rejection_reason` | CHECK (action_type <> 'REJECT' OR (rejection_reason IS NOT NULL AND length(trim(rejection_reason)) > 0)) |
@@ -4030,18 +4085,18 @@ DEVIATION_ACTION은 deviation_action_round의 PK와 ACTION-{round_number}-{revis
 
 #### 업무 규칙
 
-담당 배정의 workflow_step_id와 이력의 workflow_step_id는 같아야 한다. 실제 처리자는 주 담당자 또는 대체 담당자이며 전자서명 signer_id와 일치한다.
+담당 배정의 workflow_step_id와 이력의 workflow_step_id는 같아야 한다. REVIEW/APPROVE/REJECT의 실제 처리자는 주 담당자 또는 대체 담당자이고, SUBMIT·CANCEL의 처리자는 대상의 작성 권한자이며, 처리자는 전자서명 signer_id와 일치한다.
 
 SUBMIT은 최초 단계, CANCEL은 현재 단계(시작 전이면 최초 단계)에 기록한다. 서명 대상 테이블·PK·버전 및 동작은 workflow_instance와 action_type에 일치해야 한다.
 
-동일 배정의 반려를 승인으로 덮어쓰지 않는다. 재상신 시 새 Workflow 또는 새 단계·담당 배정을 생성한다. 처리 대상 단계와 배정을 잠근 뒤 현재 진행 상태·미처리 여부·대체자 자격을 다시 검사하고 서명·처리 이력·단계 및 전체 상태 전환을 원자적으로 저장한다.
+동일 배정의 반려를 승인으로 덮어쓰지 않는다. 재상신 시 대상의 새 개정 또는 새 요청과 새 Workflow를 생성하며, 종료된 Workflow를 다시 쓰지 않는다. 처리 대상 단계와 배정을 잠근 뒤 현재 진행 상태·미처리 여부·대체자 자격을 다시 검사하고 서명·처리 이력·단계 및 전체 상태 전환을 원자적으로 저장한다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-project_workflow_config"></a>
-### 65. 프로젝트 결재선 설정 (`project_workflow_config`)
+### 66. 프로젝트 결재선 설정 (`project_workflow_config`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4058,18 +4113,18 @@ SUBMIT은 최초 단계, CANCEL은 현재 단계(시작 전이면 최초 단계)
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1064 | 결재선 설정 ID | `config_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1065 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1066 | 수행 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | N | - | N | Y | N | Y | 활동별 설정일 때 지정. 프로젝트 기본 설정은 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1067 | 설정 버전 | `config_version` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 적용 후 변경할 때 증가하는 설정판 | `1` |
-| 1068 | 결재선 구성 | `route_definition` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 작성자 단계(author_stage), 검토 단계 배열(review_stages), 승인 단계 배열(approval_stages). 각 단계에 순서·SERIAL/PARALLEL·주/대체 담당자 배열 저장 | - |
-| 1069 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 현재 적용 중인 설정 여부. 새 설정 적용 시 이전 행은 FALSE로 전환하고 이전 적용 서명·시각·원문은 보존한다. | `FALSE` |
-| 1070 | 적용 서명 ID | `applied_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | electronic_signature.signature_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1071 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 값 | `2026-09-01T00:00:00Z` |
-| 1072 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
-| 1073 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1074 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
-| 1075 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1073 | 결재선 설정 ID | `config_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1074 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1075 | 수행 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | N | - | N | Y | N | Y | 활동별 설정일 때 지정. 프로젝트 기본 설정은 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1076 | 설정 버전 | `config_version` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 적용 후 변경할 때 증가하는 설정판 | `1` |
+| 1077 | 결재선 구성 | `route_definition` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 작성자 단계(author_stage), 검토 단계 배열(review_stages), 승인 단계 배열(approval_stages). 각 단계에 순서·SERIAL/PARALLEL·주/대체 담당자 배열 저장 | - |
+| 1078 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 현재 적용 중인 설정 여부. 새 설정 적용 시 이전 행은 FALSE로 전환하고 이전 적용 서명·시각·원문은 보존한다. | `FALSE` |
+| 1079 | 적용 서명 ID | `applied_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | electronic_signature.signature_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1080 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 값 | `2026-09-01T00:00:00Z` |
+| 1081 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 값 | `2026-09-01T00:00:00Z` |
+| 1082 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1083 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 값 | `2026-09-01T00:00:00Z` |
+| 1084 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4100,7 +4155,7 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 ## Traceability
 
 <a id="table-traceability_link"></a>
-### 66. 공통 추적 관계 (`traceability_link`)
+### 67. 공통 추적 관계 (`traceability_link`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4117,19 +4172,19 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1076 | 추적 관계 ID | `traceability_link_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | URS, FDS, DDS, DQ, FRA, IQ, OQ, PQ 항목 간 추적 관계 고유 식별자. 삭제되지 않은 데이터는 (project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type) 조합의 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1077 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 추적 관계가 속한 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
-| 1078 | 출발 엔터티 유형 | `source_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 연결 대상 유형: REQUIREMENT, FDS_SPEC, DDS_SPEC, DQ_ITEM, FRA_ITEM, IQ_ITEM, OQ_ITEM, PQ_ITEM. 각 유형의 특정 개정 행 PK를 연결한다. | `REQUIREMENT` |
-| 1079 | 출발 엔터티 ID | `source_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형에 해당하는 테이블의 특정 개정 행 PK. 물리 FK가 아닌 다형 참조; 논리 key나 표시 번호로 대체하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1080 | 연결 엔터티 유형 | `target_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 연결 대상 유형: REQUIREMENT, FDS_SPEC, DDS_SPEC, DQ_ITEM, FRA_ITEM, IQ_ITEM, OQ_ITEM, PQ_ITEM. 각 유형의 특정 개정 행 PK를 연결한다. | `OQ_ITEM` |
-| 1081 | 연결 엔터티 ID | `target_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형에 해당하는 테이블의 특정 개정 행 PK. 물리 FK가 아닌 다형 참조; 논리 key나 표시 번호로 대체하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1082 | 관계 유형 | `link_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | IMPLEMENTED_BY, ASSESSED_BY, VERIFIED_BY, MITIGATED_BY | `VERIFIED_BY` |
-| 1083 | 연결 근거 | `link_reason` | `text` | N | N | - | N | - | N | N | N | Y | 두 산출물 항목을 연결한 업무적 근거 | `URS 요구사항을 IQ 시험으로 검증` |
-| 1084 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 추적 관계 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 1085 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 추적 관계를 생성한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
-| 1086 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 추적 관계 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 1087 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 추적 관계를 최종 수정한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
-| 1088 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 추적 관계 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 1085 | 추적 관계 ID | `traceability_link_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | URS, FDS, DDS, DQ, FRA, IQ, OQ, PQ 항목 간 추적 관계 고유 식별자. 삭제되지 않은 데이터는 (project_id, source_entity_type, source_entity_id, target_entity_type, target_entity_id, link_type) 조합의 중복을 허용하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1086 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 추적 관계가 속한 프로젝트 ID | `00000000-0000-0000-0000-000000000001` |
+| 1087 | 출발 엔터티 유형 | `source_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 연결 대상 유형: REQUIREMENT, FDS_SPEC, DDS_SPEC, DQ_ITEM, FRA_ITEM, IQ_ITEM, OQ_ITEM, PQ_ITEM. 각 유형의 특정 개정 행 PK를 연결한다. | `REQUIREMENT` |
+| 1088 | 출발 엔터티 ID | `source_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형에 해당하는 테이블의 특정 개정 행 PK. 물리 FK가 아닌 다형 참조; 논리 key나 표시 번호로 대체하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1089 | 연결 엔터티 유형 | `target_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 연결 대상 유형: REQUIREMENT, FDS_SPEC, DDS_SPEC, DQ_ITEM, FRA_ITEM, IQ_ITEM, OQ_ITEM, PQ_ITEM. 각 유형의 특정 개정 행 PK를 연결한다. | `OQ_ITEM` |
+| 1090 | 연결 엔터티 ID | `target_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형에 해당하는 테이블의 특정 개정 행 PK. 물리 FK가 아닌 다형 참조; 논리 key나 표시 번호로 대체하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1091 | 관계 유형 | `link_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | IMPLEMENTED_BY, ASSESSED_BY, VERIFIED_BY, MITIGATED_BY | `VERIFIED_BY` |
+| 1092 | 연결 근거 | `link_reason` | `text` | N | N | - | N | - | N | N | N | Y | 두 산출물 항목을 연결한 업무적 근거 | `URS 요구사항을 IQ 시험으로 검증` |
+| 1093 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 추적 관계 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 1094 | 작성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 추적 관계를 생성한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
+| 1095 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 추적 관계 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 1096 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 추적 관계를 최종 수정한 사용자 ID | `00000000-0000-0000-0000-000000000001` |
+| 1097 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 추적 관계 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
 
 #### 제약조건
 
@@ -4156,7 +4211,7 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 ## Deviation
 
 <a id="table-deviation"></a>
-### 67. 일탈 관리 (`deviation`)
+### 68. 일탈 관리 (`deviation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4173,33 +4228,33 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1089 | 일탈 ID | `deviation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 일탈 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1090 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 일탈이 발생한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
-| 1091 | 발생 대상 유형 | `source_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 실패한 원본 수행의 종류: IQ_EXECUTION, OQ_EXECUTION, PQ_EXECUTION. | `OQ_EXECUTION` |
-| 1092 | 발생 대상 ID | `source_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 해당 수행 테이블의 execution_id. 특정 회차·정정 결과를 가리키는 다형 참조이며 물리 FK가 아님. | `00000000-0000-0000-0000-000000000001` |
-| 1093 | 일탈 번호 | `deviation_no` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 프로젝트 내 일탈 관리 번호 | `DEV-001` |
-| 1094 | 일탈 제목 | `title` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시험 항목명과 일탈 번호를 이용한 보고서 표시 제목. 별도 필수 입력값이 아님. | `예상 결과 불일치` |
-| 1095 | 일탈 사유 | `description` | `text` | N | N | - | Y | - | N | N | N | Y | 현재 조치 개정의 일탈 사유 표시 요약. 원본 실패 사유는 source_entity_id의 수행 기록에서 조회한다. | `OQ 수행 중 예상 결과와 실제 결과 불일치` |
-| 1096 | 일탈 상태 | `deviation_status` | `varchar(30)` | N | N | - | Y | `'ACTION_PENDING'` | N | Y | N | Y | ACTION_PENDING(사유·조치 승인 대기), RERUN_ALLOWED(재수행 가능), COMPLETION_PENDING(완료보고 대기), CLOSED(종료). | `ACTION_PENDING` |
-| 1097 | 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 완료보고 승인 또는 사유를 입력한 종료 처리의 최종 서명 시각. | `2026-09-03T17:00:00Z` |
-| 1098 | 승인자 ID | `approved_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 완료보고 승인 또는 종료 처리의 최종 서명 사용자. | `00000000-0000-0000-0000-000000000001` |
-| 1099 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 일탈 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 1100 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 일탈 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1101 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 일탈 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
-| 1102 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 일탈 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1103 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 일탈 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
-| 1104 | 즉시 조치 | `immediate_action` | `text` | N | N | - | Y | - | N | N | N | Y | 현재 조치 개정의 즉시 조치 표시 요약. 회차별 승인 원문은 deviation_action_round에 보존한다. | - |
-| 1105 | 사유·조치 승인 상태 | `action_approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | 현재 조치 개정의 승인 상태 요약. DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. 독립 편집하지 않는다. | `DRAFT` |
-| 1106 | 사유·조치 승인 워크플로우 | `action_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | current_action_round_id의 workflow_instance_id에서 동기화한 현재 승인 절차. 이전 회차는 deviation_action_round에서 조회하며 독립 편집하지 않는다. | `00000000-0000-0000-0000-000000000001` |
-| 1107 | 사유·조치 최종 서명 | `action_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 현재 조치 회차의 signature_id에서 동기화한 최종 승인 서명. 과거 서명은 회차별로 보존한다. | `00000000-0000-0000-0000-000000000001` |
-| 1108 | 최근 재수행 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | N | N | Y | 최근 재수행의 유효한 결과 개정 PK. 회차의 최초 재수행과 같은 논리 시험·attempt_no에 속해야 한다. 재수행의 최초 수행 행이 중단(ABORTED)되면 연결을 해제하고, 결과 정정이 RECORDED로 확정되면 정정 행으로 갱신한다. 작성 중 정정의 취소는 영향을 주지 않는다. source_entity_type으로 테이블을 식별한다. | `00000000-0000-0000-0000-000000000001` |
-| 1109 | 시정·예방 조치 | `corrective_action` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 완료보고 개정(deviation_completion_revision)에서 동기화한 시정·예방 조치. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
-| 1110 | 완료 보고 | `completion_report` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 완료보고 개정에서 동기화한 완료 보고. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
-| 1111 | 완료보고 승인 서명 | `completion_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 승인된 완료보고 개정의 최종 승인 서명(signature_id)에서 동기화. | `00000000-0000-0000-0000-000000000001` |
-| 1112 | 종료 처리 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 미수행 종료 개정(closure_kind=CLOSE)에서 동기화한 종료 사유. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
-| 1113 | 종료 처리 서명 | `closure_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 승인된 미수행 종료 개정의 최종 승인 서명에서 동기화. 완료보고 승인과 구분. | `00000000-0000-0000-0000-000000000001` |
-| 1114 | 현재 일탈 조치 개정 | `current_action_round_id` | `uuid` | N | Y | `deviation_action_round.action_round_id` | N | - | N | Y | N | Y | 이 일탈의 마지막 조치 회차에서 최신 원문 개정. 최초 실패와 첫 조치 초안을 생성하는 트랜잭션 종료 시 필수 | - |
-| 1115 | 현재 종결 보고 개정 | `current_completion_revision_id` | `uuid` | N | Y | `deviation_completion_revision.completion_revision_id` | N | - | N | Y | N | Y | 이 일탈의 최신 종결 보고 개정(is_current_revision=TRUE). 종결 보고를 작성하기 전에는 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1098 | 일탈 ID | `deviation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 일탈 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1099 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 일탈이 발생한 Validation 프로젝트 | `00000000-0000-0000-0000-000000000001` |
+| 1100 | 발생 대상 유형 | `source_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 실패한 원본 수행의 종류: IQ_EXECUTION, OQ_EXECUTION, PQ_EXECUTION. | `OQ_EXECUTION` |
+| 1101 | 발생 대상 ID | `source_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 해당 수행 테이블의 execution_id. 특정 회차·정정 결과를 가리키는 다형 참조이며 물리 FK가 아님. | `00000000-0000-0000-0000-000000000001` |
+| 1102 | 일탈 번호 | `deviation_no` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 프로젝트 내 일탈 관리 번호. 단계별로 {단계}-DEV-{순번} 형식으로 발급한다(예: IQ-DEV-001) | `IQ-DEV-001` |
+| 1103 | 일탈 제목 | `title` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 시험 항목명과 일탈 번호를 이용한 보고서 표시 제목. 별도 필수 입력값이 아님. | `예상 결과 불일치` |
+| 1104 | 일탈 사유 | `description` | `text` | N | N | - | Y | - | N | N | N | Y | 현재 조치 개정의 일탈 사유 표시 요약. 원본 실패 사유는 source_entity_id의 수행 기록에서 조회한다. | `OQ 수행 중 예상 결과와 실제 결과 불일치` |
+| 1105 | 일탈 상태 | `deviation_status` | `varchar(30)` | N | N | - | Y | `'ACTION_PENDING'` | N | Y | N | Y | ACTION_PENDING(사유·조치 승인 대기), RERUN_ALLOWED(재수행 가능), COMPLETION_PENDING(완료보고 대기), CLOSED(종료). | `ACTION_PENDING` |
+| 1106 | 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 완료보고 승인 또는 사유를 입력한 종료 처리의 최종 서명 시각. | `2026-09-03T17:00:00Z` |
+| 1107 | 승인자 ID | `approved_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 완료보고 승인 또는 종료 처리의 최종 서명 사용자. | `00000000-0000-0000-0000-000000000001` |
+| 1108 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 일탈 생성 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 1109 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 일탈 등록 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1110 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 일탈 최종 수정 시각(UTC) | `2026-09-01T10:00:00Z` |
+| 1111 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 일탈 최종 수정 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1112 | 삭제시각 | `deleted_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 일탈 소프트 삭제 시각 | `2026-09-02T10:00:00Z` |
+| 1113 | 즉시 조치 | `immediate_action` | `text` | N | N | - | Y | - | N | N | N | Y | 현재 조치 개정의 즉시 조치 표시 요약. 회차별 승인 원문은 deviation_action_round에 보존한다. | - |
+| 1114 | 사유·조치 승인 상태 | `action_approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | 현재 조치 개정의 승인 상태 요약. DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. 독립 편집하지 않는다. | `DRAFT` |
+| 1115 | 사유·조치 승인 워크플로우 | `action_workflow_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | current_action_round_id의 workflow_instance_id에서 동기화한 현재 승인 절차. 이전 회차는 deviation_action_round에서 조회하며 독립 편집하지 않는다. | `00000000-0000-0000-0000-000000000001` |
+| 1116 | 사유·조치 최종 서명 | `action_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 현재 조치 회차의 signature_id에서 동기화한 최종 승인 서명. 과거 서명은 회차별로 보존한다. | `00000000-0000-0000-0000-000000000001` |
+| 1117 | 최근 재수행 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | N | N | Y | 최근 재수행의 유효한 결과 개정 PK. 회차의 최초 재수행과 같은 논리 시험·attempt_no에 속해야 한다. 재수행의 최초 수행 행이 중단(ABORTED)되면 연결을 해제하고, 결과 정정이 RECORDED로 확정되면 정정 행으로 갱신하되, 일탈이 종료(CLOSED)된 뒤에는 갱신하지 않는다. 작성 중 정정의 취소는 영향을 주지 않는다. source_entity_type으로 테이블을 식별한다. | `00000000-0000-0000-0000-000000000001` |
+| 1118 | 시정·예방 조치 | `corrective_action` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 완료보고 개정(deviation_completion_revision)에서 동기화한 시정·예방 조치. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
+| 1119 | 완료 보고 | `completion_report` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 완료보고 개정에서 동기화한 완료 보고. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
+| 1120 | 완료보고 승인 서명 | `completion_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 승인된 완료보고 개정의 최종 승인 서명(signature_id)에서 동기화. | `00000000-0000-0000-0000-000000000001` |
+| 1121 | 종료 처리 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | 승인된 미수행 종료 개정(closure_kind=CLOSE)에서 동기화한 종료 사유. 작성·수정은 개정 테이블에서 하며 독립 편집하지 않는다. | - |
+| 1122 | 종료 처리 서명 | `closure_signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 승인된 미수행 종료 개정의 최종 승인 서명에서 동기화. 완료보고 승인과 구분. | `00000000-0000-0000-0000-000000000001` |
+| 1123 | 현재 일탈 조치 개정 | `current_action_round_id` | `uuid` | N | Y | `deviation_action_round.action_round_id` | N | - | N | Y | N | Y | 이 일탈의 마지막 조치 회차에서 최신 원문 개정. 최초 실패와 첫 조치 초안을 생성하는 트랜잭션 종료 시 필수 | - |
+| 1124 | 현재 종결 보고 개정 | `current_completion_revision_id` | `uuid` | N | Y | `deviation_completion_revision.completion_revision_id` | N | - | N | Y | N | Y | 이 일탈의 최신 종결 보고 개정(is_current_revision=TRUE). 종결 보고를 작성하기 전에는 NULL | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4212,7 +4267,7 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 | `rule_deviation_1` | 업무 검증 | `project_id, source_entity_id, deviation_no` | source_entity_id 및 rerun_execution_id는 동일 프로젝트·동일 논리 시험에 속해야 한다 |
 | `rule_deviation_2` | 업무 검증 | - | RERUN_ALLOWED 전환에는 사유·조치 APPROVED와 action_signature_id가 필요하다. |
 | `rule_deviation_3` | 업무 검증 | `source_entity_id, rerun_execution_id, current_action_round_id` | 일탈 원본 source_entity_id는 최초 실패 기록을 유지한다. 승인된 조치에 따른 재수행이 FAIL이면 새 일탈을 만들지 않고 deviation.rerun_execution_id에 그 재수행의 유효 결과 개정을 기록하며, 다음 round_number의 deviation_action_round(failed_execution_id = 그 재수행 execution_id)를 생성하고 current_action_round_id를 새 회차로 갱신한다. |
-| `rule_deviation_4` | 업무 검증 | `corrective_action, completion_report, completion_signature_id` | COMPLETION_PENDING 이후 완료보고 개정(closure_kind=COMPLETION)의 최종 승인으로 종료하며, 승인본에서 동기화한 corrective_action / completion_report / completion_signature_id가 필수. 완료보고 승인 직전 최근 재수행의 유효 결과가 PASS이고 그 결과 개정의 record_status가 APPROVED인지 검사한다. |
+| `rule_deviation_4` | 업무 검증 | `corrective_action, completion_report, completion_signature_id` | COMPLETION_PENDING 이후 완료보고 개정(closure_kind=COMPLETION)의 최종 승인으로 종료하며, 승인본에서 동기화한 corrective_action / completion_report / completion_signature_id가 필수. 완료보고 승인 직전 최근 재수행의 유효 결과가 PASS이고 결과 등록(execution_status=RECORDED, 결과 전자서명 완료)이 끝났는지 검사한다. 결과 결재는 일탈 종료 뒤에 진행한다(각 수행 테이블의 rule_*_execution_5). |
 | `rule_deviation_5` | 업무 검증 | `closure_reason, closure_signature_id` | 재수행 없이 종료할 때 RERUN_ALLOWED 상태이고 현재 조치 회차에 연결된 재수행(rerun_execution_id)이 없어야 하며, 미수행 종료 개정(closure_kind=CLOSE)의 최종 승인으로 종료하고 승인본에서 동기화한 closure_reason / closure_signature_id가 필수. 두 종료 경로는 구분하고 과거 서명·결과는 삭제하지 않는다. |
 | `rule_deviation_6` | 업무 검증 | `approved_by, completion_signature_id, closure_signature_id` | CLOSED이면 completion_signature_id / closure_signature_id 중 정확히 하나와 approved_by / approved_at이 필수이며, 최종 서명자·서명 시각과 일치해야 한다. |
 | `rule_deviation_7` | 업무 검증 | - | 재수행 판정은 rerun_execution_id의 qualification_result에서 조회한다. 원본 실패 사유·즉시 조치는 수행 기록에서 당시 값을 재현할 수 있다. |
@@ -4234,7 +4289,7 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 ---
 
 <a id="table-deviation_action_round"></a>
-### 68. 일탈 조치 회차 (`deviation_action_round`)
+### 69. 일탈 조치 회차 (`deviation_action_round`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4251,22 +4306,22 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1116 | 일탈 조치 개정 ID | `action_round_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 하나의 조치 회차에서 작성한 특정 원문 개정 식별자 | - |
-| 1117 | 일탈 ID | `deviation_id` | `uuid` | N | Y | `deviation.deviation_id` | Y | - | N | Y | N | Y | 일탈 원본 | - |
-| 1118 | 조치 회차 | `round_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 최초 실패는 1. 승인 후 재수행이 실패하면 다음 회차를 생성한다. | `1` |
-| 1119 | 회차 내 원문 개정 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 실패에 대한 반려 후 수정·재상신 시 증가한다. | `1` |
-| 1120 | 회차 최신 개정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 일탈·조치 회차에서 최신 작성 개정은 한 건 | - |
-| 1121 | 해당 회차 실패 수행 ID | `failed_execution_id` | `uuid` | N | N | - | Y | - | N | N | N | Y | deviation.source_entity_type에 해당하는 수행 PK. 첫 회차는 최초 실패, 다음 회차는 직전 회차의 실패한 재수행. 다형 참조이며 물리 FK 아님 | - |
-| 1122 | 회차별 일탈 사유 | `description` | `text` | N | N | - | Y | - | N | N | N | Y | 해당 실패에 대한 승인 대상 사유 원문 | - |
-| 1123 | 회차별 즉시 조치 | `immediate_action` | `text` | N | N | - | Y | - | N | N | N | Y | 해당 실패에 대해 수행한 조치 원문 | - |
-| 1124 | 조치 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED는 이 원문 개정의 종결 상태 | - |
-| 1125 | 조치 승인 절차 | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 action_round_id와 ACTION-{round_number}-{revision_number}를 대상으로 하는 DEVIATION_ACTION 결재 | - |
-| 1126 | 조치 최종 승인 서명 | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 해당 조치 원문 개정의 최종 승인 서명 | - |
-| 1127 | 승인으로 허용한 재수행 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | N | N | Y | 이 승인으로 시작한 재수행 PK. source_entity_type으로 테이블을 식별한다. 재수행하지 않고 종료하거나 재수행을 중단(ABORTED)해 연결을 해제한 경우 NULL | - |
-| 1128 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 원문 개정 생성 시각 | - |
-| 1129 | 작성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조치 원문 작성자 | - |
-| 1130 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 초안 편집 또는 관리 상태 변경 시각 | - |
-| 1131 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 처리자 | - |
+| 1125 | 일탈 조치 개정 ID | `action_round_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 하나의 조치 회차에서 작성한 특정 원문 개정 식별자 | - |
+| 1126 | 일탈 ID | `deviation_id` | `uuid` | N | Y | `deviation.deviation_id` | Y | - | N | Y | N | Y | 일탈 원본 | - |
+| 1127 | 조치 회차 | `round_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 최초 실패는 1. 승인 후 재수행이 실패하면 다음 회차를 생성한다. | `1` |
+| 1128 | 회차 내 원문 개정 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 같은 실패에 대한 반려 후 수정·재상신 시 증가한다. | `1` |
+| 1129 | 회차 최신 개정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 같은 일탈·조치 회차에서 최신 작성 개정은 한 건 | - |
+| 1130 | 해당 회차 실패 수행 ID | `failed_execution_id` | `uuid` | N | N | - | Y | - | N | N | N | Y | deviation.source_entity_type에 해당하는 수행 PK. 첫 회차는 최초 실패, 다음 회차는 직전 회차의 실패한 재수행. 다형 참조이며 물리 FK 아님 | - |
+| 1131 | 회차별 일탈 사유 | `description` | `text` | N | N | - | Y | - | N | N | N | Y | 해당 실패에 대한 승인 대상 사유 원문 | - |
+| 1132 | 회차별 즉시 조치 | `immediate_action` | `text` | N | N | - | Y | - | N | N | N | Y | 해당 실패에 대해 수행한 조치 원문 | - |
+| 1133 | 조치 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED는 이 원문 개정의 종결 상태 | - |
+| 1134 | 조치 승인 절차 | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 action_round_id와 ACTION-{round_number}-{revision_number}를 대상으로 하는 DEVIATION_ACTION 결재 | - |
+| 1135 | 조치 최종 승인 서명 | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 해당 조치 원문 개정의 최종 승인 서명 | - |
+| 1136 | 승인으로 허용한 재수행 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | N | N | Y | 이 승인으로 시작한 재수행 PK. source_entity_type으로 테이블을 식별한다. 재수행하지 않고 종료하거나 재수행을 중단(ABORTED)해 연결을 해제한 경우 NULL | - |
+| 1137 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 원문 개정 생성 시각 | - |
+| 1138 | 작성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 조치 원문 작성자 | - |
+| 1139 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 초안 편집 또는 관리 상태 변경 시각 | - |
+| 1140 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 처리자 | - |
 
 #### 제약조건
 
@@ -4289,14 +4344,14 @@ route_definition의 단계는 {step_order, execution_mode, assignees:[{user_id, 
 
 REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Workflow의 대상·범위·버전, 최종 서명과 서명 원문은 이 조치 개정과 일치해야 한다.
 
-재수행 생성은 일탈과 승인 회차를 잠그고 deviation_status=RERUN_ALLOWED·승인 상태·현재 회차·기존 재수행 부재를 검사한 뒤 시험 수행 생성, 회차 연결, 일탈 요약 갱신을 한 트랜잭션으로 처리한다. 수행 정정은 새 수행 PK를 사용하되 원래 재수행 연결을 유지하고 동일 attempt_no의 record_revision으로 정정 계보를 조회한다. 다음 실패의 판단과 완료보고는 해당 시점의 유효한 결과 개정을 명시적으로 식별한다.
+재수행 생성은 일탈과 승인 회차를 잠그고 deviation_status=RERUN_ALLOWED·승인 상태·현재 회차·기존 재수행 부재·상신된 미수행 종료 개정 부재를 검사한 뒤 시험 수행 생성, 회차 연결, 일탈 요약 갱신을 한 트랜잭션으로 처리한다. 수행 정정은 새 수행 PK를 사용하되 원래 재수행 연결을 유지하고 동일 attempt_no의 record_revision으로 정정 계보를 조회한다. 다음 실패의 판단과 완료보고는 해당 시점의 유효한 결과 개정을 명시적으로 식별한다.
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-deviation_completion_revision"></a>
-### 69. 일탈 종결 보고 개정 (`deviation_completion_revision`)
+### 70. 일탈 종결 보고 개정 (`deviation_completion_revision`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4313,24 +4368,24 @@ REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Wor
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1132 | 종결 보고 개정 ID | `completion_revision_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 종결 보고의 특정 원문 개정 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1133 | 일탈 ID | `deviation_id` | `uuid` | N | Y | `deviation.deviation_id` | Y | - | N | Y | N | Y | 종결 대상 일탈 | `00000000-0000-0000-0000-000000000001` |
-| 1134 | 종결 구분 | `closure_kind` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | COMPLETION=재수행 성공 후 완료보고, CLOSE=재수행 없이 종료 | `COMPLETION` |
-| 1135 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 일탈별 1부터 증가. 반려·취소 후 수정하면 다음 순번의 새 행을 만든다 | `1` |
-| 1136 | 최신 개정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 일탈의 최신 종결 보고 개정 여부 | `TRUE` |
-| 1137 | 기준 조치 회차 | `action_round_id` | `uuid` | N | Y | `deviation_action_round.action_round_id` | Y | - | N | Y | N | Y | 작성 시점의 현재 조치 회차(deviation.current_action_round_id) | `00000000-0000-0000-0000-000000000001` |
-| 1138 | 근거 재수행 결과 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | COMPLETION의 근거인 재수행 유효 결과 개정 PK. deviation.source_entity_type으로 테이블을 식별하는 다형 참조이며 물리 FK가 아니다. CLOSE는 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1139 | 시정·예방 조치 | `corrective_action` | `text` | N | N | - | N | - | N | N | N | Y | COMPLETION의 시정·예방 조치 원문. 상신 시 필수 | `같은 모델 장비 3대 점검, 설치 체크리스트에 경보 기준값 항목 추가` |
-| 1140 | 완료 보고 | `completion_report` | `text` | N | N | - | N | - | N | N | N | Y | COMPLETION의 완료 보고 원문. 상신 시 필수 | `경보 기준값 설정 오류. 8도로 수정 후 재시험 성공` |
-| 1141 | 종료 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | CLOSE의 재수행 없이 종료하는 사유 원문. 상신 시 필수 | - |
-| 1142 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 반려·취소 후 다시 작성한 사유. revision_number ≥ 2이면 필수 | `QA 반려 의견 반영` |
-| 1143 | 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED는 이 개정의 종결 상태 | `DRAFT` |
-| 1144 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정을 대상으로 하는 DEVIATION_COMPLETION 또는 DEVIATION_CLOSE 결재 | `00000000-0000-0000-0000-000000000001` |
-| 1145 | 최종 승인 서명 ID | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 이 개정의 최종 승인 전자서명 | `00000000-0000-0000-0000-000000000001` |
-| 1146 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 원문 개정 생성 시각 | `2026-09-03T10:00:00Z` |
-| 1147 | 작성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 종결 보고 작성자 | `00000000-0000-0000-0000-000000000001` |
-| 1148 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 초안 편집 또는 관리 상태 변경 시각 | `2026-09-03T10:00:00Z` |
-| 1149 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 처리자 | `00000000-0000-0000-0000-000000000001` |
+| 1141 | 종결 보고 개정 ID | `completion_revision_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 종결 보고의 특정 원문 개정 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1142 | 일탈 ID | `deviation_id` | `uuid` | N | Y | `deviation.deviation_id` | Y | - | N | Y | N | Y | 종결 대상 일탈 | `00000000-0000-0000-0000-000000000001` |
+| 1143 | 종결 구분 | `closure_kind` | `varchar(20)` | N | N | - | Y | - | N | Y | N | Y | COMPLETION=재수행 성공 후 완료보고, CLOSE=재수행 없이 종료 | `COMPLETION` |
+| 1144 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | `1` | N | N | N | Y | 일탈별 1부터 증가. 반려·취소 후 수정하면 다음 순번의 새 행을 만든다 | `1` |
+| 1145 | 최신 개정 여부 | `is_current_revision` | `boolean` | N | N | - | Y | `TRUE` | N | Y | N | Y | 같은 일탈의 최신 종결 보고 개정 여부 | `TRUE` |
+| 1146 | 기준 조치 회차 | `action_round_id` | `uuid` | N | Y | `deviation_action_round.action_round_id` | Y | - | N | Y | N | Y | 작성 시점의 현재 조치 회차(deviation.current_action_round_id) | `00000000-0000-0000-0000-000000000001` |
+| 1147 | 근거 재수행 결과 ID | `rerun_execution_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | COMPLETION의 근거인 재수행 유효 결과 개정 PK. deviation.source_entity_type으로 테이블을 식별하는 다형 참조이며 물리 FK가 아니다. CLOSE는 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1148 | 시정·예방 조치 | `corrective_action` | `text` | N | N | - | N | - | N | N | N | Y | COMPLETION의 시정·예방 조치 원문. 상신 시 필수 | `같은 모델 장비 3대 점검, 설치 체크리스트에 경보 기준값 항목 추가` |
+| 1149 | 완료 보고 | `completion_report` | `text` | N | N | - | N | - | N | N | N | Y | COMPLETION의 완료 보고 원문. 상신 시 필수 | `경보 기준값 설정 오류. 8도로 수정 후 재시험 성공` |
+| 1150 | 종료 사유 | `closure_reason` | `text` | N | N | - | N | - | N | N | N | Y | CLOSE의 재수행 없이 종료하는 사유 원문. 상신 시 필수 | - |
+| 1151 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 반려·취소 후 다시 작성한 사유. revision_number ≥ 2이면 필수 | `QA 반려 의견 반영` |
+| 1152 | 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | Y | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED는 이 개정의 종결 상태 | `DRAFT` |
+| 1153 | 승인 절차 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | 이 개정을 대상으로 하는 DEVIATION_COMPLETION 또는 DEVIATION_CLOSE 결재 | `00000000-0000-0000-0000-000000000001` |
+| 1154 | 최종 승인 서명 ID | `signature_id` | `uuid` | N | Y | `electronic_signature.signature_id` | N | - | N | Y | N | Y | 이 개정의 최종 승인 전자서명 | `00000000-0000-0000-0000-000000000001` |
+| 1155 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 원문 개정 생성 시각 | `2026-09-03T10:00:00Z` |
+| 1156 | 작성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 종결 보고 작성자 | `00000000-0000-0000-0000-000000000001` |
+| 1157 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 초안 편집 또는 관리 상태 변경 시각 | `2026-09-03T10:00:00Z` |
+| 1158 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 처리자 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4363,7 +4418,7 @@ REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Wor
 ## Document
 
 <a id="table-deliverable_document"></a>
-### 70. 산출물 문서 (`deliverable_document`)
+### 71. 산출물 문서 (`deliverable_document`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4380,30 +4435,30 @@ REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Wor
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1150 | 문서 ID | `document_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1151 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1152 | 수행 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | project_activity.project_activity_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1153 | 문서 구분 | `document_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | STAGE_DELIVERABLE / PROTOCOL / RECORD / SUMMARY | `RECORD` |
-| 1154 | 문서 번호 | `document_number` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 산출물 화면의 문서 번호. 승인 전 NULL 허용 | `OQ-R-001` |
-| 1155 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1156 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1157 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1158 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1159 | 문서 ID | `document_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1160 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | validation_project.project_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1161 | 수행 활동 ID | `project_activity_id` | `uuid` | N | Y | `project_activity.project_activity_id` | Y | - | N | Y | N | Y | project_activity.project_activity_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1162 | 문서 구분 | `document_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | STAGE_DELIVERABLE / RECORD / SUMMARY. IQ/OQ/PQ는 시험별로 계획(프로토콜)을 결재하며 별도 실시계획서 문서를 만들지 않는다 | `RECORD` |
+| 1163 | 문서 번호 | `document_number` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 산출물 화면의 문서 번호. 승인 전 NULL 허용. IQ/OQ/PQ 결과서는 {단계}-R-{순번} 형식(예: IQ-R-001) | `OQ-R-001` |
+| 1164 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1165 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1166 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1167 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
 | 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
 |---|---|---|---|
 | `rule_deliverable_document_1` | 업무 검증 | - | 문서의 project_activity_id는 동일 project_id에 속해야 한다. RTM은 독립 수행 활동/필수 산출물에 포함하지 않는다. |
-| `rule_deliverable_document_2` | 업무 검증 | - | 문서번호가 있는 경우 프로젝트 안에서 유일하게 관리한다. 시험 프로토콜과 결과 문서는 문서 구분으로 나눈다. |
-| `ck_deliverable_document_type` | CHECK | `document_type` | CHECK (document_type IN ('STAGE_DELIVERABLE','PROTOCOL','RECORD','SUMMARY')) |
+| `rule_deliverable_document_2` | 업무 검증 | - | 문서번호가 있는 경우 프로젝트 안에서 유일하게 관리한다. |
+| `ck_deliverable_document_type` | CHECK | `document_type` | CHECK (document_type IN ('STAGE_DELIVERABLE','RECORD','SUMMARY')) |
 
 [↑ 맨 위로](#top)
 
 ---
 
 <a id="table-deliverable_revision"></a>
-### 71. 산출물 개정 (`deliverable_revision`)
+### 72. 산출물 개정 (`deliverable_revision`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4420,32 +4475,32 @@ REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Wor
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1159 | 문서 개정 ID | `document_revision_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1160 | 문서 ID | `document_id` | `uuid` | N | Y | `deliverable_document.document_id` | Y | - | N | Y | N | Y | deliverable_document.document_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1161 | 문서 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서 제목 | `운전 적격성 평가 결과서` |
-| 1162 | 문서 표시 버전 | `version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 표시 버전. 최종 승인 때만 올리며(2장 개정 규칙) 승인본끼리만 유일하다(uq_deliverable_revision_1_2) | `v1.0` |
-| 1163 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 개정 순번 | `1` |
-| 1164 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 사유 | `시험 결과 반영` |
-| 1165 | 최신 작성본 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 최신 작성본 여부 | `TRUE` |
-| 1166 | 문서 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED 후 수정은 새 문서 개정으로 처리 | `DRAFT` |
-| 1167 | 문서 결재 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1168 | 근거 업무 승인 버전 | `source_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 화면의 승인 데이터 버전. 문서 자체 버전과 구분 | `v1.0` |
-| 1169 | 근거 업무 개정 목록 | `source_refs` | `jsonb` | N | N | - | Y | - | N | N | N | Y | [{table_name,record_id,version}] 배열. 여러 업무 항목의 정확한 개정과 승인된 수행 회차를 고정 | `[{"table_name":"oq_execution","record_id":"00000000-0000-0000-0000-000000000001","version":"1-1"}]` |
-| 1170 | 승인 데이터 표 | `approved_table_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 화면의 승인 데이터 열/행. {columns:string[],rows:string[][]} | `{"columns":["항목","결과"],"rows":[["OQ-001","Pass"]]}` |
-| 1171 | Part 11 표 | `part11_table_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | QIA 산출물의 Part 11 문항·응답·판정 표. 다른 활동은 NULL | - |
-| 1172 | 개정 이력 표 | `revision_table_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 작성 당시 개정 이력 열/행 | `{"columns":["버전","사유"],"rows":[["v1.0","최초 작성"]]}` |
-| 1173 | 재승인 원인 활동 | `reapproval_source_stage` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 상위 활동 변경으로 재승인이 필요한 경우의 활동 코드. RTM 제외 | `URS` |
-| 1174 | 재승인 사유 | `reapproval_reason` | `text` | N | N | - | N | - | N | N | N | Y | 재승인 사유 | `URS 개정으로 내용 재검토` |
-| 1175 | 승인 유효성 상실 시각 | `invalidated_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 승인 유효성 상실 시각 | `2026-09-01T00:00:00Z` |
-| 1176 | 최종 승인자 ID | `approved_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1177 | 최종 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 최종 승인 시각 | `2026-09-01T00:00:00Z` |
-| 1178 | PDF 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 생성 PDF를 보관한 경우 연결 | `00000000-0000-0000-0000-000000000001` |
-| 1179 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1180 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1181 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1182 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1183 | 문서 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 문서 상신 시 고정한 동일 프로젝트의 기준. 상신·승인 시 필수. 이전 수행은 각 수행의 기준을 함께 표시한다. | - |
-| 1184 | 평가 질문·판정 규칙 원문 | `evaluation_definition_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | QIA/FRA 문서의 근거 평가별 질문·규칙 버전과 실제 정의, 입력·결과를 고정한 배열. 평가와 무관한 문서는 NULL | - |
+| 1168 | 문서 개정 ID | `document_revision_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1169 | 문서 ID | `document_id` | `uuid` | N | Y | `deliverable_document.document_id` | Y | - | N | Y | N | Y | deliverable_document.document_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1170 | 문서 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서 제목 | `운전 적격성 평가 결과서` |
+| 1171 | 문서 표시 버전 | `version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 표시 버전. 최종 승인 때만 올리며(2장 개정 규칙) 승인본끼리만 유일하다(uq_deliverable_revision_1_2) | `v1.0` |
+| 1172 | 개정 순번 | `revision_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 개정 순번 | `1` |
+| 1173 | 개정 사유 | `revision_reason` | `text` | N | N | - | N | - | N | N | N | Y | 개정 사유 | `시험 결과 반영` |
+| 1174 | 최신 작성본 여부 | `is_current_version` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 최신 작성본 여부 | `TRUE` |
+| 1175 | 문서 승인 상태 | `approval_status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / REVIEW / APPROVAL / APPROVED / REJECTED / CANCELLED. REJECTED·CANCELLED 후 수정은 새 문서 개정으로 처리 | `DRAFT` |
+| 1176 | 문서 결재 ID | `workflow_instance_id` | `uuid` | N | Y | `workflow_instance.workflow_instance_id` | N | - | N | Y | N | Y | workflow_instance.workflow_instance_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1177 | 근거 업무 승인 버전 | `source_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 화면의 승인 데이터 버전. 문서 자체 버전과 구분 | `v1.0` |
+| 1178 | 근거 업무 개정 목록 | `source_refs` | `jsonb` | N | N | - | Y | - | N | N | N | Y | [{table_name,record_id,version}] 배열. 여러 업무 항목의 정확한 개정과 승인된 수행 회차를 고정 | `[{"table_name":"oq_execution","record_id":"00000000-0000-0000-0000-000000000001","version":"1-1"}]` |
+| 1179 | 승인 데이터 표 | `approved_table_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 화면의 승인 데이터 열/행. {columns:string[],rows:string[][]} | `{"columns":["항목","결과"],"rows":[["OQ-001","Pass"]]}` |
+| 1180 | Part 11 표 | `part11_table_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | QIA 산출물의 Part 11 문항·응답·판정 표. 다른 활동은 NULL | - |
+| 1181 | 개정 이력 표 | `revision_table_snapshot` | `jsonb` | N | N | - | Y | - | N | N | N | Y | 작성 당시 개정 이력 열/행 | `{"columns":["버전","사유"],"rows":[["v1.0","최초 작성"]]}` |
+| 1182 | 재승인 원인 활동 | `reapproval_source_stage` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | 상위 활동 변경으로 재승인이 필요한 경우의 활동 코드. RTM 제외 | `URS` |
+| 1183 | 재승인 사유 | `reapproval_reason` | `text` | N | N | - | N | - | N | N | N | Y | 재승인 사유 | `URS 개정으로 내용 재검토` |
+| 1184 | 승인 유효성 상실 시각 | `invalidated_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 승인 유효성 상실 시각 | `2026-09-01T00:00:00Z` |
+| 1185 | 최종 승인자 ID | `approved_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1186 | 최종 승인 시각 | `approved_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 최종 승인 시각 | `2026-09-01T00:00:00Z` |
+| 1187 | PDF 파일 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 생성 PDF를 보관한 경우 연결 | `00000000-0000-0000-0000-000000000001` |
+| 1188 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1189 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1190 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1191 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1192 | 문서 검증 대상 기준 | `system_baseline_id` | `uuid` | N | Y | `project_system_baseline.baseline_id` | N | - | N | Y | N | Y | 문서 상신 시 고정한 동일 프로젝트의 기준. 상신·승인 시 필수. 이전 수행은 각 수행의 기준을 함께 표시한다. | - |
+| 1193 | 평가 질문·판정 규칙 원문 | `evaluation_definition_snapshot` | `jsonb` | N | N | - | N | - | N | N | N | Y | QIA/FRA 문서의 근거 평가별 질문·규칙 버전과 실제 정의, 입력·결과를 고정한 배열. 평가와 무관한 문서는 NULL | - |
 
 #### 제약조건
 
@@ -4463,9 +4518,9 @@ REVIEW·APPROVAL·APPROVED에는 workflow_instance_id가 필수이며 승인 Wor
 
 #### 업무 규칙
 
-PDF 생성 상태는 문서 승인 상태를 대신하지 않는다. VP 원본 목차는 vp_section이고, VP 산출물은 승인된 원본을 반영하므로 같은 내용을 두 곳에서 독립 편집하지 않는다.
+PDF 생성 상태는 문서 승인 상태를 대신하지 않는다. VP는 산출물 문서를 만들지 않으며 본문·목차는 vp_section에서만 관리한다.
 
-IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험 항목·수행의 정확한 PK·버전을 모두 기록한다. 프로토콜 문서는 평가 item_revision_refs의 전체 구성을 고정하며 결과 문서는 그 구성에 속한 수행의 정확한 회차·결과 개정을 연결한다. 문서만 개정할 때 같은 평가·시험 참조를 그대로 재사용할 수 있다. system_baseline_id와 참조 대상은 같은 프로젝트여야 한다. 다른 기준에서 수행한 결과를 포함하면 해당 수행의 기준과 재사용 판단 근거를 본문에 명시한다.
+IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험 항목·수행의 정확한 PK·버전을 모두 기록한다. 결과 문서(RECORD)는 상신 때 평가 item_revision_refs의 전체 구성을 고정하고, 그 구성에 속한 수행의 정확한 회차·결과 개정을 연결한다. 문서만 개정할 때 같은 평가·시험 참조를 그대로 재사용할 수 있다. system_baseline_id와 참조 대상은 같은 프로젝트여야 한다. 다른 기준에서 수행한 결과를 포함하면 해당 수행의 기준과 재사용 판단 근거를 본문에 명시한다.
 
 문서 상신·승인 시 system_baseline_id는 필수이며, QIA/FRA 문서는 evaluation_definition_snapshot도 필수이다. 해당 사본은 입력과 버전별 실제 정의로 결과를 재계산할 수 있어야 하며 단순 결과 표만 저장하지 않는다. 상신 후 본문·구성·질문 및 규칙 사본은 잠그고 반려·취소 후 수정은 새 문서 개정으로 처리한다. 생성 PDF는 파일 생성 이후 연결하되 이미 서명한 업무 원문을 바꾸지 않으며, PDF 파일의 원본 동일성은 file_asset의 해시로 별도 검증한다.
 
@@ -4474,7 +4529,7 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 ---
 
 <a id="table-deliverable_section"></a>
-### 72. 산출물 목차/본문 (`deliverable_section`)
+### 73. 산출물 목차/본문 (`deliverable_section`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4491,19 +4546,19 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1185 | 섹션 ID | `section_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1186 | 문서 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | Y | - | N | Y | N | Y | deliverable_revision.document_revision_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1187 | 섹션 키 | `section_key` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 섹션 키 | `purpose` |
-| 1188 | 목차 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 목차 제목 | `목적` |
-| 1189 | 본문 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | 본문 | `본 시험의 목적을 기술한다.` |
-| 1190 | 번역 제목 | `translated_title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 목차 제목의 영문 번역. '영어 버전 보기'에서 원문 아래에 표시하며 번역 전 NULL | `Purpose` |
-| 1191 | 번역 본문 | `translated_content` | `text` | N | N | - | N | - | N | N | N | Y | 본문의 영문 번역. 직접 입력하거나 AI 번역을 적용해 채우며, 다시 적용하면 이전 번역을 덮어쓴다. 원문(title·content)은 바꾸지 않는다. 번역 칸(translated_title·translated_content)은 원문과 같은 산출물로 함께 전자서명하므로 서명 원문(signed_payload)에 포함하며, 승인 후 번역 수정은 원문과 같이 새 개정에서 다시 승인받는다 | `Describes the purpose of this test.` |
-| 1192 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1193 | 작성 출처 | `source_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | MANUAL / AI / APPROVED / HISTORY / PART11 | `MANUAL` |
-| 1194 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1195 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1196 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1197 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1194 | 섹션 ID | `section_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1195 | 문서 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | Y | - | N | Y | N | Y | deliverable_revision.document_revision_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1196 | 섹션 키 | `section_key` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 섹션 키 | `purpose` |
+| 1197 | 목차 제목 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 목차 제목 | `목적` |
+| 1198 | 본문 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | 본문 | `본 시험의 목적을 기술한다.` |
+| 1199 | 번역 제목 | `translated_title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 목차 제목의 영문 번역. '영어 버전 보기'에서 원문 아래에 표시하며 번역 전 NULL | `Purpose` |
+| 1200 | 번역 본문 | `translated_content` | `text` | N | N | - | N | - | N | N | N | Y | 본문의 영문 번역. 직접 입력하거나 AI 번역을 적용해 채우며, 다시 적용하면 이전 번역을 덮어쓴다. 원문(title·content)은 바꾸지 않는다. 번역 칸(translated_title·translated_content)은 원문과 같은 산출물로 함께 전자서명하므로 서명 원문(signed_payload)에 포함하며, 승인 후 번역 수정은 원문과 같이 새 개정에서 다시 승인받는다 | `Describes the purpose of this test.` |
+| 1201 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1202 | 작성 출처 | `source_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | MANUAL / AI / APPROVED / HISTORY / PART11 | `MANUAL` |
+| 1203 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1204 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1205 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1206 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4522,13 +4577,13 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 ## Report
 
 <a id="table-report_generation"></a>
-### 73. 리포트 생성 작업 (`report_generation`)
+### 74. 리포트 생성 작업 (`report_generation`)
 
 | 항목 | 정의 |
 |---|---|
 | 설명 | 화면에서 요청한 산출물·감사 PDF 생성과 다운로드 결과 |
 | Primary Key | `report_generation_id` |
-| 주요 참조(FK) | `project_id, requested_by, result_file_id, created_by, updated_by, document_revision_id` |
+| 주요 참조(FK) | `project_id, requested_by, result_file_id, created_by, updated_by, document_revision_id, vp_id` |
 | GxP 중요도 | High |
 | Audit 대상 | Y |
 | 보존/삭제 원칙 | 리포트 생성 결과 및 실행이력을 감사 가능 기간 보존 |
@@ -4539,40 +4594,41 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1198 | 리포트 생성 ID | `report_generation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 리포트 생성 작업 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1199 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 단위 리포트인 경우 연결하며 전체 시스템 또는 조직 단위 리포트는 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
-| 1200 | 리포트 유형 | `report_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | DELIVERABLE / AUDIT_TRAIL. 화면의 산출물 또는 감사 내보내기 | `AUDIT_TRAIL` |
-| 1201 | 리포트명 | `report_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 사용자에게 표시되는 생성 리포트명 | `2026년 8월 Audit Trail 리포트` |
-| 1202 | 조회 시작일시 | `period_from` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 리포트 원천 데이터 조회 시작일시. 조회기간이 없는 리포트는 NULL 허용 | `2026-08-01T00:00:00Z` |
-| 1203 | 조회 종료일시 | `period_to` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 리포트 원천 데이터 조회 종료일시. period_from보다 빠를 수 없음 | `2026-08-31T23:59:59Z` |
-| 1204 | 조회 조건 | `report_parameters` | `jsonb` | N | N | - | N | - | N | N | Y | Y | 화면에서 선택한 기간·사용자·역할·메뉴 등 내보내기 필터 | `{"action_types":["CREATE","UPDATE"]}` |
-| 1205 | 출력 형식 | `output_format` | `varchar(20)` | N | N | - | Y | `'PDF'` | N | Y | N | Y | 출력 형식 PDF | `PDF` |
-| 1206 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
-| 1207 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PDF/내보내기를 요청한 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1208 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 사용자가 내보내기를 요청한 시각 | `2026-09-02T15:00:00Z` |
-| 1209 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 생성이 시작된 시각 | `2026-09-02T15:00:05Z` |
-| 1210 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 생성 성공 또는 실패가 확정된 시각 | `2026-09-02T15:01:30Z` |
-| 1211 | 결과 파일 ID | `result_file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 결과를 파일 자산으로 보관한 경우 연결. 다운로드만 수행하면 NULL 가능 | `00000000-0000-0000-0000-000000000001` |
-| 1212 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인을 분류하는 시스템 오류 코드 | `REPORT_FILE_CREATE_FAILED` |
-| 1213 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 리포트 생성 실패 상세 내용. 비밀번호, 토큰 등 민감정보는 저장하지 않음 | `결과 파일 저장 중 오류 발생` |
-| 1214 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 리포트 생성 작업 레코드 생성 시각(UTC) | `2026-09-02T15:00:00Z` |
-| 1215 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 내보내기를 요청한 사용자. 자동·배치 생성은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1216 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 리포트 생성 작업 최종 수정 시각(UTC) | `2026-09-02T15:01:30Z` |
-| 1217 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 내보내기 처리 결과의 수정 사용자. 자동 상태 반영은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1218 | 산출물 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | N | - | N | Y | N | Y | deliverable_revision.document_revision_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1207 | 리포트 생성 ID | `report_generation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 리포트 생성 작업 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1208 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 단위 리포트인 경우 연결하며 전체 시스템 또는 조직 단위 리포트는 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
+| 1209 | 리포트 유형 | `report_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | DELIVERABLE / AUDIT_TRAIL. 화면의 산출물 또는 감사 내보내기 | `AUDIT_TRAIL` |
+| 1210 | 리포트명 | `report_name` | `varchar(200)` | N | N | - | Y | - | N | N | N | Y | 사용자에게 표시되는 생성 리포트명 | `2026년 8월 Audit Trail 리포트` |
+| 1211 | 조회 시작일시 | `period_from` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 리포트 원천 데이터 조회 시작일시. 조회기간이 없는 리포트는 NULL 허용 | `2026-08-01T00:00:00Z` |
+| 1212 | 조회 종료일시 | `period_to` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 리포트 원천 데이터 조회 종료일시. period_from보다 빠를 수 없음 | `2026-08-31T23:59:59Z` |
+| 1213 | 조회 조건 | `report_parameters` | `jsonb` | N | N | - | N | - | N | N | Y | Y | 화면에서 선택한 기간·사용자·역할·메뉴 등 내보내기 필터 | `{"action_types":["CREATE","UPDATE"]}` |
+| 1214 | 출력 형식 | `output_format` | `varchar(20)` | N | N | - | Y | `'PDF'` | N | Y | N | Y | 출력 형식 PDF | `PDF` |
+| 1215 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
+| 1216 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | PDF/내보내기를 요청한 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1217 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 사용자가 내보내기를 요청한 시각 | `2026-09-02T15:00:00Z` |
+| 1218 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 생성이 시작된 시각 | `2026-09-02T15:00:05Z` |
+| 1219 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 생성 성공 또는 실패가 확정된 시각 | `2026-09-02T15:01:30Z` |
+| 1220 | 결과 파일 ID | `result_file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | 결과를 파일 자산으로 보관한 경우 연결. 다운로드만 수행하면 NULL 가능 | `00000000-0000-0000-0000-000000000001` |
+| 1221 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인을 분류하는 시스템 오류 코드 | `REPORT_FILE_CREATE_FAILED` |
+| 1222 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 리포트 생성 실패 상세 내용. 비밀번호, 토큰 등 민감정보는 저장하지 않음 | `결과 파일 저장 중 오류 발생` |
+| 1223 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 리포트 생성 작업 레코드 생성 시각(UTC) | `2026-09-02T15:00:00Z` |
+| 1224 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 내보내기를 요청한 사용자. 자동·배치 생성은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1225 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 리포트 생성 작업 최종 수정 시각(UTC) | `2026-09-02T15:01:30Z` |
+| 1226 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 내보내기 처리 결과의 수정 사용자. 자동 상태 반영은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1227 | 산출물 개정 ID | `document_revision_id` | `uuid` | N | Y | `deliverable_revision.document_revision_id` | N | - | N | Y | N | Y | deliverable_revision.document_revision_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1228 | VP 개정 ID | `vp_id` | `uuid` | N | Y | `vp_plan.vp_id` | N | - | N | Y | N | Y | VP PDF인 경우 대상 VP 개정. document_revision_id와 함께 쓰지 않는다(rule_report_generation_1) | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
 | 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
 |---|---|---|---|
-| `rule_report_generation_1` | 업무 검증 | `document_revision_id` | DELIVERABLE이면 document_revision_id 필수이며 해당 프로젝트와 일치해야 한다. AUDIT_TRAIL이면 기간/필터로 조회 범위를 고정한다. |
+| `rule_report_generation_1` | 업무 검증 | `document_revision_id, vp_id` | DELIVERABLE이면 document_revision_id(산출물 문서)와 vp_id(VP) 중 정확히 하나가 필수이며 해당 프로젝트와 일치해야 한다. AUDIT_TRAIL이면 둘 다 NULL이고 기간/필터로 조회 범위를 고정한다. |
 | `rule_report_generation_2` | 업무 검증 | `period_from, period_to` | period_from과 period_to가 모두 있으면 period_from<=period_to. generation_status에는 자동 재시도 대기 상태를 두지 않는다. |
 | `ck_report_generation_type` | CHECK | `report_type` | CHECK (report_type IN ('DELIVERABLE','AUDIT_TRAIL')) |
 | `ck_report_generation_status` | CHECK | `generation_status` | CHECK (generation_status IN ('PENDING','PROCESSING','COMPLETED','FAILED','CANCELLED')) |
 
 #### 업무 규칙
 
-본문·목차·버전·문서 승인 상태는 deliverable_revision과 deliverable_section에 저장한다. 이 테이블은 내보내기 결과만 관리한다.
+본문·목차·버전·문서 승인 상태는 deliverable_revision과 deliverable_section(VP는 vp_plan과 vp_section)에 저장한다. 이 테이블은 내보내기 결과만 관리한다.
 
 [↑ 맨 위로](#top)
 
@@ -4581,7 +4637,7 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 ## AI
 
 <a id="table-ai_generation_job"></a>
-### 74. AI 생성 작업 (`ai_generation_job`)
+### 75. AI 생성 작업 (`ai_generation_job`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4598,26 +4654,26 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1219 | AI 작업 ID | `ai_job_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 생성 작업 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1220 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 연결 | `00000000-0000-0000-0000-000000000001` |
-| 1221 | 작업 유형 | `job_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | ITEM_GENERATION=항목 생성, DOCUMENT_GENERATION=문서 생성, TRANSLATION=문서 목차 영문 번역, EVALUATION=QIA 프로세스 GxP 자동 평가 | `ITEM_GENERATION` |
-| 1222 | 대상 엔터티 유형 | `target_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_REVISION / VP_PLAN / QIA_PROCESS. VP_PLAN은 요청 시점의 VP 개정(vp_plan.vp_id), QIA_PROCESS는 평가할 QIA 프로세스(qia_process.qia_process_id) | `IQ_ITEM` |
-| 1223 | 대상 엔터티 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 기존 대상이면 해당 개정 PK. 새 항목을 생성하는 미리보기는 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
-| 1224 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 생성에 사용한 모델 식별자. 날짜가 포함된 고정 버전명으로 저장하며 최신 버전을 가리키는 별칭은 저장하지 않는다. 확인한 경우 기록하며 미확인 시 NULL을 허용한다. | - |
-| 1225 | 프롬프트 버전 | `prompt_version` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | AI 서비스가 사용한 프롬프트 템플릿 버전(WAS↔AI 규약 항목). COMPLETED이면 필수. 같은 버전 이름에 다른 프롬프트를 배포하지 않는다 | `IQ_ITEM_v2` |
-| 1226 | 마스킹 응답 원문 | `masked_response` | `text` | N | N | - | N | - | N | N | Y | Y | AI 서비스가 반환한 응답 원문을 마스킹된 상태 그대로 작업 단위로 보관한다. 마스킹 복원용 대응표는 저장하지 않으므로 이후 다시 만들 수 없다. COMPLETED이면 필수. 검출 규칙에 없는 정보가 남을 수 있어 민감 정보로 분류한다. 감사 시 원본으로 볼 기준(이 값 또는 ai_result_item.content)은 결정 대기 | - |
-| 1227 | 입력 파라미터 | `input_parameters` | `jsonb` | N | N | - | Y | - | N | N | Y | Y | 화면 입력 목적·범위·기준 URS·생성 개수, 생성·번역할 문서 목차 또는 평가할 프로세스 | `{"purpose":"접근권한 검증","scope":"로그인","count":3}` |
-| 1228 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
-| 1229 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 요청 사용자. 자동·배치 요청은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1230 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 요청 접수 시각 | `2026-09-02T00:00:00Z` |
-| 1231 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 시작 시각 | `2026-09-02T00:00:00Z` |
-| 1232 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 완료 시각 | `2026-09-02T00:00:00Z` |
-| 1233 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인 코드 | `LLM_TIMEOUT` |
-| 1234 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 실패 상세 메시지 | `모델 응답시간 초과` |
-| 1235 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1236 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1237 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1238 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1229 | AI 작업 ID | `ai_job_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 생성 작업 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1230 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | N | - | N | Y | N | Y | 프로젝트 연결 | `00000000-0000-0000-0000-000000000001` |
+| 1231 | 작업 유형 | `job_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | ITEM_GENERATION=항목 생성, DOCUMENT_GENERATION=문서 생성, TRANSLATION=문서 목차 영문 번역, EVALUATION=QIA 프로세스 GxP 자동 평가 | `ITEM_GENERATION` |
+| 1232 | 대상 엔터티 유형 | `target_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_REVISION / VP_PLAN / QIA_PROCESS. VP_PLAN은 요청 시점의 VP 개정(vp_plan.vp_id), QIA_PROCESS는 평가할 QIA 프로세스(qia_process.qia_process_id) | `IQ_ITEM` |
+| 1233 | 대상 엔터티 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 기존 대상이면 해당 개정 PK. 새 항목을 생성하는 미리보기는 NULL 허용 | `00000000-0000-0000-0000-000000000001` |
+| 1234 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | 생성에 사용한 모델 식별자. 날짜가 포함된 고정 버전명으로 저장하며 최신 버전을 가리키는 별칭은 저장하지 않는다. 확인한 경우 기록하며 미확인 시 NULL을 허용한다. | - |
+| 1235 | 프롬프트 버전 | `prompt_version` | `varchar(100)` | N | N | - | N | - | N | Y | N | Y | AI 서비스가 사용한 프롬프트 템플릿 버전(WAS↔AI 규약 항목). COMPLETED이면 필수. 같은 버전 이름에 다른 프롬프트를 배포하지 않는다 | `IQ_ITEM_v2` |
+| 1236 | 마스킹 응답 원문 | `masked_response` | `text` | N | N | - | N | - | N | N | Y | Y | AI 서비스가 반환한 응답 원문을 마스킹된 상태 그대로 작업 단위로 보관한다. 마스킹 복원용 대응표는 저장하지 않으므로 이후 다시 만들 수 없다. COMPLETED이면 필수. 검출 규칙에 없는 정보가 남을 수 있어 민감 정보로 분류한다. 감사 시 원본으로 볼 기준(이 값 또는 ai_result_item.content)은 결정 대기 | - |
+| 1237 | 입력 파라미터 | `input_parameters` | `jsonb` | N | N | - | Y | - | N | N | Y | Y | 화면 입력 목적·범위·기준 URS·생성 개수, 생성·번역할 문서 목차 또는 평가할 프로세스 | `{"purpose":"접근권한 검증","scope":"로그인","count":3}` |
+| 1238 | 생성 상태 | `generation_status` | `varchar(20)` | N | N | - | Y | `'PENDING'` | N | Y | N | Y | PENDING / PROCESSING / COMPLETED / FAILED / CANCELLED | `PENDING` |
+| 1239 | 요청자 ID | `requested_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 요청 사용자. 자동·배치 요청은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1240 | 요청 시각 | `requested_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 요청 접수 시각 | `2026-09-02T00:00:00Z` |
+| 1241 | 실행 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 시작 시각 | `2026-09-02T00:00:00Z` |
+| 1242 | 실행 완료 시각 | `completed_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | AI 처리 완료 시각 | `2026-09-02T00:00:00Z` |
+| 1243 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 실패 원인 코드 | `LLM_TIMEOUT` |
+| 1244 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | 실패 상세 메시지 | `모델 응답시간 초과` |
+| 1245 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1246 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1247 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1248 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4636,7 +4692,7 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 ---
 
 <a id="table-ai_generation_result"></a>
-### 75. AI 생성 결과 (`ai_generation_result`)
+### 76. AI 생성 결과 (`ai_generation_result`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4653,17 +4709,17 @@ IQ/OQ/PQ의 source_refs에는 해당 평가 개정과 문서에 포함된 시험
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1239 | AI 결과 ID | `ai_result_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 결과 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1240 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | Y | - | N | Y | N | Y | 상위 AI 작업 | `00000000-0000-0000-0000-000000000001` |
-| 1241 | 결과 제목 | `result_title` | `varchar(300)` | N | N | - | N | - | N | N | N | Y | 결과 제목 | `OQ 테스트 초안` |
-| 1242 | 선택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
-| 1243 | 반영 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 실제 산출물 반영 여부 | `TRUE` |
-| 1244 | 선택 사용자 ID | `selected_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 채택 사용자 | `00000000-0000-0000-0000-000000000001` |
-| 1245 | 선택 시각 | `selected_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 채택 시각 | `2026-09-02T00:00:00Z` |
-| 1246 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1247 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1248 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1249 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1249 | AI 결과 ID | `ai_result_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | AI 결과 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1250 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | Y | - | N | Y | N | Y | 상위 AI 작업 | `00000000-0000-0000-0000-000000000001` |
+| 1251 | 결과 제목 | `result_title` | `varchar(300)` | N | N | - | N | - | N | N | N | Y | 결과 제목 | `OQ 테스트 초안` |
+| 1252 | 선택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
+| 1253 | 반영 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 실제 산출물 반영 여부 | `TRUE` |
+| 1254 | 선택 사용자 ID | `selected_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | 채택 사용자 | `00000000-0000-0000-0000-000000000001` |
+| 1255 | 선택 시각 | `selected_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 채택 시각 | `2026-09-02T00:00:00Z` |
+| 1256 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1257 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1258 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1259 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4680,7 +4736,7 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 ---
 
 <a id="table-ai_result_item"></a>
-### 76. AI 생성 결과 항목 (`ai_result_item`)
+### 77. AI 생성 결과 항목 (`ai_result_item`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4697,22 +4753,22 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1250 | AI 결과 항목 ID | `ai_result_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 결과 항목 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1251 | AI 결과 ID | `ai_result_id` | `uuid` | N | Y | `ai_generation_result.ai_result_id` | Y | - | N | Y | N | Y | 상위 결과 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1252 | 항목 순번 | `item_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 결과 표시 순서 | `1` |
-| 1253 | 항목 유형 | `item_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT, FRA_SCENARIO, IQ_TEST, OQ_TEST, PQ_TEST, DOCUMENT_SECTION, SECTION_TRANSLATION=목차 번역(title=번역 제목, content=번역 본문), QIA_ANSWER=QIA 문항 응답(title=문항 번호 Q1~Q10, content=O 또는 X) | `REQUIREMENT` |
-| 1254 | 제목 | `title` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 생성 항목 제목 | `전자서명 기록` |
-| 1255 | 본문 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | AI가 생성한 시험/요구사항/위험평가/목차별 초안 내용. 마스킹을 복원한 값으로 저장하며 사용자가 처음 본 제안이자 수정 이력의 기준이다(마스킹된 원문은 ai_generation_job.masked_response) | `내용` |
-| 1256 | 판단 점수 | `judgment_score` | `numeric(5,2)` | N | N | - | N | - | N | N | N | Y | AI 자동 평가에서 문항별 제안 응답과 함께 AI가 반환한 판단 점수(0~100, %). QIA_ANSWER에서 필수이며 그 외 유형은 NULL | `87.00` |
-| 1257 | 적용 대상 유형 | `target_entity_type` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 적용한 업무 테이블 유형: REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_SECTION / VP_SECTION / QIA_PROCESS. VP_SECTION은 VP 목차(vp_section.vp_section_id), QIA_PROCESS는 응답을 적용한 QIA 프로세스(qia_process.qia_process_id) | `IQ_ITEM` |
-| 1258 | 적용 대상 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 실제로 적용하여 생성/수정한 개정 PK. 적용 전 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1259 | 채택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
-| 1260 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
-| 1261 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1262 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
-| 1263 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
-| 1264 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 적용 여부 | `FALSE` |
-| 1265 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 | `2026-09-01T00:00:00Z` |
+| 1260 | AI 결과 항목 ID | `ai_result_item_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 결과 항목 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1261 | AI 결과 ID | `ai_result_id` | `uuid` | N | Y | `ai_generation_result.ai_result_id` | Y | - | N | Y | N | Y | 상위 결과 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1262 | 항목 순번 | `item_order` | `integer` | N | N | - | Y | `1` | N | Y | N | Y | 결과 표시 순서 | `1` |
+| 1263 | 항목 유형 | `item_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | REQUIREMENT, FRA_SCENARIO, IQ_TEST, OQ_TEST, PQ_TEST, DOCUMENT_SECTION, SECTION_TRANSLATION=목차 번역(title=번역 제목, content=번역 본문), QIA_ANSWER=QIA 문항 응답(title=문항 번호 Q1~Q10, content=O 또는 X) | `REQUIREMENT` |
+| 1264 | 제목 | `title` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 생성 항목 제목 | `전자서명 기록` |
+| 1265 | 본문 내용 | `content` | `text` | N | N | - | Y | - | N | N | N | Y | AI가 생성한 시험/요구사항/위험평가/목차별 초안 내용. 마스킹을 복원한 값으로 저장하며 사용자가 처음 본 제안이자 수정 이력의 기준이다(마스킹된 원문은 ai_generation_job.masked_response) | `내용` |
+| 1266 | 판단 점수 | `judgment_score` | `numeric(5,2)` | N | N | - | N | - | N | N | N | Y | AI 자동 평가에서 문항별 제안 응답과 함께 AI가 반환한 판단 점수(0~100, %). QIA_ANSWER에서 필수이며 그 외 유형은 NULL | `87.00` |
+| 1267 | 적용 대상 유형 | `target_entity_type` | `varchar(50)` | N | N | - | N | - | N | Y | N | Y | 적용한 업무 테이블 유형: REQUIREMENT / FRA_ITEM / IQ_ITEM / OQ_ITEM / PQ_ITEM / DELIVERABLE_SECTION / VP_SECTION / QIA_PROCESS. VP_SECTION은 VP 목차(vp_section.vp_section_id), QIA_PROCESS는 응답을 적용한 QIA 프로세스(qia_process.qia_process_id) | `IQ_ITEM` |
+| 1268 | 적용 대상 ID | `target_entity_id` | `uuid` | N | N | - | N | - | N | Y | N | Y | 실제로 적용하여 생성/수정한 개정 PK. 적용 전 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1269 | 채택 여부 | `is_selected` | `boolean` | N | N | - | Y | `FALSE` | N | Y | N | Y | 사용자 채택 여부 | `TRUE` |
+| 1270 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-02T00:00:00Z` |
+| 1271 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1272 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-02T00:00:00Z` |
+| 1273 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 수정 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1274 | 적용 여부 | `is_applied` | `boolean` | N | N | - | Y | `FALSE` | N | N | N | Y | 적용 여부 | `FALSE` |
+| 1275 | 적용 시각 | `applied_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 적용 시각 | `2026-09-01T00:00:00Z` |
 
 #### 제약조건
 
@@ -4730,7 +4786,7 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 ---
 
 <a id="table-ai_sensitive_detection"></a>
-### 77. AI 전송 데이터 민감정보 검출 결과 (`ai_sensitive_detection`)
+### 78. AI 전송 데이터 민감정보 검출 결과 (`ai_sensitive_detection`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4747,15 +4803,15 @@ AI 결과 묶음이다. 항목별 선택·적용은 ai_result_item을 기준으�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1266 | 검출 ID | `detection_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 검출 결과 행 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1267 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | N | - | N | Y | N | Y | 검출한 데이터를 보낸 AI 생성 작업. 챗봇 질문이면 NULL(ck_ai_sensitive_detection_source) | `00000000-0000-0000-0000-000000000001` |
-| 1268 | 챗봇 질문 메시지 ID | `chat_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | N | - | N | Y | N | Y | 검출한 데이터를 보낸 감사대응 챗봇 질문(sender_type=USER 행). AI 생성 작업이면 NULL(ck_ai_sensitive_detection_source) | - |
-| 1269 | 검출 유형 | `detection_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 사용 값(참고 목록이며 CHECK로 제한하지 않음): EMAIL(이메일), PHONE(전화번호), RRN(주민등록번호), ORGANIZATION(고객사·공장·연구소 등 조직명), PERSON(이름). 검출 항목이 늘면 목록에 추가한다 | `EMAIL` |
-| 1270 | 검출 건수 | `detected_count` | `integer` | N | N | - | Y | - | N | N | N | Y | 해당 유형의 검출 건수. 검사한 유형은 0건이어도 기록한다 | `2` |
-| 1271 | 검출 규칙 버전 | `detector_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 검출·마스킹에 사용한 규칙 버전. 같은 버전 이름에 다른 규칙을 배포하지 않는다 | `MASK_RULE_v1` |
-| 1272 | 검출 시각 | `detected_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 검출을 수행한 시각 | `2026-10-16T01:00:00Z` |
-| 1273 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-10-16T01:00:00Z` |
-| 1274 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1276 | 검출 ID | `detection_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 검출 결과 행 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1277 | AI 작업 ID | `ai_job_id` | `uuid` | N | Y | `ai_generation_job.ai_job_id` | N | - | N | Y | N | Y | 검출한 데이터를 보낸 AI 생성 작업. 챗봇 질문이면 NULL(ck_ai_sensitive_detection_source) | `00000000-0000-0000-0000-000000000001` |
+| 1278 | 챗봇 질문 메시지 ID | `chat_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | N | - | N | Y | N | Y | 검출한 데이터를 보낸 감사대응 챗봇 질문(sender_type=USER 행). AI 생성 작업이면 NULL(ck_ai_sensitive_detection_source) | - |
+| 1279 | 검출 유형 | `detection_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 사용 값(참고 목록이며 CHECK로 제한하지 않음): EMAIL(이메일), PHONE(전화번호), RRN(주민등록번호), ORGANIZATION(고객사·공장·연구소 등 조직명), PERSON(이름). 검출 항목이 늘면 목록에 추가한다 | `EMAIL` |
+| 1280 | 검출 건수 | `detected_count` | `integer` | N | N | - | Y | - | N | N | N | Y | 해당 유형의 검출 건수. 검사한 유형은 0건이어도 기록한다 | `2` |
+| 1281 | 검출 규칙 버전 | `detector_version` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 검출·마스킹에 사용한 규칙 버전. 같은 버전 이름에 다른 규칙을 배포하지 않는다 | `MASK_RULE_v1` |
+| 1282 | 검출 시각 | `detected_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 검출을 수행한 시각 | `2026-10-16T01:00:00Z` |
+| 1283 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-10-16T01:00:00Z` |
+| 1284 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 생성 사용자. 자동·배치 처리는 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4780,7 +4836,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-ai_chat_session"></a>
-### 78. AI 감사대응 챗봇 대화 (`ai_chat_session`)
+### 79. AI 감사대응 챗봇 대화 (`ai_chat_session`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4797,16 +4853,16 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1275 | 대화 ID | `chat_session_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 챗봇 대화 식별자. AI 서비스의 대화 맥락과 검색 결과도 이 값으로 구분한다(rule_ai_chat_message_7) | `00000000-0000-0000-0000-000000000001` |
-| 1276 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 대화를 연 프로젝트. 검색·답변 범위는 이 프로젝트와 그 시스템(validation_project.system_id)으로 제한한다 | `00000000-0000-0000-0000-000000000001` |
-| 1277 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 연 사용자. 대화와 그 기록은 이 사용자에게만 보여준다 | `00000000-0000-0000-0000-000000000001` |
-| 1278 | 로그인 세션 ID | `login_session_id` | `uuid` | N | Y | `login_session.session_id` | Y | - | N | Y | N | Y | 대화를 연 로그인 세션. 그 세션의 user_id는 이 행의 user_id와 같아야 한다. 이 로그인이 끝나면 대화도 끝난다(rule_ai_chat_session_2) | `00000000-0000-0000-0000-000000000001` |
-| 1279 | 종료 시각 | `ended_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 대화 종료 시각. 진행 중이면 NULL | `2026-11-12T01:30:00Z` |
-| 1280 | 종료 사유 | `end_reason` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | USER_CLOSED=사용자가 채팅 종료, LOGIN_ENDED=로그인 세션 종료(로그아웃·미사용 시간 초과·최대 유지 시간 만료·강제 종료·비밀번호 변경·중복 로그인), ACCESS_REVOKED=프로젝트 조회 권한 상실 또는 프로젝트 삭제, AI_DISABLED=조직의 AI 기능 OFF. 진행 중이면 NULL | `USER_CLOSED` |
-| 1281 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 대화 시작 시각 | `2026-11-12T01:00:00Z` |
-| 1282 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 연 사용자. user_id와 같다(ck_ai_chat_session_creator) | `00000000-0000-0000-0000-000000000001` |
-| 1283 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-11-12T01:30:00Z` |
-| 1284 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 종료 처리한 요청의 사용자(채팅을 닫거나 로그아웃한 본인, 계정을 비활성화한 관리자 등). 정리 배치가 종료하면 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1285 | 대화 ID | `chat_session_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 챗봇 대화 식별자. AI 서비스의 대화 맥락과 검색 결과도 이 값으로 구분한다(rule_ai_chat_message_7) | `00000000-0000-0000-0000-000000000001` |
+| 1286 | 프로젝트 ID | `project_id` | `uuid` | N | Y | `validation_project.project_id` | Y | - | N | Y | N | Y | 대화를 연 프로젝트. 검색·답변 범위는 이 프로젝트와 그 시스템(validation_project.system_id)으로 제한한다 | `00000000-0000-0000-0000-000000000001` |
+| 1287 | 사용자 ID | `user_id` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 연 사용자. 대화와 그 기록은 이 사용자에게만 보여준다 | `00000000-0000-0000-0000-000000000001` |
+| 1288 | 로그인 세션 ID | `login_session_id` | `uuid` | N | Y | `login_session.session_id` | Y | - | N | Y | N | Y | 대화를 연 로그인 세션. 그 세션의 user_id는 이 행의 user_id와 같아야 한다. 이 로그인이 끝나면 대화도 끝난다(rule_ai_chat_session_2) | `00000000-0000-0000-0000-000000000001` |
+| 1289 | 종료 시각 | `ended_at` | `timestamptz` | N | N | - | N | - | N | Y | N | Y | 대화 종료 시각. 진행 중이면 NULL | `2026-11-12T01:30:00Z` |
+| 1290 | 종료 사유 | `end_reason` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | USER_CLOSED=사용자가 채팅 종료, LOGIN_ENDED=로그인 세션 종료(로그아웃·미사용 시간 초과·최대 유지 시간 만료·강제 종료·비밀번호 변경·중복 로그인), ACCESS_REVOKED=프로젝트 조회 권한 상실 또는 프로젝트 삭제, AI_DISABLED=조직의 AI 기능 OFF. 진행 중이면 NULL | `USER_CLOSED` |
+| 1291 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 대화 시작 시각 | `2026-11-12T01:00:00Z` |
+| 1292 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 연 사용자. user_id와 같다(ck_ai_chat_session_creator) | `00000000-0000-0000-0000-000000000001` |
+| 1293 | 수정시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-11-12T01:30:00Z` |
+| 1294 | 수정자 ID | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화를 종료 처리한 요청의 사용자(채팅을 닫거나 로그아웃한 본인, 계정을 비활성화한 관리자 등). 정리 배치가 종료하면 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4832,7 +4888,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-ai_chat_message"></a>
-### 79. AI 감사대응 챗봇 메시지 (`ai_chat_message`)
+### 80. AI 감사대응 챗봇 메시지 (`ai_chat_message`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4849,22 +4905,22 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1285 | 메시지 ID | `chat_message_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 메시지 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1286 | 대화 ID | `chat_session_id` | `uuid` | N | Y | `ai_chat_session.chat_session_id` | Y | - | N | Y | N | Y | 메시지가 속한 대화 | `00000000-0000-0000-0000-000000000001` |
-| 1287 | 메시지 순번 | `message_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 대화 안에서 1부터 증가한다. 대화 행을 잠근 뒤 발급한다 | `1` |
-| 1288 | 발신 구분 | `sender_type` | `varchar(10)` | N | N | - | Y | - | N | N | N | Y | USER=사용자 질문, BOT=챗봇 답변 | `USER` |
-| 1289 | 질문 메시지 ID | `question_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | N | - | Y | Y | N | Y | BOT 행에서 필수: 이 답변이 답한 같은 대화의 USER 행. 질문 1건에 답변은 1건이다. USER 행은 NULL | `00000000-0000-0000-0000-000000000001` |
-| 1290 | 내용 | `content` | `text` | N | N | - | Y | - | N | N | Y | N | USER: 사용자가 입력한 원문. BOT: 화면에 표시한 답변 또는 안내 문구이며 AI 답변은 마스킹을 복원한 값이다(마스킹된 원문은 masked_response). 개인정보가 들어갈 수 있어 민감 정보로 분류하며 Audit JSON에 넣지 않는다 | `OQ-003 시험 결과를 알려줘` |
-| 1291 | 응답 유형 | `response_type` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | BOT만: ANSWER=근거가 있는 답변, REFUSED=부적절한 요청 안내(비속어, 차별·혐오 표현, 민감정보 조회, 권한 우회 등), OUT_OF_SCOPE=지원하는 질문 범위 안내, NEED_MORE_INFO=근거 부족·불명확한 질문에 대한 추가 정보 요청, FAILED=처리 실패. USER 행은 NULL | `ANSWER` |
-| 1292 | 응답 결정 주체 | `response_source` | `varchar(10)` | N | N | - | N | - | N | N | N | Y | BOT만: AI=AI 서비스의 응답 결과로 답한 것, SERVER=AI 응답 결과를 쓰지 않고 서버가 정한 것(AI 호출 전 차단, 호출 실패, 근거 검사 실패에 따른 대체). USER 행은 NULL | `AI` |
-| 1293 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | AI 서비스가 응답한 경우 사용한 모델 식별자. ai_generation_job.model_name과 같은 규칙(날짜가 포함된 고정 버전명, 미확인 시 NULL) | - |
-| 1294 | 프롬프트 버전 | `prompt_version` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | AI 서비스가 응답한 경우 사용한 프롬프트 템플릿 버전(WAS↔AI 규약 항목). AI 응답을 받았으면 필수. 같은 버전 이름에 다른 프롬프트를 배포하지 않는다 | `AUDIT_CHAT_v1` |
-| 1295 | 마스킹 응답 원문 | `masked_response` | `text` | N | N | - | N | - | N | N | Y | N | AI 서비스가 반환한 응답 원문(근거 목록 포함)을 마스킹된 상태 그대로 보관한다. AI 응답을 받았으면 필수이며, 서버가 다른 문구로 대체한 답변(rule_ai_chat_message_5)도 보관한다. 마스킹 복원용 대응표는 저장하지 않는다. 감사 시 원본으로 볼 기준(이 값 또는 content)은 ai_generation_job.masked_response와 같이 결정 대기 | - |
-| 1296 | 전송 근거 목록 | `sent_source_refs` | `jsonb` | N | N | - | N | - | N | N | N | Y | BOT만: 이 답변을 만들기 위해 AI로 보낸 근거 데이터의 대상 행. [{entity_type,entity_id,version,revision_number}] 배열이며 값은 ai_chat_citation의 cited_entity_type·cited_entity_id·cited_version·cited_revision_number와 같은 형식이다. AI로 보냈으면 필수이고 검색 결과가 없으면 빈 배열이다. AI로 보내지 않았으면 NULL이며, AI로 보낸 뒤 서버 장애로 NO_RESPONSE 마감한 행은 NULL일 수 있다. 근거 검사(rule_ai_chat_citation_2)의 기준이다 | `[{"entity_type":"OQ_EXECUTION","entity_id":"00000000-0000-0000-0000-000000000001","version":"1-1","revision_number":1}]` |
-| 1297 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | FAILED이면 필수, 그 외 NULL. 예: AI_ERROR=AI 호출 오류, LLM_TIMEOUT=응답시간 초과, STREAM_INTERRUPTED=답변 수신 중 끊김, NO_RESPONSE=답변 없이 응답 제한 시간 초과, CITATION_INVALID=근거 검사 실패, MASKING_FAILED=검출 결과 저장 실패로 전송하지 않음 | `LLM_TIMEOUT` |
-| 1298 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | FAILED 상세 메시지. 비밀정보·민감정보를 넣지 않는다 | `모델 응답시간 초과` |
-| 1299 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 저장 시각 | `2026-11-12T01:00:00Z` |
-| 1300 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화 사용자(BOT 행도 같다). 정리 배치가 마감한 FAILED 행은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
+| 1295 | 메시지 ID | `chat_message_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 메시지 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1296 | 대화 ID | `chat_session_id` | `uuid` | N | Y | `ai_chat_session.chat_session_id` | Y | - | N | Y | N | Y | 메시지가 속한 대화 | `00000000-0000-0000-0000-000000000001` |
+| 1297 | 메시지 순번 | `message_number` | `integer` | N | N | - | Y | - | N | N | N | Y | 대화 안에서 1부터 증가한다. 대화 행을 잠근 뒤 발급한다 | `1` |
+| 1298 | 발신 구분 | `sender_type` | `varchar(10)` | N | N | - | Y | - | N | N | N | Y | USER=사용자 질문, BOT=챗봇 답변 | `USER` |
+| 1299 | 질문 메시지 ID | `question_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | N | - | Y | Y | N | Y | BOT 행에서 필수: 이 답변이 답한 같은 대화의 USER 행. 질문 1건에 답변은 1건이다. USER 행은 NULL | `00000000-0000-0000-0000-000000000001` |
+| 1300 | 내용 | `content` | `text` | N | N | - | Y | - | N | N | Y | N | USER: 사용자가 입력한 원문. BOT: 화면에 표시한 답변 또는 안내 문구이며 AI 답변은 마스킹을 복원한 값이다(마스킹된 원문은 masked_response). 개인정보가 들어갈 수 있어 민감 정보로 분류하며 Audit JSON에 넣지 않는다 | `OQ-003 시험 결과를 알려줘` |
+| 1301 | 응답 유형 | `response_type` | `varchar(20)` | N | N | - | N | - | N | N | N | Y | BOT만: ANSWER=근거가 있는 답변, REFUSED=부적절한 요청 안내(비속어, 차별·혐오 표현, 민감정보 조회, 권한 우회 등), OUT_OF_SCOPE=지원하는 질문 범위 안내, NEED_MORE_INFO=근거 부족·불명확한 질문에 대한 추가 정보 요청, FAILED=처리 실패. USER 행은 NULL | `ANSWER` |
+| 1302 | 응답 결정 주체 | `response_source` | `varchar(10)` | N | N | - | N | - | N | N | N | Y | BOT만: AI=AI 서비스의 응답 결과로 답한 것, SERVER=AI 응답 결과를 쓰지 않고 서버가 정한 것(AI 호출 전 차단, 호출 실패, 근거 검사 실패에 따른 대체). USER 행은 NULL | `AI` |
+| 1303 | AI 모델명 | `model_name` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | AI 서비스가 응답한 경우 사용한 모델 식별자. ai_generation_job.model_name과 같은 규칙(날짜가 포함된 고정 버전명, 미확인 시 NULL) | - |
+| 1304 | 프롬프트 버전 | `prompt_version` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | AI 서비스가 응답한 경우 사용한 프롬프트 템플릿 버전(WAS↔AI 규약 항목). AI 응답을 받았으면 필수. 같은 버전 이름에 다른 프롬프트를 배포하지 않는다 | `AUDIT_CHAT_v1` |
+| 1305 | 마스킹 응답 원문 | `masked_response` | `text` | N | N | - | N | - | N | N | Y | N | AI 서비스가 반환한 응답 원문(근거 목록 포함)을 마스킹된 상태 그대로 보관한다. AI 응답을 받았으면 필수이며, 서버가 다른 문구로 대체한 답변(rule_ai_chat_message_5)도 보관한다. 마스킹 복원용 대응표는 저장하지 않는다. 감사 시 원본으로 볼 기준(이 값 또는 content)은 ai_generation_job.masked_response와 같이 결정 대기 | - |
+| 1306 | 전송 근거 목록 | `sent_source_refs` | `jsonb` | N | N | - | N | - | N | N | N | Y | BOT만: 이 답변을 만들기 위해 AI로 보낸 근거 데이터의 대상 행. [{entity_type,entity_id,version,revision_number}] 배열이며 값은 ai_chat_citation의 cited_entity_type·cited_entity_id·cited_version·cited_revision_number와 같은 형식이다. AI로 보냈으면 필수이고 검색 결과가 없으면 빈 배열이다. AI로 보내지 않았으면 NULL이며, AI로 보낸 뒤 서버 장애로 NO_RESPONSE 마감한 행은 NULL일 수 있다. 근거 검사(rule_ai_chat_citation_2)의 기준이다 | `[{"entity_type":"OQ_EXECUTION","entity_id":"00000000-0000-0000-0000-000000000001","version":"1-1","revision_number":1}]` |
+| 1307 | 오류 코드 | `error_code` | `varchar(50)` | N | N | - | N | - | N | N | N | Y | FAILED이면 필수, 그 외 NULL. 예: AI_ERROR=AI 호출 오류, LLM_TIMEOUT=응답시간 초과, STREAM_INTERRUPTED=답변 수신 중 끊김, NO_RESPONSE=답변 없이 응답 제한 시간 초과, CITATION_INVALID=근거 검사 실패, MASKING_FAILED=검출 결과 저장 실패로 전송하지 않음 | `LLM_TIMEOUT` |
+| 1308 | 오류 메시지 | `error_message` | `text` | N | N | - | N | - | N | N | N | Y | FAILED 상세 메시지. 비밀정보·민감정보를 넣지 않는다 | `모델 응답시간 초과` |
+| 1309 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 저장 시각 | `2026-11-12T01:00:00Z` |
+| 1310 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 대화 사용자(BOT 행도 같다). 정리 배치가 마감한 FAILED 행은 SYSTEM 계정의 user_id를 저장 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4899,7 +4955,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-ai_chat_citation"></a>
-### 80. AI 감사대응 챗봇 답변 근거 (`ai_chat_citation`)
+### 81. AI 감사대응 챗봇 답변 근거 (`ai_chat_citation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4916,16 +4972,16 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1301 | 근거 ID | `chat_citation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 답변 근거 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1302 | 답변 메시지 ID | `chat_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | Y | - | N | Y | N | Y | 근거를 단 답변(sender_type=BOT, response_type=ANSWER 행) | `00000000-0000-0000-0000-000000000001` |
-| 1303 | 표시 순서 | `citation_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 답변 안 근거 표시 순서. 1부터 | `1` |
-| 1304 | 근거 대상 유형 | `cited_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 근거로 인용한 업무 기록의 유형. 허용 유형과 근거로 쓸 수 있는 행은 업무 규칙의 표를 따른다 | `DELIVERABLE_REVISION` |
-| 1305 | 근거 대상 ID | `cited_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형 테이블의 특정 행 PK(개정 관리 대상은 개정 행 PK). 다형 참조이므로 실제 FK가 아니다 | `00000000-0000-0000-0000-000000000001` |
-| 1306 | 인용 버전 | `cited_version` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 인용 당시 대상의 버전. 결재 대상 버전과 같은 형식(workflow_instance 업무 규칙의 범위별 target_version 형식)이며 유형별 값은 업무 규칙의 표를 따른다. VALIDATION_PROJECT만 NULL(ck_ai_chat_citation_version) | `v1.0` |
-| 1307 | 인용 개정 순번 | `cited_revision_number` | `integer` | N | N | - | N | - | N | N | N | Y | 인용 당시 대상의 개정 순번. 유형별 값은 업무 규칙의 표를 따르며 VALIDATION_PROJECT만 NULL(ck_ai_chat_citation_version) | `2` |
-| 1308 | 인용 위치 | `cited_location` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 대상 안의 위치를 화면 표시 문자열로 저장한다(예: 문서 목차 '3.2 접근 권한', 시험 절차 'Step 3'). 대상 화면으로의 이동은 cited_entity_type·cited_entity_id로 한다 | `3.2 접근 권한` |
-| 1309 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 저장 시각 | `2026-11-12T01:00:00Z` |
-| 1310 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 답변 행의 created_by와 같다 | `00000000-0000-0000-0000-000000000001` |
+| 1311 | 근거 ID | `chat_citation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 답변 근거 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1312 | 답변 메시지 ID | `chat_message_id` | `uuid` | N | Y | `ai_chat_message.chat_message_id` | Y | - | N | Y | N | Y | 근거를 단 답변(sender_type=BOT, response_type=ANSWER 행) | `00000000-0000-0000-0000-000000000001` |
+| 1313 | 표시 순서 | `citation_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 답변 안 근거 표시 순서. 1부터 | `1` |
+| 1314 | 근거 대상 유형 | `cited_entity_type` | `varchar(50)` | N | N | - | Y | - | N | Y | N | Y | 근거로 인용한 업무 기록의 유형. 허용 유형과 근거로 쓸 수 있는 행은 업무 규칙의 표를 따른다 | `DELIVERABLE_REVISION` |
+| 1315 | 근거 대상 ID | `cited_entity_id` | `uuid` | N | N | - | Y | - | N | Y | N | Y | 대상 유형 테이블의 특정 행 PK(개정 관리 대상은 개정 행 PK). 다형 참조이므로 실제 FK가 아니다 | `00000000-0000-0000-0000-000000000001` |
+| 1316 | 인용 버전 | `cited_version` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 인용 당시 대상의 버전. 결재 대상 버전과 같은 형식(workflow_instance 업무 규칙의 범위별 target_version 형식)이며 유형별 값은 업무 규칙의 표를 따른다. VALIDATION_PROJECT만 NULL(ck_ai_chat_citation_version) | `v1.0` |
+| 1317 | 인용 개정 순번 | `cited_revision_number` | `integer` | N | N | - | N | - | N | N | N | Y | 인용 당시 대상의 개정 순번. 유형별 값은 업무 규칙의 표를 따르며 VALIDATION_PROJECT만 NULL(ck_ai_chat_citation_version) | `2` |
+| 1318 | 인용 위치 | `cited_location` | `varchar(500)` | N | N | - | N | - | N | N | N | Y | 대상 안의 위치를 화면 표시 문자열로 저장한다(예: 문서 목차 '3.2 접근 권한', 시험 절차 'Step 3'). 대상 화면으로의 이동은 cited_entity_type·cited_entity_id로 한다 | `3.2 접근 권한` |
+| 1319 | 생성시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 저장 시각 | `2026-11-12T01:00:00Z` |
+| 1320 | 생성자 ID | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | 답변 행의 created_by와 같다 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -4966,7 +5022,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ## Regulation
 
 <a id="table-regulatory_source"></a>
-### 81. 규정 근거 문서 (`regulatory_source`)
+### 82. 규정 근거 문서 (`regulatory_source`)
 
 | 항목 | 정의 |
 |---|---|
@@ -4983,24 +5039,24 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1311 | 규정 문서 ID | `regulatory_source_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1312 | 문서 코드 | `source_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 코드 | `REF-001` |
-| 1313 | 문서 유형 | `source_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | REGULATION / GUIDELINE / INTERNAL_SOP | `GUIDELINE` |
-| 1314 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서명 | `검토용 기준 문서` |
-| 1315 | 판본/개정 | `edition` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 판본/개정 | `Rev.1` |
-| 1316 | 발행기관/부서 | `issuing_body` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 발행기관/부서 | `품질보증팀` |
-| 1317 | 발행일 | `published_date` | `date` | N | N | - | N | - | N | Y | N | Y | 발행기관이 이 판본을 발행한 날짜. 같은 문서의 최신 판본을 판단하는 기준(rule_regulatory_source_4) | `2022-07-01` |
-| 1318 | 출처 URL | `source_url` | `text` | N | N | - | N | - | N | N | N | Y | 출처 URL | `https://example.com/reference` |
-| 1319 | 원본 첨부 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | file_asset.file_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1320 | 적용 시작일 | `effective_from` | `date` | N | N | - | N | - | N | N | N | Y | 적용 시작일 | `2026-09-01` |
-| 1321 | 적용 종료일 | `effective_to` | `date` | N | N | - | N | - | N | N | N | Y | 적용 종료일 | `2026-09-01` |
-| 1322 | 검토 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / VERIFIED / RETIRED | `DRAFT` |
-| 1323 | 확인자 ID | `verified_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1324 | 확인 시각 | `verified_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 확인 시각 | `2026-09-01T00:00:00Z` |
-| 1325 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1326 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1327 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1328 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1321 | 규정 문서 ID | `regulatory_source_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1322 | 문서 코드 | `source_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 문서 코드 | `REF-001` |
+| 1323 | 문서 유형 | `source_type` | `varchar(30)` | N | N | - | Y | - | N | N | N | Y | REGULATION / GUIDELINE / INTERNAL_SOP | `GUIDELINE` |
+| 1324 | 문서명 | `title` | `varchar(255)` | N | N | - | Y | - | N | N | N | Y | 문서명 | `검토용 기준 문서` |
+| 1325 | 판본/개정 | `edition` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 판본/개정 | `Rev.1` |
+| 1326 | 발행기관/부서 | `issuing_body` | `varchar(200)` | N | N | - | N | - | N | N | N | Y | 발행기관/부서 | `품질보증팀` |
+| 1327 | 발행일 | `published_date` | `date` | N | N | - | N | - | N | Y | N | Y | 발행기관이 이 판본을 발행한 날짜. 같은 문서의 최신 판본을 판단하는 기준(rule_regulatory_source_4) | `2022-07-01` |
+| 1328 | 출처 URL | `source_url` | `text` | N | N | - | N | - | N | N | N | Y | 출처 URL | `https://example.com/reference` |
+| 1329 | 원본 첨부 ID | `file_id` | `uuid` | N | Y | `file_asset.file_id` | N | - | N | Y | N | Y | file_asset.file_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1330 | 적용 시작일 | `effective_from` | `date` | N | N | - | N | - | N | N | N | Y | 적용 시작일 | `2026-09-01` |
+| 1331 | 적용 종료일 | `effective_to` | `date` | N | N | - | N | - | N | N | N | Y | 적용 종료일 | `2026-09-01` |
+| 1332 | 검토 상태 | `status` | `varchar(20)` | N | N | - | Y | `'DRAFT'` | N | N | N | Y | DRAFT / VERIFIED / RETIRED | `DRAFT` |
+| 1333 | 확인자 ID | `verified_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1334 | 확인 시각 | `verified_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 확인 시각 | `2026-09-01T00:00:00Z` |
+| 1335 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1336 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1337 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1338 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -5023,7 +5079,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-regulatory_clause"></a>
-### 82. 규정 조항 (`regulatory_clause`)
+### 83. 규정 조항 (`regulatory_clause`)
 
 | 항목 | 정의 |
 |---|---|
@@ -5040,19 +5096,19 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1329 | 조항 ID | `regulatory_clause_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1330 | 규정 문서 ID | `regulatory_source_id` | `uuid` | N | Y | `regulatory_source.regulatory_source_id` | Y | - | N | Y | N | Y | regulatory_source.regulatory_source_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1331 | 조항 코드 | `clause_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 조항 코드 | `4.1` |
-| 1332 | 조항 제목 | `title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 조항 제목 | `접근 관리` |
-| 1333 | 조항 요약 | `summary` | `text` | N | N | - | N | - | N | N | N | Y | 조항 내용을 한두 줄로 설명한 글. 사용자가 요구사항의 근거 조항을 고르거나 볼 때 원문을 열지 않아도 내용을 알 수 있게 화면에 표시한다. AI 문서 생성에는 사용하지 않는다. 선택 입력이며 원문과 요약 중 하나는 있어야 한다(ck_regulatory_clause_text) | `해당 업무에 적용할 요구사항 요약` |
-| 1334 | 조항 원문 | `clause_text` | `text` | N | N | - | N | - | N | N | N | Y | 조항 전체 원문 글. 조(예: 11.10) 단위로 저장하며 AI가 문서를 생성할 때 참고한다. 저작권 때문에 원문을 제공할 수 없는 자료는 비워 두고 요약만 둘 수 있다(ck_regulatory_clause_text) | `Persons who use closed systems to create, modify, maintain, or transmit electronic records shall employ procedures and controls ...` |
-| 1335 | 원문 위치 | `source_locator` | `text` | N | N | - | N | - | N | N | N | Y | 원문 위치 | `제4장 1절` |
-| 1336 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1337 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 사용 여부 | `TRUE` |
-| 1338 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1339 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1340 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1341 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1339 | 조항 ID | `regulatory_clause_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1340 | 규정 문서 ID | `regulatory_source_id` | `uuid` | N | Y | `regulatory_source.regulatory_source_id` | Y | - | N | Y | N | Y | regulatory_source.regulatory_source_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1341 | 조항 코드 | `clause_code` | `varchar(100)` | N | N | - | Y | - | N | N | N | Y | 조항 코드 | `4.1` |
+| 1342 | 조항 제목 | `title` | `varchar(255)` | N | N | - | N | - | N | N | N | Y | 조항 제목 | `접근 관리` |
+| 1343 | 조항 요약 | `summary` | `text` | N | N | - | N | - | N | N | N | Y | 조항 내용을 한두 줄로 설명한 글. 사용자가 요구사항의 근거 조항을 고르거나 볼 때 원문을 열지 않아도 내용을 알 수 있게 화면에 표시한다. AI 문서 생성에는 사용하지 않는다. 선택 입력이며 원문과 요약 중 하나는 있어야 한다(ck_regulatory_clause_text) | `해당 업무에 적용할 요구사항 요약` |
+| 1344 | 조항 원문 | `clause_text` | `text` | N | N | - | N | - | N | N | N | Y | 조항 전체 원문 글. 조(예: 11.10) 단위로 저장하며 AI가 문서를 생성할 때 참고한다. 저작권 때문에 원문을 제공할 수 없는 자료는 비워 두고 요약만 둘 수 있다(ck_regulatory_clause_text) | `Persons who use closed systems to create, modify, maintain, or transmit electronic records shall employ procedures and controls ...` |
+| 1345 | 원문 위치 | `source_locator` | `text` | N | N | - | N | - | N | N | N | Y | 원문 위치 | `제4장 1절` |
+| 1346 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1347 | 사용 여부 | `is_active` | `boolean` | N | N | - | Y | `TRUE` | N | N | N | Y | 사용 여부 | `TRUE` |
+| 1348 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1349 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1350 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1351 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -5068,7 +5124,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-requirement_regulation"></a>
-### 83. 요구사항 규정 근거 (`requirement_regulation`)
+### 84. 요구사항 규정 근거 (`requirement_regulation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -5085,16 +5141,16 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1342 | 근거 연결 ID | `requirement_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1343 | 업무 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | requirement.requirement_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1344 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1345 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
-| 1346 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
-| 1347 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1348 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1349 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1350 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1351 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1352 | 근거 연결 ID | `requirement_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1353 | 업무 항목 ID | `requirement_id` | `uuid` | N | Y | `requirement.requirement_id` | Y | - | N | Y | N | Y | requirement.requirement_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1354 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1355 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
+| 1356 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
+| 1357 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1358 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1359 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1360 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1361 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
@@ -5109,7 +5165,7 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 ---
 
 <a id="table-library_item_regulation"></a>
-### 84. 라이브러리 규정 근거 (`library_item_regulation`)
+### 85. 라이브러리 규정 근거 (`library_item_regulation`)
 
 | 항목 | 정의 |
 |---|---|
@@ -5126,16 +5182,16 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 
 | No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
 |---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
-| 1352 | 근거 연결 ID | `library_item_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
-| 1353 | 라이브러리 항목 ID | `library_id` | `uuid` | N | Y | `library_item.library_id` | Y | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1354 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1355 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
-| 1356 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
-| 1357 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
-| 1358 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
-| 1359 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
-| 1360 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
-| 1361 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1362 | 근거 연결 ID | `library_item_regulation_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1363 | 라이브러리 항목 ID | `library_id` | `uuid` | N | Y | `library_item.library_id` | Y | - | N | Y | N | Y | library_item.library_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1364 | 규정 조항 ID | `regulatory_clause_id` | `uuid` | N | Y | `regulatory_clause.regulatory_clause_id` | Y | - | N | Y | N | Y | regulatory_clause.regulatory_clause_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1365 | 적용 근거 | `application_note` | `text` | N | N | - | N | - | N | N | N | Y | 적용 근거 | `접근권한 요구사항에 적용` |
+| 1366 | 인용 문구 | `citation_snapshot` | `text` | N | N | - | Y | - | N | N | N | Y | 적용 당시 문서명·판본·조항 표시를 보존 | `검토용 기준 문서 Rev.1 / 4.1` |
+| 1367 | 표시 순서 | `sort_order` | `integer` | N | N | - | Y | - | N | N | N | Y | 표시 순서 | `1` |
+| 1368 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1369 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1370 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+| 1371 | 수정자 | `updated_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | Y | N | Y | app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
 
 #### 제약조건
 
