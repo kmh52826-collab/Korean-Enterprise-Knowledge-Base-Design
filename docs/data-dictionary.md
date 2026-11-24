@@ -17,9 +17,9 @@
 
 ## 1. 문서 개요
 
-- 전체 테이블: **85개**
-- 전체 컬럼: **1,370개**
-- 도메인: **26개**
+- 전체 테이블: **86개**
+- 전체 컬럼: **1,384개**
+- 도메인: **27개**
 - 명명 규칙: 테이블 및 컬럼은 `snake_case`, PK는 엔터티별 식별자 컬럼 사용
 - 날짜/시간 기준: DB에는 UTC 저장, 화면에서는 사용자 또는 사업장 Timezone 적용
 - GxP 원칙: 승인 기록은 직접 수정하지 않고 Revision 및 상태 이력으로 관리하며 주요 변경은 Audit Trail에 기록
@@ -147,6 +147,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 | 83 | Regulation | 규정 조항 | [`regulatory_clause`](#table-regulatory_clause) | `regulatory_clause_id` | `regulatory_source_id, created_by, updated_by` | High | Y |
 | 84 | Regulation | 요구사항 규정 근거 | [`requirement_regulation`](#table-requirement_regulation) | `requirement_regulation_id` | `requirement_id, regulatory_clause_id, created_by, updated_by` | High | Y |
 | 85 | Regulation | 라이브러리 규정 근거 | [`library_item_regulation`](#table-library_item_regulation) | `library_item_regulation_id` | `library_id, regulatory_clause_id, created_by, updated_by` | High | Y |
+| 86 | Operation | 점검 모드 이력 | [`maintenance_window`](#table-maintenance_window) | `maintenance_window_id` | `created_by, started_by, ended_by` | High | Y |
 
 ## 4. 도메인별 바로가기
 
@@ -176,6 +177,7 @@ DB의 PK·FK·CHECK·UNIQUE는 저장 시 강제하는 제약이다. 제약조�
 - **Report**: [`report_generation`](#table-report_generation)
 - **AI**: [`ai_generation_job`](#table-ai_generation_job), [`ai_generation_result`](#table-ai_generation_result), [`ai_result_item`](#table-ai_result_item), [`ai_sensitive_detection`](#table-ai_sensitive_detection), [`ai_chat_session`](#table-ai_chat_session), [`ai_chat_message`](#table-ai_chat_message), [`ai_chat_citation`](#table-ai_chat_citation)
 - **Regulation**: [`regulatory_source`](#table-regulatory_source), [`regulatory_clause`](#table-regulatory_clause), [`requirement_regulation`](#table-requirement_regulation), [`library_item_regulation`](#table-library_item_regulation)
+- **Operation**: [`maintenance_window`](#table-maintenance_window)
 
 ---
 
@@ -946,7 +948,7 @@ LOGIN_FAILED는 플랫폼이 로그인을 거부한 이벤트다. SSO는 IdP 인
 
 menu_code=SYSTEM_PROCESS는 사람이 아닌 행위자(actor_type=SYSTEM·BATCH)가 남기는 모든 기록에 사용한다. 초기 데이터 시드, 스케줄 배치, 파일 검사 Worker의 검사 상태 전환, 파일 연결 예약(file_link_request)에 따른 자동 연결, 자동 재시도가 모두 해당한다. 이때 업무 영역은 target_table_name·target_record_id로 식별하고, 사용자가 시작한 원래 화면은 같은 대상의 사용자 감사 기록(예: 업로드 완료 기록)으로 이어서 찾는다. 사용자가 화면에서 수행한 변경(USER)과 ANONYMOUS 이벤트에는 SYSTEM_PROCESS를 사용하지 않는다(ck_audit_trail_10).
 
-영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization, 초대 메일 링크(email_link_token, purpose=INVITATION)는 ACCOUNTS, user_signature_credential·login_session, 서명 비밀번호 재설정 메일 링크(email_link_token, purpose=SIGNATURE_PASSWORD_RESET)와 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·urs_category·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_party·project_activity_assignment·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드(VP PDF는 VP)·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과·검출(ai_generation_job·ai_generation_result·ai_result_item·ai_sensitive_detection)는 생성 대상 업무의 활동 코드를 사용하고, 감사대응 챗봇(ai_chat_session·ai_chat_message·ai_chat_citation)과 챗봇 질문의 검출 행(chat_message_id가 있는 ai_sensitive_detection)은 PROJECT를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
+영역 매핑(USER·ANONYMOUS 행위 기준. SYSTEM·BATCH 행위는 SYSTEM_PROCESS): 계정·그룹·권한(app_user, role, user_role, user_group, user_group_member, group_role, access_permission_grant, inventory_role_grant)과 organization, 초대 메일 링크(email_link_token, purpose=INVITATION), 점검 모드 이력(maintenance_window)은 ACCOUNTS, user_signature_credential·login_session, 서명 비밀번호 재설정 메일 링크(email_link_token, purpose=SIGNATURE_PASSWORD_RESET)와 로그인·서명 인증 이벤트는 AUTH, system_asset·system_asset_revision은 INVENTORY, library_item·urs_category·regulatory_source·regulatory_clause·library_item_regulation은 LIBRARY, validation_project·project_system_baseline·project_member·project_activity·project_party·project_activity_assignment·project_closure_request·project_workflow_config와 활동 마스터(validation_activity·activity_dependency)는 PROJECT로 기록한다. 업무 항목·문서는 해당 활동 코드(VP·VA·QIA·URS·FDS_GROUP·FRA·DQ·IQ·OQ·PQ·VSR)를 사용하며 requirement_regulation은 URS, fds_spec·dds_spec은 FDS_GROUP이다. 결재(workflow_instance·workflow_step·workflow_step_assignee·approval_action)는 결재 대상 업무의 영역 코드(인벤토리는 INVENTORY, 프로젝트 종료 요청은 PROJECT)를 따른다. 일탈(deviation·deviation_action_round·deviation_completion_revision)은 원본 수행의 IQ·OQ·PQ, 증적(evidence_link)과 파일(file_asset·file_link_request)은 연결 대상 업무의 코드(프로젝트 외 업로드는 LIBRARY), 업로드 완료 기록(file_scan_job)은 연결 대상이 정해지기 전이므로 file_scan_job.project_id가 있으면 PROJECT, 없으면(규정 원문 등 프로젝트 외 업로드) LIBRARY, traceability_link는 연결을 저장한 화면의 코드(RTM 화면은 DASHBOARD)를 사용한다. deliverable_document·deliverable_revision·deliverable_section은 해당 활동 코드, report_generation은 DELIVERABLE이면 대상 산출물의 활동 코드(VP PDF는 VP)·AUDIT_TRAIL이면 AUDIT_TRAIL, AI 작업·결과·검출(ai_generation_job·ai_generation_result·ai_result_item·ai_sensitive_detection)는 생성 대상 업무의 활동 코드를 사용하고, 감사대응 챗봇(ai_chat_session·ai_chat_message·ai_chat_citation)과 챗봇 질문의 검출 행(chat_message_id가 있는 ai_sensitive_detection)은 PROJECT를 사용한다. electronic_signature는 서명 대상(target_table_name)의 영역 코드를 따른다(예: 결재선 적용은 PROJECT, 인벤토리는 INVENTORY, 일탈 완료·종료는 원본 수행의 IQ·OQ·PQ). 감사기록 조회·내보내기는 AUDIT_TRAIL이다.
 
 전자서명 비밀번호 관련 이벤트는 대상 테이블을 user_signature_credential로, 대상 레코드를 해당 credential_id로 기록하며 old_values/new_values에 해시·원문을 포함하지 않는다.
 
@@ -5202,6 +5204,64 @@ AI 생성 작업에서 AI 서비스로 보내는 데이터(시스템·프로젝�
 | `uq_library_item_regulation_1` | UNIQUE | `library_id, regulatory_clause_id` | UNIQUE(library_id,regulatory_clause_id) |
 | `ck_library_item_regulation_sort_order` | CHECK | `sort_order` | CHECK (sort_order >= 1) |
 | `rule_library_item_regulation_2` | 업무 검증 | - | 라이브러리 항목을 URS에 적용할 때 조항 연결과 인용 문구를 requirement_regulation으로 복사하며, 이후 라이브러리 근거 변경을 이미 적용한 URS에 자동 전파하지 않는다. |
+
+[↑ 맨 위로](#top)
+
+---
+
+## Operation
+
+<a id="table-maintenance_window"></a>
+### 86. 점검 모드 이력 (`maintenance_window`)
+
+| 항목 | 정의 |
+|---|---|
+| 설명 | 배포·인프라 작업 전에 쓰기 요청을 막는 점검 모드의 예고·시작·종료·취소 이력 |
+| Primary Key | `maintenance_window_id` |
+| 주요 참조(FK) | `created_by, started_by, ended_by` |
+| GxP 중요도 | High |
+| Audit 대상 | Y |
+| 보존/삭제 원칙 | 감사 가능 기간 보존 |
+
+#### 컬럼 정의
+
+> `NN`: Not Null · `UQ`: Unique · `IDX`: Index · `민감`: 개인/민감정보
+
+| No | 논리 컬럼명 | 물리 컬럼명 | 타입 | PK | FK | 참조 | NN | Default | UQ | IDX | 민감 | Audit | 설명/업무 규칙 | 예시값 |
+|---:|---|---|---|:---:|:---:|---|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| 1371 | 점검 ID | `maintenance_window_id` | `uuid` | Y | N | - | Y | `gen_random_uuid()` | Y | Y | N | Y | 이 행의 고유 식별자 | `00000000-0000-0000-0000-000000000001` |
+| 1372 | 상태 | `status` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | SCHEDULED=예고, ACTIVE=점검 중, ENDED=종료, CANCELLED=취소. 진행 중(SCHEDULED·ACTIVE)인 점검은 DB당 1건(uq_maintenance_window_open) | `SCHEDULED` |
+| 1373 | 점검 유형 | `maintenance_type` | `varchar(20)` | N | N | - | Y | - | N | N | N | Y | DEPLOYMENT=배포, INFRASTRUCTURE=인프라 작업, EMERGENCY=긴급 | `DEPLOYMENT` |
+| 1374 | 시작 예정 시각 | `planned_start_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 예고한 점검 시작 예정 시각 | `2026-09-01T13:00:00Z` |
+| 1375 | 종료 예상 시각 | `expected_end_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 점검 종료 예상 시각. 시작 예정 시각과 함께 입력하면 시작 예정 시각보다 늦어야 한다(ck_maintenance_window_period) | `2026-09-01T15:00:00Z` |
+| 1376 | 시작 시각 | `started_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 점검을 시작한 시각. ACTIVE·ENDED에서 필수, SCHEDULED·CANCELLED에서는 NULL(ck_maintenance_window_progress) | `2026-09-01T13:00:00Z` |
+| 1377 | 종료 시각 | `ended_at` | `timestamptz` | N | N | - | N | - | N | N | N | Y | 점검을 종료하거나 예고를 취소한 시각. ENDED·CANCELLED에서 필수, SCHEDULED·ACTIVE에서는 NULL(ck_maintenance_window_progress) | `2026-09-01T14:30:00Z` |
+| 1378 | 점검 사유 | `reason` | `varchar(500)` | N | N | - | Y | - | N | N | N | Y | 점검 사유 | `정기 배포` |
+| 1379 | 변경 번호 | `change_reference` | `varchar(100)` | N | N | - | N | - | N | N | N | Y | 점검과 연결된 변경 번호. ACTIVE·ENDED에서 필수(ck_maintenance_window_change_reference) | `CHG-2026-001` |
+| 1380 | 생성자 | `created_by` | `uuid` | N | Y | `app_user.user_id` | Y | - | N | N | N | Y | 점검을 등록한 사용자. app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1381 | 시작자 | `started_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 점검을 시작한 사용자. ACTIVE에서 필수(ck_maintenance_window_progress). app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1382 | 종료자 | `ended_by` | `uuid` | N | Y | `app_user.user_id` | N | - | N | N | N | Y | 점검을 종료하거나 예고를 취소한 사용자. ENDED·CANCELLED에서 필수(ck_maintenance_window_progress). app_user.user_id 참조 | `00000000-0000-0000-0000-000000000001` |
+| 1383 | 생성 시각 | `created_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | Y | N | Y | 생성 시각 | `2026-09-01T00:00:00Z` |
+| 1384 | 수정 시각 | `updated_at` | `timestamptz` | N | N | - | Y | `CURRENT_TIMESTAMP` | N | N | N | Y | 수정 시각 | `2026-09-01T00:00:00Z` |
+
+#### 제약조건
+
+| 제약명 | 유형 | 적용 컬럼 | 조건 / 규칙 |
+|---|---|---|---|
+| `ck_maintenance_window_status` | CHECK | `status` | CHECK (status IN ('SCHEDULED','ACTIVE','ENDED','CANCELLED')) |
+| `ck_maintenance_window_type` | CHECK | `maintenance_type` | CHECK (maintenance_type IN ('DEPLOYMENT','INFRASTRUCTURE','EMERGENCY')) |
+| `ck_maintenance_window_period` | CHECK | `planned_start_at, expected_end_at` | CHECK (planned_start_at IS NULL OR expected_end_at IS NULL OR expected_end_at > planned_start_at) |
+| `ck_maintenance_window_progress` | CHECK | `status, started_at, started_by, ended_at, ended_by` | CHECK ((status = 'SCHEDULED' AND started_at IS NULL AND ended_at IS NULL) OR (status = 'ACTIVE' AND started_at IS NOT NULL AND started_by IS NOT NULL AND ended_at IS NULL) OR (status = 'ENDED' AND started_at IS NOT NULL AND ended_at IS NOT NULL AND ended_by IS NOT NULL) OR (status = 'CANCELLED' AND started_at IS NULL AND ended_at IS NOT NULL AND ended_by IS NOT NULL)) |
+| `ck_maintenance_window_change_reference` | CHECK | `status, change_reference` | CHECK (status IN ('SCHEDULED','CANCELLED') OR change_reference IS NOT NULL) |
+| `uq_maintenance_window_open` | UNIQUE | `status` | UNIQUE ((TRUE)) WHERE status IN ('SCHEDULED','ACTIVE') |
+
+#### 업무 규칙
+
+점검 모드의 예고·시작·종료·취소 이력을 고객사 DB마다 관리한다. 진행 중(SCHEDULED·ACTIVE)인 점검은 DB당 1건만 둘 수 있다(uq_maintenance_window_open).
+
+점검을 시작하면 started_at·started_by를, 종료하거나 예고를 취소하면 ended_at·ended_by를 기록한다. 취소(CANCELLED)는 시작 전에만 할 수 있다(ck_maintenance_window_progress). 변경 번호(change_reference)는 ACTIVE·ENDED에서 필수다(ck_maintenance_window_change_reference).
+
+예고·시작·종료·취소는 모두 Audit Trail에 기록한다. 사용자가 처리하면 menu_code=ACCOUNTS, SYSTEM·BATCH 행위자가 처리하면 SYSTEM_PROCESS로 기록한다(rule_audit_trail_9, ck_audit_trail_10).
 
 [↑ 맨 위로](#top)
 
